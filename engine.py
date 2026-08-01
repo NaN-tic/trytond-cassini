@@ -1,0 +1,2149 @@
+import base64
+import csv
+import io
+import json
+import mimetypes
+import uuid
+from datetime import date, datetime, time, timedelta
+from decimal import Decimal, InvalidOperation
+from xml.etree import ElementTree
+
+from sql import For
+from trytond import backend
+from trytond.pool import Pool
+from trytond.pyson import PYSONDecoder, PYSONEncoder
+from trytond.tools import timezone
+from trytond.transaction import Transaction
+
+from .i18n import translate
+from .search import (
+    COMMON_SEARCH_FIELDS as SEARCH_COMMON_SEARCH_FIELDS,
+    date_format, parse_date, search_domain_parser,
+    search_field_definitions, time_format, to_server_datetime)
+from werkzeug.wrappers import Response
+from werkzeug.utils import secure_filename
+
+from .state import InterfaceState, decode_value, encode_value
+from .widgets import WidgetRenderer
+
+SUPPORTED_VIEWS = {'tree', 'form', 'list-form', 'calendar'}
+COMMON_SEARCH_FIELDS = SEARCH_COMMON_SEARCH_FIELDS
+
+
+def evaluate(value, context, default=None):
+    if value in (None, ''):
+        return default
+    if not isinstance(value, str):
+        return value
+    try:
+        return PYSONDecoder(context).decode(value)
+    except Exception:
+        return default
+
+
+def combine_domains(*domains):
+    domains = [domain for domain in domains if domain]
+    if not domains:
+        return []
+    if len(domains) == 1:
+        return domains[0]
+    return ['AND', *domains]
+
+
+class SaoEngine:
+    """Translate Tryton client semantics into a persistent state document."""
+
+    def __init__(self, workspace):
+        self.pool = Pool()
+        Workspace = self.pool.get('cassini.workspace')
+        # HTMX requests from different parts of the same workspace may arrive
+        # concurrently. ModelSQL.lock uses NOWAIT, which turns a normal overlap
+        # with a long-running request into a database error. A blocking row
+        # lock serialises the state document so every request reads the latest
+        # committed revision.
+        if backend.name != 'sqlite':
+            table = Workspace.__table__()
+            cursor = Transaction().connection.cursor()
+            cursor.execute(*table.select(
+                    table.id,
+                    where=table.id == workspace.id,
+                    for_=For('UPDATE')))
+        values, = Workspace.read(
+            [workspace.id], ['state', 'revision'])
+        workspace.state = values['state']
+        workspace.revision = values['revision']
+        self.workspace = workspace
+        self.interface = InterfaceState(decode_value(values['state']))
+
+    @property
+    def user(self):
+        return self.workspace.user
+
+    def save(self):
+        self.workspace.store(self.interface)
+
+    def context(self, extra=None, data=None):
+        User = self.pool.get('res.user')
+        context = dict(User.get_preferences(context_only=True))
+        context.update(Transaction().context)
+        data = data or {}
+        context.update({
+                'active_model': data.get('model'),
+                'active_id': data.get('id'),
+                'active_ids': data.get('ids', []),
+                '_user': Transaction().user,
+                })
+        if extra:
+            context.update(extra)
+        return context
+
+    def start_user_actions(self, action_ids):
+        """Execute the login actions from the user preferences like Sao."""
+        if 'startup_actions' in self.interface.data:
+            return
+        self.interface.data['startup_actions'] = list(action_ids or [])
+        self._start_next_user_actions()
+        self.save()
+
+    def _start_next_user_actions(self):
+        actions = self.interface.data.setdefault('startup_actions', [])
+        while actions:
+            action_id = actions.pop(0)
+            opened = self.open_action(action_id)
+            if (opened
+                    and not isinstance(opened, Response)
+                    and opened.get('kind') == 'wizard'):
+                opened['startup_action'] = True
+                break
+
+    def open_menu(self, menu_id):
+        ActionKeyword = self.pool.get('ir.action.keyword')
+        actions = ActionKeyword.get_keyword(
+            'tree_open', ('ir.ui.menu', int(menu_id)))
+        if not actions:
+            raise ValueError(translate('This menu does not define an action'))
+        return self.open_action(actions[0], {
+                'model': 'ir.ui.menu',
+                'id': int(menu_id),
+                'ids': [int(menu_id)],
+                })
+
+    def open_resource(self, model_name, record_id, title=None):
+        Model = self.pool.get(model_name)
+        record_id = int(record_id)
+        record = Model(record_id)
+        action = {
+            'id': None,
+            'name': title or record.rec_name,
+            'type': 'ir.action.act_window',
+            'res_model': model_name,
+            'res_id': record_id,
+            'views': [],
+            'domains': [],
+            'pyson_domain': '[]',
+            'pyson_context': '{}',
+            'pyson_order': 'null',
+            'pyson_search_value': '[]',
+            'limit': 100,
+            }
+        return self.open_action(action, {
+                'model': model_name,
+                'id': record_id,
+                'ids': [record_id],
+                })
+
+    def open_relation_modal(
+            self, parent_tab_id, model_name, record_id, title=None,
+            record_ids=None):
+        parent = self._tab(parent_tab_id)
+        if parent.get('kind') not in {'window', 'wizard'}:
+            raise ValueError(translate('Unknown relation parent'))
+        Model = self.pool.get(model_name)
+        record_id = int(record_id)
+        record = Model(record_id)
+        action = {
+            'id': None,
+            'name': title or record.rec_name,
+            'type': 'ir.action.act_window',
+            'res_model': model_name,
+            'res_id': record_id,
+            'views': [],
+            'domains': [],
+            'pyson_domain': '[]',
+            'pyson_context': '{}',
+            'pyson_order': 'null',
+            'pyson_search_value': '[]',
+            'limit': 100,
+            }
+        tab = self._open_window(
+            action, {
+                'model': model_name,
+                'id': record_id,
+                'ids': [record_id],
+                }, None, reuse=False)
+        if record_ids:
+            record_ids = list(dict.fromkeys(
+                    int(id_) for id_ in record_ids if id_))
+            if record_id not in record_ids:
+                record_ids.append(record_id)
+            self.load_tab(tab, ids=record_ids)
+            tab['current_record'] = str(record_id)
+            tab['selected'] = [str(record_id)]
+            tab['relation_navigation'] = True
+        tab['relation_modal'] = True
+        tab['return_tab'] = parent['id']
+        self.save()
+        return tab
+
+    def open_related(self, tab_id, resource):
+        tab = self._tab(tab_id, kind='window')
+        key = tab.get('current_record')
+        record = tab.get('records', {}).get(key)
+        if not record or not record.get('id'):
+            raise ValueError(translate('Select a saved record first'))
+        resources = {
+            'attachments': ('ir.attachment', translate('Attachments')),
+            'notes': ('ir.note', translate('Notes')),
+            'logs': ('ir.model.log', translate('Logs')),
+            }
+        try:
+            model_name, title = resources[resource]
+        except KeyError:
+            raise ValueError(translate('Unknown related resource'))
+        reference = '%s,%s' % (tab['model'], record['id'])
+        action = {
+            'id': None,
+            'name': '%s — %s' % (title, tab['title']),
+            'type': 'ir.action.act_window',
+            'res_model': model_name,
+            'views': [],
+            'domains': [],
+            'pyson_domain': json.dumps([
+                    ('resource', '=', reference)]),
+            'pyson_context': json.dumps({
+                    'default_resource': reference}),
+            'pyson_order': 'null',
+            'pyson_search_value': '[]',
+            'limit': 100,
+            }
+        return self.open_action(action, {
+                'model': tab['model'],
+                'id': record['id'],
+                'ids': [record['id']],
+                })
+
+    def open_action(self, action, data=None, extra_context=None):
+        data = data or {}
+        action = self.action_value(action)
+        action_type = action.get('type')
+        if action_type == 'ir.action.act_window':
+            tab = self._open_window(action, data, extra_context)
+        elif action_type == 'ir.action.wizard':
+            tab = self._open_wizard(action, data, extra_context)
+        elif action_type == 'ir.action.report':
+            return self.execute_report(action, data, extra_context)
+        elif action_type == 'ir.action.url':
+            tab = self.interface.add_tab({
+                    'kind': 'url',
+                    'title': action.get('name') or action.get('url'),
+                    'url': action.get('url'),
+                    'action': encode_value(action),
+                    })
+        elif action_type == 'nantic.action.open_conversation':
+            try:
+                Conversation = self.pool.get(
+                    'nantic.chat.conversation')
+            except KeyError:
+                raise ValueError(
+                    translate('Unsupported action type %s') % action_type)
+            identifier = (
+                action.get('identifier') or action.get('res_id'))
+            conversations = Conversation.search([
+                    ('identifier', '=', identifier),
+                    ('create_uid', '=', Transaction().user),
+                    ], limit=1)
+            if not conversations:
+                raise ValueError(translate('Unknown conversation'))
+            conversation, = conversations
+            shell = self.interface.component('shell', {
+                    'panel': 'none',
+                    'theme': 'light',
+                    'user_menu': False,
+                    })
+            shell['panel'] = 'help'
+            shell['user_menu'] = False
+            assistant = self.interface.component('assistant', {
+                    'section': 'assistant',
+                    'conversation': None,
+                    'nan': None,
+                    })
+            assistant['section'] = 'assistant'
+            assistant['conversation'] = conversation.identifier
+            agent = conversation.get_agent_info()
+            assistant['nan'] = agent.get('id') if agent else None
+            conversation.mark_assistant_messages_as_read()
+            tab = None
+        else:
+            raise ValueError(translate('Unsupported action type %s') % action_type)
+        self.save()
+        return tab
+
+    def action_value(self, action):
+        if isinstance(action, int):
+            Action = self.pool.get('ir.action')
+            action = Action(action).get_action_value()
+        return action
+
+    @staticmethod
+    def _same_window(tab, values, explicit_view_ids):
+        """Match an existing window using Sao's ``Tab.Form.compare`` rules."""
+        if tab.get('kind') != 'window' or tab.get('relation_modal'):
+            return False
+        try:
+            view_index = tab.get('view_types', []).index(
+                tab.get('view_type'))
+        except ValueError:
+            return False
+        return (
+            view_index <= 0
+            and tab.get('model') == values['model']
+            and tab.get('res_id') == values['res_id']
+            and decode_value(tab.get('domain', [])) == values['domain']
+            and decode_value(tab.get(
+                    'context_domain', [])) == values['context_domain']
+            and tab.get('view_ids', []) == values['view_ids']
+            and (
+                explicit_view_ids
+                or tab.get('view_types', ['tree', 'form'])
+                == values['view_types'])
+            and decode_value(tab.get('context', {})) == values['context']
+            and decode_value(tab.get(
+                    'search_value', [])) == values['search_value']
+            and decode_value(tab.get(
+                    'domain_tabs', [])) == values['domain_tabs'])
+
+    def _open_window(self, action, data, extra_context, reuse=True):
+        base_context = self.context(extra_context, data)
+        action_context = evaluate(
+            action.get('pyson_context'), base_context, {}) or {}
+        tab_context = dict(extra_context or {})
+        tab_context.update(action_context)
+        evaluation_context = self.context(tab_context, data)
+        evaluation_context['context'] = evaluation_context
+
+        views = action.get('views') or []
+        view_ids = []
+        view_types = []
+        for view in views:
+            view_id, view_type = view
+            if view_type in SUPPORTED_VIEWS:
+                view_ids.append(view_id)
+                view_types.append(view_type)
+        if not view_types:
+            view_types = ['tree', 'form']
+            view_ids = [None, None]
+        if action.get('res_id') or data.get('res_id'):
+            if 'form' in view_types:
+                index = view_types.index('form')
+                view_types.insert(0, view_types.pop(index))
+                view_ids.insert(0, view_ids.pop(index))
+
+        domain = evaluate(
+            action.get('pyson_domain'), evaluation_context, [])
+        context_domain = evaluate(
+            action.get('context_domain'), evaluation_context, []) or []
+        domain_tabs = [
+            {
+                'name': name,
+                'domain': evaluate(
+                    tab_domain, evaluation_context, []) or [],
+                'count': bool(count),
+                }
+            for name, tab_domain, count in action.get('domains', [])
+            ]
+        search_value = evaluate(
+            action.get('pyson_search_value'), evaluation_context, [])
+        window = {
+                'kind': 'window',
+                'title': action.get('name') or action.get('res_model'),
+                'action_id': action.get('id'),
+                'action': encode_value(action),
+                'model': action.get('res_model') or data.get('res_model'),
+                'res_id': action.get('res_id') or data.get('res_id'),
+                'context': encode_value(tab_context),
+                'domain': encode_value(domain),
+                'context_domain': encode_value(context_domain),
+                'domain_tabs': encode_value(domain_tabs),
+                'domain_counts': encode_value([]),
+                'active_domain': 0,
+                'search_value': encode_value(search_value),
+                'order': encode_value(evaluate(
+                        action.get('pyson_order'),
+                        evaluation_context, None)),
+                'view_ids': view_ids,
+                'view_types': view_types,
+                'view_type': view_types[0],
+                'view_id': view_ids[0],
+                'limit': action.get('limit') or 100,
+                'offset': 0,
+                'search': '',
+                'search_draft': '',
+                'search_domain': [],
+                'search_filters': {},
+                'active_only': True,
+                'records': {},
+                'record_order': [],
+                'selected': [],
+                'current_record': None,
+                'toolbar': {},
+                'pages': {},
+                'column_visibility': {},
+                }
+        comparison = {
+            'model': window['model'],
+            'res_id': window['res_id'],
+            'context': tab_context,
+            'domain': domain,
+            'context_domain': context_domain,
+            'domain_tabs': domain_tabs,
+            'search_value': search_value,
+            'view_ids': view_ids,
+            'view_types': view_types,
+            }
+        if reuse:
+            for tab in self.interface.tabs:
+                if self._same_window(tab, comparison, bool(views)):
+                    self.interface.activate(tab['id'])
+                    return tab
+
+        tab = self.interface.add_tab(window)
+        res_id = window['res_id']
+        self.load_tab(tab, ids=[res_id] if res_id else None)
+        return tab
+
+    def _open_wizard(self, action, data, extra_context):
+        Wizard = self.pool.get(action['wiz_name'], type='wizard')
+        context = self.context(extra_context, data)
+        context['action_id'] = action.get('id')
+        active_tab = self.interface.active_tab
+        return_tab = active_tab['id'] if active_tab else None
+        if (active_tab
+                and active_tab.get('kind') == 'wizard'
+                and not active_tab.get('window')):
+            return_tab = active_tab.get('return_tab')
+        with Transaction().set_context(context):
+            session_id, start_state, end_state = Wizard.create()
+            result = Wizard.execute(session_id, {}, start_state)
+            if not result.get('view'):
+                end_action = Wizard.delete(session_id)
+                if end_action:
+                    result.setdefault('actions', []).append((end_action, {}))
+        tab = self.interface.add_tab({
+                'kind': 'wizard',
+                'title': action.get('name') or action['wiz_name'],
+                'action': encode_value(action),
+                'wizard_name': action['wiz_name'],
+                'wizard_session': session_id,
+                'wizard_state': start_state,
+                'wizard_end_state': end_state,
+                'context': encode_value(extra_context or {}),
+                'data': encode_value(data),
+                'window': bool(action.get('window')),
+                'return_tab': return_tab,
+                })
+        self._apply_wizard_result(tab, result)
+        if tab.get('ended'):
+            self.interface.close(tab['id'])
+            return self.interface.get_tab(return_tab)
+        return tab
+
+    def _apply_wizard_result(self, tab, result):
+        if result.get('view'):
+            view = result['view']
+            values = dict(view.get('defaults') or {})
+            values.update(view.get('values') or {})
+            fields_view = view['fields_view']
+            Model = self.pool.get(fields_view['model'])
+            context = self.context(
+                decode_value(tab.get('context', {})),
+                decode_value(tab.get('data', {})))
+            with Transaction().set_context(context):
+                record = Model(**self._record_values(Model, values))
+                changed = set(values)
+                if changed:
+                    record.on_change(changed)
+                dependent = self._dependent_fields(fields_view, changed)
+                if dependent:
+                    record.on_change_with(dependent)
+                values.update(record._default_values)
+            tab.update({
+                    'wizard_state': view['state'],
+                    'model': fields_view.get('model'),
+                    'view': encode_value(fields_view),
+                    'values': encode_value(values),
+                    'buttons': encode_value(view.get('buttons') or []),
+                    'ended': False,
+                    })
+        else:
+            tab['ended'] = True
+        downloads = []
+        for action, data in result.get('actions', []):
+            if isinstance(action, str):
+                return_tab = self.interface.get_tab(tab.get('return_tab'))
+                if return_tab and return_tab.get('kind') == 'window':
+                    self.client_action(return_tab, action)
+                continue
+            action = self.action_value(action)
+            if action.get('type') == 'ir.action.report':
+                downloads.append(self.queue_report(action, data))
+            else:
+                self.open_action(action, data)
+        return downloads
+
+    def wizard_step(self, tab_id, button_state, values):
+        tab = self._tab(tab_id, kind='wizard')
+        startup_action = bool(tab.get('startup_action'))
+        Wizard = self.pool.get(tab['wizard_name'], type='wizard')
+        data = {
+            tab['wizard_state']: decode_value(values),
+            }
+        context = self.context(
+            decode_value(tab.get('context', {})),
+            decode_value(tab.get('data', {})))
+        with Transaction().set_context(context):
+            result = Wizard.execute(
+                tab['wizard_session'], data, button_state)
+            if not result.get('view'):
+                end_action = Wizard.delete(tab['wizard_session'])
+                if end_action:
+                    result.setdefault('actions', []).append((end_action, {}))
+        downloads = self._apply_wizard_result(tab, result)
+        if tab.get('ended'):
+            self.interface.close(tab_id)
+            if startup_action:
+                self._start_next_user_actions()
+        self.save()
+        return tab, downloads
+
+    def queue_report(self, action, data, extra_context=None):
+        key = uuid.uuid4().hex
+        downloads = self.interface.data.setdefault('downloads', {})
+        downloads[key] = {
+            'action': encode_value(action),
+            'data': encode_value(data),
+            'context': encode_value(extra_context or {}),
+            }
+        return key
+
+    def download_report(self, key):
+        downloads = self.interface.data.setdefault('downloads', {})
+        try:
+            definition = downloads.pop(key)
+        except KeyError:
+            raise ValueError(translate('This download is no longer available'))
+        self.save()
+        return self.execute_report(
+            decode_value(definition['action']),
+            decode_value(definition['data']),
+            decode_value(definition['context']))
+
+    def update_wizard_field(self, tab_id, field_name, raw_value):
+        tab = self._tab(tab_id, kind='wizard')
+        view = decode_value(tab.get('view', {}))
+        Model = self.pool.get(view['model'])
+        if field_name not in Model._fields:
+            raise ValueError(translate('Unknown wizard field %s') % field_name)
+        definition = view.get('fields', {}).get(field_name, {})
+        value = self.parse_value(
+            Model._fields[field_name], raw_value, definition)
+        values = decode_value(tab.get('values', {}))
+        record = Model(**self._record_values(Model, values))
+        before = encode_value(record._default_values)
+        setattr(record, field_name, value)
+        record.on_change({field_name})
+        dependent = self._dependent_fields(view, {field_name})
+        if dependent:
+            record.on_change_with(dependent)
+        changed = self._record_changes(record, before)
+        values.update(changed)
+        tab['values'] = encode_value(values)
+        tab['notice'] = encode_value(record.on_change_notify())
+        self.save()
+        return tab, set(changed) | {field_name}
+
+    def _tab(self, tab_id, kind=None):
+        tab = self.interface.get_tab(tab_id)
+        if not tab:
+            raise KeyError(translate('Unknown tab %s') % tab_id)
+        if kind and tab.get('kind') != kind:
+            raise ValueError(translate('Tab %s is not a %s tab') % (tab_id, kind))
+        return tab
+
+    def activate_tab(self, tab_id):
+        self.interface.activate(tab_id)
+        self.save()
+        return self._tab(tab_id)
+
+    def close_tab(self, tab_id):
+        tab = self.interface.get_tab(tab_id)
+        if tab and tab.get('kind') == 'wizard' and not tab.get('ended'):
+            Wizard = self.pool.get(tab['wizard_name'], type='wizard')
+            Wizard.delete(tab['wizard_session'])
+        self.interface.close(tab_id)
+        self.save()
+        return self.interface.active_tab
+
+    def switch_view(self, tab_id, view_type):
+        tab = self._tab(tab_id, kind='window')
+        if view_type not in tab['view_types']:
+            raise ValueError(translate('View %s is not part of this action') % view_type)
+        index = tab['view_types'].index(view_type)
+        tab['view_type'] = view_type
+        tab['view_id'] = tab['view_ids'][index]
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    def switch_domain(self, tab_id, index):
+        tab = self._tab(tab_id, kind='window')
+        domains = decode_value(tab.get('domain_tabs', []))
+        index = int(index)
+        if index < 0 or index >= len(domains):
+            raise ValueError(translate('Unknown domain tab'))
+        tab['active_domain'] = index
+        tab['offset'] = 0
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    def switch_page(self, tab_id, notebook, page):
+        tab = self._tab(tab_id)
+        tab.setdefault('pages', {})[notebook] = int(page)
+        self.save()
+        return tab
+
+    def open_preferences(self, values):
+        self.interface.data['preferences_open'] = True
+        state = self.interface.component('preferences')
+        if 'values' not in state:
+            state['values'] = encode_value(values)
+            state['pages'] = {}
+            state['changed'] = []
+        else:
+            state.setdefault('changed', [])
+        self.save()
+        return state
+
+    def close_preferences(self):
+        self.interface.data['preferences_open'] = False
+        self.interface.data['components'].pop('preferences', None)
+        self.save()
+
+    def update_preference(self, view, field_name, raw_value):
+        User = self.pool.get('res.user')
+        if field_name not in User._fields:
+            raise ValueError(translate('Unknown preference field %s') % field_name)
+        state = self.interface.component('preferences')
+        values = decode_value(state.get('values', {}))
+        definition = view.get('fields', {}).get(field_name, {})
+        if definition.get('type') != User._fields[field_name]._type:
+            value = raw_value
+            if definition.get('type') == 'selection':
+                for key, label in definition.get('selection', []):
+                    if str(key) == str(raw_value):
+                        value = key
+                        break
+            values[field_name] = value
+            state['values'] = encode_value(values)
+            state['changed'] = sorted(
+                set(state.get('changed', [])) | {field_name})
+            self.save()
+            return state, {field_name}
+        value = self.parse_value(
+            User._fields[field_name], raw_value, definition)
+        record_values = self._record_values(User, values)
+        for name in list(record_values):
+            if (view.get('fields', {}).get(name, {}).get('type')
+                    != User._fields[name]._type):
+                # The preferences view deliberately exposes fields such as
+                # language and action as selections instead of their model
+                # field type. Those client values are not suitable for
+                # instantiating an in-memory res.user record.
+                record_values.pop(name)
+        record = User(
+            Transaction().user,
+            **record_values)
+        before = encode_value(record._default_values)
+        setattr(record, field_name, value)
+        record.on_change({field_name})
+        dependent = self._dependent_fields(view, {field_name})
+        if dependent:
+            record.on_change_with(dependent)
+        changed = self._record_changes(record, before)
+        values.update(changed)
+        state['values'] = encode_value(values)
+        changed_fields = set(changed) | {field_name}
+        state['changed'] = sorted(
+            set(state.get('changed', [])) | changed_fields)
+        self.save()
+        return state, changed_fields
+
+    def _update_window_counts(self, tab, Model, view):
+        base_domain = combine_domains(
+            decode_value(tab.get('domain', [])),
+            decode_value(tab.get('context_domain', [])),
+            decode_value(tab.get('search_value', [])),
+            decode_value(tab.get('search_domain', [])))
+        if tab.get('search') and not decode_value(
+                tab.get('search_domain', [])):
+            base_domain = combine_domains(
+                base_domain, self._search_domain(tab, view))
+        domain_tabs = decode_value(tab.get('domain_tabs', []))
+        active_domain = []
+        active_domain_index = 0
+        if domain_tabs:
+            active_domain_index = min(
+                tab.get('active_domain', 0), len(domain_tabs) - 1)
+            active_domain = domain_tabs[active_domain_index]['domain']
+        domain = combine_domains(base_domain, active_domain)
+        tab['count'] = Model.search_count(domain)
+        tab['domain_counts'] = encode_value([
+                (
+                    min(tab['count'], 1000)
+                    if index == active_domain_index
+                    else Model.search_count(
+                        combine_domains(
+                            base_domain, domain_tab['domain']),
+                        limit=1000)
+                ) if domain_tab.get('count') else None
+                for index, domain_tab in enumerate(domain_tabs)
+                ])
+        return domain
+
+    def load_tab(self, tab, ids=None):
+        Model = self.pool.get(tab['model'])
+        ModelAccess = self.pool.get('ir.model.access')
+        tab['history'] = bool(getattr(Model, '_history', False))
+        tab['access'] = ModelAccess.get_access(
+            [tab['model']])[tab['model']]
+        context = self.context(decode_value(tab.get('context', {})))
+        tab['search_context'] = encode_value(context)
+        if not tab.get('active_only', True):
+            context['active_test'] = False
+        screen_width = self.interface.data.get('screen_width')
+        if screen_width:
+            context.update({
+                    'screen_size': (int(screen_width), 0),
+                    'view_tree_width': True,
+                    })
+        with Transaction().set_context(context):
+            view = Model.fields_view_get(
+                view_id=tab.get('view_id'),
+                view_type=tab['view_type'])
+            tab['view'] = encode_value(view)
+            tab['toolbar'] = encode_value(Model.view_toolbar_get())
+            fields_names = list(view.get('fields', {}).keys())
+            read_fields = [
+                name for name in fields_names
+                if name in Model._fields and name != 'id'
+                ]
+            if 'rec_name' not in read_fields:
+                read_fields.append('rec_name')
+
+            domain = self._update_window_counts(tab, Model, view)
+
+            if ids is None:
+                ids = Model.search(
+                    domain,
+                    offset=tab.get('offset', 0),
+                    limit=tab.get('limit', 100),
+                    order=decode_value(tab.get('order')))
+            else:
+                ids = [int(id_) for id_ in ids if id_]
+                order = decode_value(tab.get('order'))
+                if len(ids) > 1 and order:
+                    ids = Model.search([
+                            ('id', 'in', ids),
+                            ], order=order)
+            ids = [int(id_) for id_ in ids if id_]
+            binary_context = {
+                '%s.%s' % (Model.__name__, name): 'size'
+                for name in read_fields
+                if name in Model._fields
+                and Model._fields[name]._type == 'binary'
+                }
+            with Transaction().set_context(binary_context):
+                values = Model.read(ids, read_fields) if ids else []
+                if values:
+                    by_id = {
+                        row['id']: row for row in values}
+                    values = [
+                        by_id[record_id]
+                        for record_id in ids if record_id in by_id
+                        ]
+                child_field = view.get('field_childs')
+                if child_field in read_fields:
+                    known = {row['id'] for row in values}
+                    pending = {
+                        child_id
+                        for row in values
+                        for child_id in row.get(child_field, [])
+                        if child_id not in known
+                        }
+                    while pending and len(known) < tab.get('limit', 100):
+                        child_ids = list(pending)[
+                            :tab.get('limit', 100) - len(known)]
+                        child_values = Model.read(child_ids, read_fields)
+                        values.extend(child_values)
+                        known.update(child_ids)
+                        pending = {
+                            child_id
+                            for row in child_values
+                            for child_id in row.get(child_field, [])
+                            if child_id not in known
+                            }
+
+        old_records = tab.get('records', {})
+        records = {}
+        order = []
+        for row in values:
+            key = str(row['id'])
+            old = old_records.get(key)
+            if old and old.get('dirty'):
+                records[key] = old
+            else:
+                records[key] = {
+                    'key': key,
+                    'id': row['id'],
+                    'values': encode_value(row),
+                    'baseline': encode_value(row),
+                    'dirty': [],
+                    'new': False,
+                    'deleted': False,
+                    }
+            order.append(key)
+
+        for key, record in old_records.items():
+            if record.get('new') and key not in records:
+                records[key] = record
+                order.insert(0, key)
+        tab['records'] = records
+        tab['record_order'] = order
+        tab['selected'] = [
+            key for key in tab.get('selected', []) if key in records]
+        if tab.get('current_record') not in records:
+            tab['current_record'] = order[0] if order else None
+        tab['dirty'] = any(record.get('dirty') for record in records.values())
+        return tab
+
+    def revisions(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        Model = self.pool.get(tab['model'])
+        if not getattr(Model, '_history', False):
+            raise ValueError(translate('This model does not keep revisions'))
+        keys = tab.get('selected') or [tab.get('current_record')]
+        ids = [
+            tab['records'][key]['id']
+            for key in keys
+            if key in tab['records'] and tab['records'][key].get('id')
+            ]
+        if not ids:
+            raise ValueError(translate('Select a saved record first'))
+        tab['revisions'] = encode_value(Model.history_revisions(ids))
+        tab['revision_open'] = True
+        self.save()
+        return tab
+
+    def close_revisions(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        tab['revision_open'] = False
+        self.save()
+        return tab
+
+    def set_revision(self, tab_id, index=None):
+        tab = self._tab(tab_id, kind='window')
+        context = decode_value(tab.get('context', {}))
+        if index is None:
+            context.pop('_datetime', None)
+        else:
+            revisions = decode_value(tab.get('revisions', []))
+            index = int(index)
+            if index < 0 or index >= len(revisions):
+                raise ValueError(translate('Unknown revision'))
+            context['_datetime'] = revisions[index][0] + timedelta(
+                milliseconds=1)
+        tab['context'] = encode_value(context)
+        tab['revision_open'] = False
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    def reload_tab(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    def search(self, tab_id, text):
+        tab = self._tab(tab_id, kind='window')
+        tab['search'] = text or ''
+        tab['search_draft'] = tab['search']
+        tab['search_filters'] = {}
+        view = decode_value(tab.get('view', {}))
+        tab['search_domain'] = encode_value(
+            self._search_domain(tab, view))
+        tab['offset'] = 0
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    def update_search_draft(self, tab_id, text):
+        tab = self._tab(tab_id, kind='window')
+        tab['search_draft'] = text or ''
+        self.save()
+        return tab
+
+    def advanced_search(self, tab_id, filters):
+        tab = self._tab(tab_id, kind='window')
+        view = decode_value(tab.get('view', {}))
+        definitions = search_field_definitions(view)
+        domain = []
+        search_filters = {}
+        labels = []
+        for name, values in filters.items():
+            if name not in definitions:
+                continue
+            definition = definitions[name]
+            title = definition.get('string') or name
+            cleaned = {
+                mode: str(value).strip()
+                for mode, value in values.items()
+                if str(value).strip()
+                }
+            if not cleaned:
+                continue
+            search_filters[name] = cleaned
+            if cleaned.get('value'):
+                raw_value = cleaned['value']
+                domain.extend(self._search_leaf(
+                        name, definition, raw_value))
+                labels.append('%s: %s' % (title, raw_value))
+            if cleaned.get('from'):
+                raw_value = cleaned['from']
+                domain.extend(self._search_leaf(
+                        name, definition, raw_value, '>='))
+                labels.append('%s: >=%s' % (title, raw_value))
+            if cleaned.get('to'):
+                raw_value = cleaned['to']
+                domain.extend(self._search_leaf(
+                        name, definition, raw_value, '<='))
+                labels.append('%s: <=%s' % (title, raw_value))
+        tab['search'] = ' '.join(labels)
+        tab['search_draft'] = tab['search']
+        tab['search_domain'] = encode_value(domain)
+        tab['search_filters'] = encode_value(search_filters)
+        tab['offset'] = 0
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    def search_bookmarks(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        ViewSearch = self.pool.get('ir.ui.view_search')
+        return ViewSearch.get().get(tab['model'], [])
+
+    def current_search_bookmark(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        current = decode_value(tab.get('search_domain', []))
+        for bookmark in self.search_bookmarks(tab_id):
+            if (PYSONEncoder().encode(bookmark[2])
+                    == PYSONEncoder().encode(current)):
+                return bookmark
+        return None
+
+    def add_search_bookmark(self, tab_id, name):
+        tab = self._tab(tab_id, kind='window')
+        domain = decode_value(tab.get('search_domain', []))
+        if not name or not domain:
+            raise ValueError(translate('A bookmark name and search are required'))
+        ViewSearch = self.pool.get('ir.ui.view_search')
+        ViewSearch.set(
+            name.strip(), tab['model'], PYSONEncoder().encode(domain))
+        return tab
+
+    def remove_search_bookmark(self, tab_id, bookmark_id):
+        tab = self._tab(tab_id, kind='window')
+        bookmarks = self.search_bookmarks(tab_id)
+        if not any(
+                int(bookmark[0]) == int(bookmark_id)
+                and bookmark[3]
+                for bookmark in bookmarks):
+            raise ValueError(translate('This search bookmark can not be removed'))
+        ViewSearch = self.pool.get('ir.ui.view_search')
+        ViewSearch.unset(int(bookmark_id))
+        return tab
+
+    def apply_search_bookmark(self, tab_id, bookmark_id):
+        tab = self._tab(tab_id, kind='window')
+        bookmark = next((
+                bookmark for bookmark in self.search_bookmarks(tab_id)
+                if int(bookmark[0]) == int(bookmark_id)), None)
+        if not bookmark:
+            raise ValueError(translate('Unknown search bookmark'))
+        domain = bookmark[2]
+        view = decode_value(tab.get('view', {}))
+        tab['search'] = self.search_domain_text(tab, view, domain)
+        tab['search_draft'] = tab['search']
+        tab['search_domain'] = encode_value(domain)
+        tab['search_filters'] = {}
+        tab['offset'] = 0
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    @staticmethod
+    def search_domain_text(tab, view, domain):
+        return search_domain_parser(tab, view).string(domain)
+
+    def toggle_active(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        tab['active_only'] = not tab.get('active_only', True)
+        tab['offset'] = 0
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    def select_neighbor(self, tab_id, direction):
+        tab = self._tab(tab_id, kind='window')
+        order = tab.get('record_order', [])
+        if not order:
+            return tab
+        current = tab.get('current_record')
+        index = order.index(current) if current in order else 0
+        if direction == 'previous':
+            index = max(0, index - 1)
+        elif direction == 'next':
+            index = min(len(order) - 1, index + 1)
+        else:
+            raise ValueError(translate('Unknown record direction'))
+        tab['current_record'] = order[index]
+        tab['selected'] = [order[index]]
+        if tab.get('relation_navigation'):
+            Model = self.pool.get(tab['model'])
+            record_id = int(order[index])
+            tab['res_id'] = record_id
+            tab['title'] = Model(record_id).rec_name
+        self.save()
+        return tab
+
+    def page(self, tab_id, direction):
+        tab = self._tab(tab_id, kind='window')
+        limit = int(tab.get('limit') or 100)
+        offset = int(tab.get('offset') or 0)
+        if direction == 'next':
+            offset = min(
+                offset + limit,
+                max(0, int(tab.get('count') or 0) - 1))
+        elif direction == 'previous':
+            offset = max(0, offset - limit)
+        else:
+            raise ValueError(translate('Unknown page direction'))
+        tab['offset'] = offset
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    def sort(self, tab_id, field_name):
+        tab = self._tab(tab_id, kind='window')
+        Model = self.pool.get(tab['model'])
+        if field_name not in Model._fields:
+            raise ValueError(translate('Unknown sort field'))
+        order = decode_value(tab.get('order')) or []
+        if order and order[0][0] == field_name:
+            direction = 'DESC' if order[0][1].upper() == 'ASC' else 'ASC'
+        else:
+            direction = 'ASC'
+        tab['order'] = encode_value([(field_name, direction)])
+        tab['offset'] = 0
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    def toggle_column(self, tab_id, field_name, visible):
+        tab = self._tab(tab_id, kind='window')
+        view = decode_value(tab.get('view', {}))
+        if field_name not in view.get('fields', {}):
+            raise ValueError(translate('Unknown optional column'))
+        tab.setdefault('column_visibility', {})[field_name] = bool(visible)
+        self.save()
+        return tab
+
+    def toggle_tree_node(self, tab_id, record_key):
+        tab = self._tab(tab_id, kind='window')
+        if record_key not in tab.get('records', {}):
+            raise ValueError(translate('Unknown tree node'))
+        expanded = tab.setdefault('expanded', [])
+        if record_key in expanded:
+            expanded.remove(record_key)
+        else:
+            expanded.append(record_key)
+        self.save()
+        return tab
+
+    def move_tree_record(self, tab_id, record_key, direction):
+        tab = self._tab(tab_id, kind='window')
+        order = tab.get('record_order', [])
+        if record_key not in order:
+            raise ValueError(translate('Unknown tree record'))
+        view = decode_value(tab.get('view', {}))
+        child_field = view.get('field_childs')
+        siblings = list(order)
+        if child_field:
+            children = {}
+            parent_by_child = {}
+            for key in order:
+                child_keys = [
+                    str(record_id)
+                    for record_id in decode_value(
+                        tab['records'][key].get('values', {})).get(
+                            child_field, [])
+                    if str(record_id) in tab['records']
+                    ]
+                children[key] = child_keys
+                parent_by_child.update({
+                        child_key: key for child_key in child_keys})
+            parent = parent_by_child.get(record_key)
+            if parent:
+                siblings = children[parent]
+            else:
+                siblings = [
+                    key for key in order
+                    if key not in parent_by_child]
+        index = siblings.index(record_key)
+        target = (
+            index - 1 if direction == 'up'
+            else index + 1 if direction == 'down'
+            else None)
+        if target is None:
+            raise ValueError(translate('Unknown sequence direction'))
+        if target < 0 or target >= len(siblings):
+            return tab
+        target_key = siblings[target]
+        record_position = order.index(record_key)
+        target_position = order.index(target_key)
+        order[record_position], order[target_position] = (
+            order[target_position], order[record_position])
+        root = ElementTree.fromstring(view.get('arch') or '<tree/>')
+        sequence = root.attrib.get('sequence')
+        if sequence:
+            for position, key in enumerate(order, 1):
+                record = tab['records'][key]
+                values = decode_value(record.get('values', {}))
+                values[sequence] = position * 10
+                record['values'] = encode_value(values)
+                record['dirty'] = sorted(
+                    set(record.get('dirty', [])) | {sequence})
+            tab['dirty'] = True
+        self.save()
+        return tab
+
+    def navigate_calendar(self, tab_id, direction):
+        tab = self._tab(tab_id, kind='window')
+        current = date.fromisoformat(
+            tab.get('calendar_date') or date.today().isoformat())
+        view = decode_value(tab.get('view', {}))
+        root = ElementTree.fromstring(
+            view.get('arch') or '<calendar/>')
+        mode = tab.get(
+            'calendar_mode', root.attrib.get('mode', 'month'))
+        if direction == 'today':
+            current = date.today()
+        elif direction == 'previous':
+            if mode == 'day':
+                current -= timedelta(days=1)
+            elif mode == 'week':
+                current -= timedelta(days=7)
+            else:
+                current = (
+                    current.replace(
+                        year=current.year - 1, month=12, day=1)
+                    if current.month == 1
+                    else current.replace(month=current.month - 1, day=1))
+        elif direction == 'next':
+            if mode == 'day':
+                current += timedelta(days=1)
+            elif mode == 'week':
+                current += timedelta(days=7)
+            else:
+                current = (
+                    current.replace(
+                        year=current.year + 1, month=1, day=1)
+                    if current.month == 12
+                    else current.replace(month=current.month + 1, day=1))
+        else:
+            raise ValueError(translate('Unknown calendar direction'))
+        tab['calendar_date'] = current.isoformat()
+        self.save()
+        return tab
+
+    def set_calendar_mode(self, tab_id, mode):
+        tab = self._tab(tab_id, kind='window')
+        if mode not in {'day', 'week', 'month'}:
+            raise ValueError(translate('Unknown calendar mode'))
+        tab['calendar_mode'] = mode
+        self.save()
+        return tab
+
+    def move_calendar_record(self, tab_id, record_key, direction):
+        tab = self._tab(tab_id, kind='window')
+        record = tab.get('records', {}).get(record_key)
+        if not record:
+            raise ValueError(translate('Unknown calendar record'))
+        view = decode_value(tab.get('view', {}))
+        root = ElementTree.fromstring(
+            view.get('arch') or '<calendar/>')
+        delta = timedelta(days=1 if direction == 'next' else -1)
+        if direction not in {'next', 'previous'}:
+            raise ValueError(translate('Unknown calendar direction'))
+        values = decode_value(record.get('values', {}))
+        changed = set()
+        for name in filter(None, [
+                    root.attrib.get('dtstart'),
+                    root.attrib.get('dtend')]):
+            if values.get(name):
+                values[name] += delta
+                changed.add(name)
+        record['values'] = encode_value(values)
+        record['dirty'] = sorted(
+            set(record.get('dirty', [])) | changed)
+        tab['dirty'] = bool(changed) or tab.get('dirty', False)
+        self.save()
+        return tab
+
+    def select_record(self, tab_id, record_key, selected=None):
+        tab = self._tab(tab_id, kind='window')
+        if record_key not in tab['records']:
+            raise KeyError(translate('Unknown record %s') % record_key)
+        tab['current_record'] = record_key
+        selected_keys = tab.setdefault('selected', [])
+        if selected is None:
+            tab['selected'] = [record_key]
+        elif selected is True and record_key not in selected_keys:
+            selected_keys.append(record_key)
+        elif selected is False and record_key in selected_keys:
+            selected_keys.remove(record_key)
+        self.save()
+        return tab['records'][record_key]
+
+    def select_all(self, tab_id, selected):
+        tab = self._tab(tab_id, kind='window')
+        tab['selected'] = (
+            list(tab.get('record_order', [])) if selected else [])
+        if selected and tab['selected']:
+            tab['current_record'] = tab['selected'][0]
+        self.save()
+        return tab
+
+    def _search_domain(self, tab, view):
+        text = (tab.get('search') or '').strip()
+        if not text:
+            return []
+        return search_domain_parser(tab, view).parse(text)
+
+    @staticmethod
+    def _search_leaf(name, definition, raw_value, operator='='):
+        type_ = definition.get('type')
+        value = raw_value
+        if type_ in {'char', 'text'} and operator == '=':
+            operator = 'ilike'
+            value = '%%%s%%' % raw_value
+        elif type_ in {'many2one', 'one2one'}:
+            name += '.rec_name'
+            if operator == '=':
+                operator = 'ilike'
+                value = '%%%s%%' % raw_value
+        elif type_ == 'boolean':
+            value = raw_value.casefold() in {
+                '1', 'true', 'yes', 'y', 'sí', 'si'}
+        elif type_ in {'integer', 'bigint'}:
+            try:
+                value = int(raw_value)
+            except ValueError:
+                return [('id', '=', None)]
+        elif type_ in {'float', 'numeric'}:
+            try:
+                value = Decimal(raw_value)
+            except InvalidOperation:
+                return [('id', '=', None)]
+        elif type_ == 'date':
+            try:
+                value = date.fromisoformat(raw_value)
+            except ValueError:
+                return [('id', '=', None)]
+        elif type_ in {'datetime', 'timestamp'}:
+            try:
+                value = datetime.fromisoformat(raw_value)
+            except ValueError:
+                return [('id', '=', None)]
+            zone = Transaction().context.get('timezone')
+            if zone and value.tzinfo is None:
+                value = value.replace(
+                    tzinfo=timezone.get_tzinfo(zone)).astimezone(
+                        timezone.UTC).replace(tzinfo=None)
+        elif type_ == 'time':
+            try:
+                value = time.fromisoformat(raw_value)
+            except ValueError:
+                return [('id', '=', None)]
+        elif type_ in {'selection', 'multiselection'}:
+            selection = definition.get('selection') or []
+            if isinstance(selection, (list, tuple)):
+                for entry in selection:
+                    if (not isinstance(entry, (list, tuple))
+                            or len(entry) != 2):
+                        continue
+                    key, title = entry
+                    if (str(title).casefold() == raw_value.casefold()
+                            or str(key) == raw_value):
+                        value = key
+                        break
+        return [(name, operator, value)]
+
+    def new_record(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        Model = self.pool.get(tab['model'])
+        context = self.context(decode_value(tab.get('context', {})))
+        if not tab.get('active_only', True):
+            context['active_test'] = False
+        current_view = decode_value(tab.get('view', {}))
+        current_root = ElementTree.fromstring(
+            current_view.get('arch') or '<tree/>')
+        editable_tree = (
+            tab.get('view_type') == 'tree'
+            and current_root.attrib.get('editable')
+            in {'1', 'top', 'bottom'})
+        if ('form' in tab['view_types']
+                and tab['view_type'] != 'form'
+                and not editable_tree):
+            index = tab['view_types'].index('form')
+            tab['view_type'] = 'form'
+            tab['view_id'] = tab['view_ids'][index]
+            with Transaction().set_context(context):
+                tab['view'] = encode_value(Model.fields_view_get(
+                        view_id=tab['view_id'], view_type='form'))
+        view = decode_value(tab['view'])
+        field_names = [
+            name for name in view.get('fields', {})
+            if name in Model._fields
+            ]
+        with Transaction().set_context(context):
+            values = Model.default_get(field_names)
+            for name in field_names:
+                default_name = 'default_' + name
+                if default_name in context:
+                    values[name] = context[default_name]
+            record_values = self._record_values(Model, values)
+            parent_field, parent_record = self._relation_draft_parent(tab)
+            if parent_field and parent_record:
+                record_values[parent_field] = parent_record
+                values[parent_field] = parent_record
+            record = Model(**record_values)
+            changed = set(values)
+            if changed:
+                record.on_change(changed)
+            dependent = self._dependent_fields(view, changed)
+            if dependent:
+                record.on_change_with(dependent)
+            values.update(record._default_values)
+            if parent_field:
+                values[parent_field] = None
+
+        key = 'new-%s' % uuid.uuid4().hex
+        tab['records'][key] = {
+            'key': key,
+            'id': None,
+            'values': encode_value(values),
+            'baseline': {},
+            'dirty': sorted(values),
+            'new': True,
+            'deleted': False,
+            }
+        tab['record_order'].insert(0, key)
+        tab['current_record'] = key
+        tab['selected'] = [key]
+        tab['dirty'] = True
+        self.save()
+        return tab['records'][key]
+
+    def _relation_draft_parent(self, tab):
+        if not tab.get('relation_draft'):
+            return None, None
+        origin = tab.get('relation_origin') or {}
+        parent = self.interface.get_tab(origin.get('tab'))
+        if not parent or parent.get('kind') != 'window':
+            return None, None
+        stored = parent.get('records', {}).get(origin.get('record'))
+        if not stored:
+            return None, None
+        Parent = self.pool.get(parent['model'])
+        values = decode_value(stored.get('values', {}))
+        record = Parent(
+            stored.get('id'), **self._record_values(Parent, values))
+        return tab.get('relation_parent_field'), record
+
+    def _record_values(self, Model, values):
+        result = {}
+        for name, value in values.items():
+            if (name == 'id' or name not in Model._fields
+                    or name.endswith('.')):
+                continue
+            value = decode_value(value)
+            field = Model._fields[name]
+            if (field._type in {'many2one', 'one2one'}
+                    and isinstance(value, (list, tuple))):
+                value = value[0] if value else None
+            result[name] = value
+        return result
+
+    def _record_changes(self, record, before):
+        changes = {}
+        for name, value in record._default_values.items():
+            if name not in before or encode_value(value) != before[name]:
+                changes[name] = value
+        return changes
+
+    def _dependent_fields(self, view, changed):
+        immediate = []
+        later = []
+        for name, definition in view.get('fields', {}).items():
+            dependencies = set(definition.get('on_change_with') or [])
+            if dependencies & set(changed):
+                immediate.append(name)
+        immediate_set = set(immediate)
+        for name in immediate:
+            dependencies = set(
+                view['fields'][name].get('on_change_with') or [])
+            if dependencies & immediate_set:
+                later.append(name)
+        return [
+            name for name in immediate if name not in later
+            ] + later
+
+    def parse_value(self, field, value, definition=None):
+        definition = definition or {}
+        if field._type == 'boolean':
+            return str(value).lower() in {'1', 'true', 'on', 'yes'}
+        if value == '':
+            if field._type in {'char', 'text'}:
+                return ''
+            return None
+        if field._type == 'integer':
+            result = int(value)
+            return int(result * float(definition.get('factor', 1) or 1))
+        if field._type == 'float':
+            return (
+                float(value)
+                * float(definition.get('factor', 1) or 1))
+        if field._type == 'numeric':
+            try:
+                return (
+                    Decimal(value)
+                    * Decimal(str(definition.get('factor', 1) or 1)))
+            except InvalidOperation as exception:
+                raise ValueError(translate('Invalid decimal value')) from exception
+        if field._type in {'date', 'datetime', 'timestamp', 'time'}:
+            context = self.context()
+            if field._type == 'date':
+                if isinstance(value, datetime):
+                    return value.date()
+                if isinstance(value, date):
+                    return value
+                return parse_date(value, date_format(context)).date()
+            if field._type == 'time':
+                if isinstance(value, time):
+                    return value
+                return parse_date(value, time_format(definition)).time()
+            if isinstance(value, datetime):
+                return to_server_datetime(value, context)
+            value = parse_date(
+                value,
+                '%s %s' % (
+                    date_format(context), time_format(definition)))
+            return to_server_datetime(value, context)
+        if field._type == 'timedelta':
+            return timedelta(seconds=float(value))
+        if field._type in {'many2one', 'one2one'}:
+            return int(value) if value else None
+        if field._type in {'one2many', 'many2many', 'multiselection'}:
+            if not isinstance(value, (list, tuple)):
+                value = value.split(',') if value else []
+            result = []
+            for item in value:
+                if isinstance(item, dict):
+                    result.append(item)
+                    continue
+                item = str(item).strip()
+                if item:
+                    result.append(
+                        int(item) if item.lstrip('-').isdigit() else item)
+            if field._type == 'multiselection':
+                selection = definition.get('selection') or []
+                if not isinstance(selection, str):
+                    choices = {
+                        str(key): key for key, label in selection}
+                    result = [choices.get(str(item), item) for item in result]
+            return result
+        if field._type == 'selection':
+            selection = definition.get('selection') or []
+            if not isinstance(selection, str):
+                for key, label in selection:
+                    if str(key) == str(value):
+                        return key
+        if field._type == 'binary' and (
+                value is None or value == ''):
+            return None
+        if field._type == 'dict':
+            return json.loads(value or '{}')
+        return value
+
+    def update_field(
+            self, tab_id, record_key, field_name, raw_value,
+            attributes=None):
+        tab = self._tab(tab_id, kind='window')
+        stored = tab['records'].get(record_key)
+        if not stored:
+            raise KeyError(translate('Unknown record %s') % record_key)
+        Model = self.pool.get(tab['model'])
+        if field_name not in Model._fields:
+            raise KeyError(translate('Unknown field %s') % field_name)
+        field = Model._fields[field_name]
+        view = decode_value(tab['view'])
+        definition = dict(
+            view.get('fields', {}).get(field_name, {}))
+        definition.update(attributes or {})
+        value = self.parse_value(field, raw_value, definition)
+        values = decode_value(stored['values'])
+        record_values = self._record_values(Model, values)
+        parent_field, parent_record = self._relation_draft_parent(tab)
+        if parent_field and parent_record:
+            record_values[parent_field] = parent_record
+        record = Model(stored.get('id'), **record_values)
+        before = encode_value(record._default_values)
+        setattr(record, field_name, value)
+        record.on_change({field_name})
+        dependent = self._dependent_fields(view, {field_name})
+        if dependent:
+            record.on_change_with(dependent)
+        changed_values = self._record_changes(record, before)
+        if parent_field:
+            changed_values.pop(parent_field, None)
+        values.update(changed_values)
+        stored['values'] = encode_value(values)
+        dirty = set(stored.get('dirty', []))
+        dirty.update(changed_values)
+        dirty.add(field_name)
+        stored['dirty'] = sorted(dirty)
+        tab['dirty'] = True
+        tab['current_record'] = record_key
+        tab['notice'] = encode_value(record.on_change_notify())
+        self.save()
+        return stored, set(changed_values) | {field_name}
+
+    def update_binary(self, tab_id, record_key, field_name, data):
+        tab = self._tab(tab_id, kind='window')
+        stored = tab['records'][record_key]
+        values = decode_value(stored['values'])
+        values[field_name] = data
+        stored['values'] = encode_value(values)
+        stored['dirty'] = sorted(
+            set(stored.get('dirty', [])) | {field_name})
+        tab['dirty'] = True
+        self.save()
+        return stored, {field_name}
+
+    def scan_code(self, tab_id, record_key, code):
+        tab = self._tab(tab_id, kind='window')
+        stored = tab.get('records', {}).get(record_key)
+        if not stored:
+            raise ValueError(translate('Select a record before scanning'))
+        Model = self.pool.get(tab['model'])
+        values = decode_value(stored.get('values', {}))
+        record = Model(
+            stored.get('id'),
+            **self._record_values(Model, values))
+        before = encode_value(record._default_values)
+        record.on_scan_code(code)
+        changes = self._record_changes(record, before)
+        values.update(changes)
+        stored['values'] = encode_value(values)
+        stored['dirty'] = sorted(
+            set(stored.get('dirty', [])) | set(changes))
+        tab['dirty'] = bool(stored['dirty']) or tab.get('dirty', False)
+        tab['notice'] = encode_value(record.on_change_notify())
+        self.save()
+        return tab
+
+    def _savable_values(
+            self, Model, values, baseline, names, creating=False):
+        result = {}
+        for name in names:
+            if name not in Model._fields:
+                continue
+            field = Model._fields[name]
+            if getattr(field, 'readonly', False):
+                continue
+            value = values.get(name)
+            if field._type in {'many2many', 'one2many'}:
+                current = list(value or [])
+                previous = [] if creating else list(baseline.get(name) or [])
+                current_ids = {
+                    item for item in current if isinstance(item, int)}
+                previous_ids = {
+                    item for item in previous if isinstance(item, int)}
+                operations = []
+                removed = sorted(previous_ids - current_ids)
+                added = sorted(current_ids - previous_ids)
+                if removed:
+                    operation = (
+                        'delete' if field._type == 'one2many'
+                        else 'remove')
+                    operations.append((operation, removed))
+                if added:
+                    operations.append(('add', added))
+                Target = field.get_target()
+                create_values = []
+                for item in current:
+                    if not isinstance(item, dict) or item.get('id'):
+                        continue
+                    create_values.append(self._savable_values(
+                            Target, item, {}, item.keys(), creating=True))
+                if create_values:
+                    operations.append(('create', create_values))
+                for item in current:
+                    if (isinstance(item, dict) and item.get('id')
+                            and item.get('values')):
+                        item_values = item['values']
+                        operations.append((
+                                'write', [item['id']], self._savable_values(
+                                    Target, item_values, {},
+                                    item_values.keys())))
+                value = operations
+            result[name] = value
+        return result
+
+    def _relation_draft_values(self, Model, values, names):
+        """Return plain values suitable for an unsaved x2many row."""
+        result = {}
+        for name in names:
+            if name not in Model._fields:
+                continue
+            field = Model._fields[name]
+            if getattr(field, 'readonly', False):
+                continue
+            result[name] = values.get(name)
+        return result
+
+    def save_record(self, tab_id, record_key):
+        tab = self._tab(tab_id, kind='window')
+        stored = tab['records'][record_key]
+        Model = self.pool.get(tab['model'])
+        values = decode_value(stored['values'])
+        baseline = decode_value(stored.get('baseline', {}))
+        context = self.context(decode_value(tab.get('context', {})))
+        with Transaction().set_context(context):
+            if stored.get('new'):
+                names = set(stored.get('dirty', []))
+                create_values = self._savable_values(
+                    Model, values, baseline, names, creating=True)
+                record, = Model.create([create_values])
+                record_id = record.id
+            else:
+                record_id = stored['id']
+                write_values = self._savable_values(
+                    Model, values, baseline, stored.get('dirty', []))
+                if write_values:
+                    Model.write([Model(record_id)], write_values)
+        relation_origin = tab.get('relation_origin')
+        if stored.get('new') and relation_origin:
+            parent = self.interface.get_tab(relation_origin.get('tab'))
+            field_name = relation_origin.get('field')
+            Parent = self.pool.get(parent['model']) if parent else None
+            if (parent and Parent and field_name in Parent._fields
+                    and parent.get('kind') == 'wizard'):
+                relation_field = Parent._fields[field_name]
+                if relation_field._type in {'many2one', 'one2one'}:
+                    relation_value = record_id
+                else:
+                    relation_value = list(
+                        decode_value(parent.get('values', {})).get(
+                            field_name) or [])
+                    if record_id not in relation_value:
+                        relation_value.append(record_id)
+                self.update_wizard_field(
+                    parent['id'], field_name, relation_value)
+                parent_values = decode_value(parent.get('values', {}))
+                parent_values[field_name] = relation_value
+                parent['values'] = encode_value(parent_values)
+            elif parent and Parent and parent.get('kind') == 'window':
+                parent_record = parent.get('records', {}).get(
+                    relation_origin.get('record'))
+                if parent_record and field_name in Parent._fields:
+                    relation_field = Parent._fields[field_name]
+                    if relation_field._type in {'many2one', 'one2one'}:
+                        relation_value = record_id
+                    else:
+                        relation_value = list(decode_value(
+                                parent_record.get('values', {})).get(
+                                    field_name) or [])
+                        if record_id not in relation_value:
+                            relation_value.append(record_id)
+                    self.update_field(
+                        parent['id'], parent_record['key'],
+                        field_name, relation_value)
+                    parent_values = decode_value(
+                        parent_record.get('values', {}))
+                    parent_values[field_name] = relation_value
+                    parent_record['values'] = encode_value(parent_values)
+        old_key = record_key
+        if stored.get('new'):
+            tab['records'].pop(old_key)
+            new_key = str(record_id)
+            tab['record_order'] = [
+                new_key if key == old_key else key
+                for key in tab['record_order']
+                ]
+            tab['current_record'] = new_key
+            tab['selected'] = [
+                new_key if key == old_key else key
+                for key in tab.get('selected', [])
+                ]
+        else:
+            stored['dirty'] = []
+        loaded_ids = [
+            record['id']
+            for record in tab['records'].values()
+            if record.get('id')
+            ]
+        view = decode_value(tab.get('view', {}))
+        root = ElementTree.fromstring(
+            view.get('arch') or '<form/>')
+        on_write = root.attrib.get('on_write')
+        if on_write:
+            callback = getattr(Model, on_write, None)
+            if callback:
+                with Transaction().set_context(context):
+                    loaded_ids.extend(callback([record_id]) or [])
+                loaded_ids = list(dict.fromkeys(loaded_ids))
+        if record_id not in loaded_ids:
+            loaded_ids.append(record_id)
+        self.load_tab(tab, ids=loaded_ids)
+        tab['current_record'] = str(record_id)
+        tab['selected'] = [str(record_id)]
+        self.save()
+        return tab['records'][str(record_id)]
+
+    def save_records(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        keys = [
+            key for key, record in tab['records'].items()
+            if record.get('dirty')
+            ]
+        for key in list(keys):
+            if key in tab['records']:
+                self.save_record(tab_id, key)
+        return self._tab(tab_id)
+
+    def save_relation_draft(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        if not tab.get('relation_draft'):
+            raise ValueError(translate('This tab is not a relation draft'))
+        origin = tab.get('relation_origin') or {}
+        parent = self._tab(origin.get('tab'))
+        record_key = tab.get('current_record')
+        stored = tab.get('records', {}).get(record_key)
+        if not stored or not stored.get('new'):
+            raise ValueError(translate('Unknown relation draft'))
+
+        Model = self.pool.get(tab['model'])
+        values = decode_value(stored.get('values', {}))
+        names = set(stored.get('dirty', []))
+        create_values = self._relation_draft_values(Model, values, names)
+        create_values.pop(tab.get('relation_parent_field'), None)
+
+        field_name = origin.get('field')
+        if parent.get('kind') == 'wizard':
+            parent_values = decode_value(parent.get('values', {}))
+            relation_values = list(parent_values.get(field_name) or [])
+            if origin.get('item'):
+                for index, item in enumerate(relation_values):
+                    if WidgetRenderer.x2many_item_key(
+                            item, index) == origin['item']:
+                        relation_values[index] = create_values
+                        break
+                else:
+                    raise ValueError(translate('Unknown related record'))
+            else:
+                relation_values.append(create_values)
+            self.update_wizard_field(
+                parent['id'], field_name, relation_values)
+        elif parent.get('kind') == 'window':
+            parent_record = parent.get('records', {}).get(
+                origin.get('record'))
+            if not parent_record:
+                raise ValueError(translate('Unknown relation parent'))
+            parent_values = decode_value(parent_record.get('values', {}))
+            relation_values = list(parent_values.get(field_name) or [])
+            if origin.get('item'):
+                for index, item in enumerate(relation_values):
+                    if WidgetRenderer.x2many_item_key(
+                            item, index) == origin['item']:
+                        relation_values[index] = create_values
+                        break
+                else:
+                    raise ValueError(translate('Unknown related record'))
+            else:
+                relation_values.append(create_values)
+            self.update_field(
+                parent['id'], parent_record['key'],
+                field_name, relation_values)
+        else:
+            raise ValueError(translate('Unknown relation parent'))
+
+        self.interface.close(tab_id)
+        self.interface.activate(parent['id'])
+        self.save()
+        return parent
+
+    def delete_record(self, tab_id, record_key):
+        tab = self._tab(tab_id, kind='window')
+        stored = tab['records'][record_key]
+        if not stored.get('new'):
+            Model = self.pool.get(tab['model'])
+            Model.delete([Model(stored['id'])])
+        tab['records'].pop(record_key, None)
+        tab['record_order'] = [
+            key for key in tab['record_order'] if key != record_key]
+        tab['selected'] = [
+            key for key in tab.get('selected', []) if key != record_key]
+        tab['current_record'] = (
+            tab['record_order'][0] if tab['record_order'] else None)
+        tab['dirty'] = any(
+            record.get('dirty') for record in tab['records'].values())
+        context = self.context(decode_value(tab.get('context', {})))
+        with Transaction().set_context(context):
+            self._update_window_counts(
+                tab, self.pool.get(tab['model']),
+                decode_value(tab.get('view', {})))
+        self.save()
+        return tab
+
+    def delete_records(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        keys = tab.get('selected') or [tab.get('current_record')]
+        keys = [key for key in keys if key in tab['records']]
+        Model = self.pool.get(tab['model'])
+        records = [
+            Model(tab['records'][key]['id'])
+            for key in keys if tab['records'][key].get('id')
+            ]
+        if records:
+            Model.delete(records)
+        for key in keys:
+            tab['records'].pop(key, None)
+        tab['record_order'] = [
+            key for key in tab['record_order'] if key not in keys]
+        tab['selected'] = []
+        tab['current_record'] = (
+            tab['record_order'][0] if tab['record_order'] else None)
+        tab['dirty'] = any(
+            record.get('dirty') for record in tab['records'].values())
+        context = self.context(decode_value(tab.get('context', {})))
+        with Transaction().set_context(context):
+            self._update_window_counts(
+                tab, Model, decode_value(tab.get('view', {})))
+        self.save()
+        return tab
+
+    def revert_record(self, tab_id, record_key):
+        tab = self._tab(tab_id, kind='window')
+        stored = tab['records'][record_key]
+        if stored.get('new'):
+            return self.delete_record(tab_id, record_key)
+        stored['values'] = stored.get('baseline', {})
+        stored['dirty'] = []
+        tab['dirty'] = any(
+            record.get('dirty') for record in tab['records'].values())
+        self.save()
+        return tab
+
+    def revert_records(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        dirty_keys = [
+            key for key, record in tab['records'].items()
+            if record.get('dirty')]
+        for key in dirty_keys:
+            if key in tab['records']:
+                self.revert_record(tab_id, key)
+        return self._tab(tab_id)
+
+    def duplicate(self, tab_id):
+        tab = self._tab(tab_id, kind='window')
+        keys = tab.get('selected') or [tab.get('current_record')]
+        records = [
+            tab['records'][key] for key in keys
+            if key and key in tab['records']
+            and not tab['records'][key].get('new')
+            ]
+        if not records:
+            return tab
+        Model = self.pool.get(tab['model'])
+        copies = Model.copy([Model(record['id']) for record in records])
+        loaded_ids = [
+            record['id']
+            for record in tab['records'].values()
+            if record.get('id')
+            ]
+        loaded_ids.extend(record.id for record in copies)
+        self.load_tab(tab, ids=loaded_ids)
+        tab['selected'] = [str(record.id) for record in copies]
+        tab['current_record'] = tab['selected'][0]
+        self.save()
+        return tab
+
+    def run_button(
+            self, tab_id, button_name, button_type='class',
+            record_key=None):
+        tab = self._tab(tab_id, kind='window')
+        if record_key:
+            if record_key not in tab['records']:
+                raise ValueError(translate('Unknown record %s') % record_key)
+            tab['current_record'] = record_key
+            if record_key not in tab.get('selected', []):
+                tab['selected'] = [record_key]
+        keys = tab.get('selected') or [tab.get('current_record')]
+        Model = self.pool.get(tab['model'])
+        if button_name not in Model._buttons:
+            raise ValueError(translate('Unknown button %s') % button_name)
+        if button_type == 'instance':
+            key = tab.get('current_record')
+            if not key or key not in tab['records']:
+                raise ValueError(translate('Select a record first'))
+            stored = tab['records'][key]
+            values = decode_value(stored['values'])
+            record = Model(
+                stored.get('id'), **self._record_values(Model, values))
+            before = encode_value(record._default_values)
+            getattr(record, button_name)()
+            changes = self._record_changes(record, before)
+            values.update(changes)
+            stored['values'] = encode_value(values)
+            stored['dirty'] = sorted(
+                set(stored.get('dirty', [])) | set(changes))
+            tab['dirty'] = any(
+                record.get('dirty') for record in tab['records'].values())
+            self.save()
+            return tab
+        record_ids = []
+        for key in list(keys):
+            if key in tab['records'] and tab['records'][key].get('dirty'):
+                stored = self.save_record(tab_id, key)
+                record_ids.append(stored['id'])
+            elif key in tab['records'] and tab['records'][key].get('id'):
+                record_ids.append(tab['records'][key]['id'])
+        tab = self._tab(tab_id, kind='window')
+        records = [Model(record_id) for record_id in record_ids]
+        if not records:
+            raise ValueError(translate('Select a saved record first'))
+        result = getattr(Model, button_name)(records)
+        if result:
+            if isinstance(result, str):
+                self.client_action(tab, result)
+            elif isinstance(result, dict):
+                self.open_action(result, {
+                        'model': tab['model'],
+                        'ids': [record.id for record in records],
+                        'id': records[0].id,
+                        })
+            elif isinstance(result, int):
+                self.open_action(result, {
+                        'model': tab['model'],
+                        'ids': [record.id for record in records],
+                        'id': records[0].id,
+                        })
+        if tab.get('view_type') == 'tree':
+            self.load_tab(tab)
+        else:
+            self.load_tab(tab, ids=record_ids)
+        selected = [
+            str(record_id) for record_id in record_ids
+            if str(record_id) in tab.get('records', {})]
+        tab['selected'] = selected
+        tab['current_record'] = selected[0] if selected else None
+        self.save()
+        return tab
+
+    def client_action(self, tab, action):
+        if action == 'new':
+            self.new_record(tab['id'])
+        elif action in {'delete', 'remove'}:
+            self.delete_records(tab['id'])
+        elif action == 'copy':
+            self.duplicate(tab['id'])
+        elif action in {'next', 'previous'}:
+            order = tab.get('record_order', [])
+            current = tab.get('current_record')
+            if current in order:
+                index = order.index(current)
+                index += 1 if action == 'next' else -1
+                if 0 <= index < len(order):
+                    tab['current_record'] = order[index]
+                    tab['selected'] = [order[index]]
+        elif action == 'close':
+            self.close_tab(tab['id'])
+        elif action.startswith('switch '):
+            view_type = action.split(' ', 2)[1]
+            self.switch_view(tab['id'], view_type)
+        elif action == 'reload':
+            self.load_tab(tab)
+        elif action in {'reload menu', 'reload context'}:
+            # The next rendered shell/menu reads fresh preferences and menus.
+            pass
+
+    def toolbar_action(self, tab_id, action_id):
+        tab = self._tab(tab_id, kind='window')
+        toolbar = decode_value(tab.get('toolbar', {}))
+        action = None
+        for category in ('print', 'action', 'relate'):
+            for candidate in toolbar.get(category, []):
+                if int(candidate['id']) == int(action_id):
+                    action = candidate
+                    break
+        if not action:
+            raise KeyError(translate('Toolbar action %s not found') % action_id)
+        keys = tab.get('selected') or [tab.get('current_record')]
+        ids = []
+        for key in list(keys):
+            if key in tab['records'] and tab['records'][key].get('dirty'):
+                stored = self.save_record(tab_id, key)
+                ids.append(stored['id'])
+            elif key in tab['records'] and tab['records'][key].get('id'):
+                ids.append(tab['records'][key]['id'])
+        return self.open_action(action, {
+                'model': tab['model'],
+                'ids': ids,
+                'id': ids[0] if ids else None,
+                })
+
+    def execute_report(self, action, data, extra_context=None):
+        Report = self.pool.get(action['report_name'], type='report')
+        context = self.context(extra_context, data)
+        context['direct_print'] = action.get('direct_print', False)
+        report_data = dict(data)
+        report_data['action_id'] = action.get('id')
+        with Transaction().set_context(context):
+            extension, content, direct_print, filename = Report.execute(
+                data.get('ids', []), report_data)
+        mimetype = {
+            'pdf': 'application/pdf',
+            'csv': 'text/csv',
+            'html': 'text/html',
+            'txt': 'text/plain',
+            'zip': 'application/zip',
+            }.get(extension, 'application/octet-stream')
+        response = Response(content, content_type=mimetype)
+        response.headers['Content-Disposition'] = (
+            '%s; filename="%s.%s"' % (
+                'inline' if direct_print else 'attachment',
+                filename, extension))
+        return response
+
+    def export(self, tab_id, export_id=None):
+        tab = self._tab(tab_id, kind='window')
+        Model = self.pool.get(tab['model'])
+        export_definition = None
+        if export_id:
+            toolbar = decode_value(tab.get('toolbar', {}))
+            export_definition = next((
+                    definition
+                    for definition in toolbar.get('exports', [])
+                    if int(definition['id']) == int(export_id)
+                    ), None)
+            if not export_definition:
+                raise ValueError(translate('Unknown predefined export'))
+        if export_definition:
+            fields_names = [
+                field['name']
+                for field in export_definition.get('export_fields.', [])]
+            header = bool(export_definition.get('header'))
+            if export_definition.get('records') == 'listed':
+                keys = tab.get('record_order', [])
+            else:
+                keys = (
+                    tab.get('selected')
+                    or [tab.get('current_record')])
+            filename = export_definition['name']
+        else:
+            view = decode_value(tab['view'])
+            fields_names = [
+                name for name in view.get('fields', {})
+                if name in Model._fields
+                and Model._fields[name]._type not in {'binary', 'one2many'}
+                ]
+            header = True
+            keys = tab.get('selected') or tab.get('record_order', [])
+            filename = tab['model'].replace('.', '_')
+        ids = [
+            tab['records'][key]['id'] for key in keys
+            if key in tab['records'] and tab['records'][key].get('id')
+            ]
+        rows = Model.export_data(
+            [Model(id_) for id_ in ids], fields_names, header=header)
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerows(rows)
+        response = Response(
+            output.getvalue(), content_type='text/csv; charset=utf-8')
+        response.headers['Content-Disposition'] = (
+            'attachment; filename="%s.csv"' % secure_filename(filename))
+        return response
+
+    def import_csv(self, tab_id, content):
+        tab = self._tab(tab_id, kind='window')
+        Model = self.pool.get(tab['model'])
+        text = content.decode('utf-8-sig')
+        rows = list(csv.reader(io.StringIO(text)))
+        if not rows:
+            raise ValueError(translate('The CSV file is empty'))
+        fields_names = rows.pop(0)
+        if not fields_names or any(not name for name in fields_names):
+            raise ValueError(
+                translate('The first CSV row must contain Tryton field names'))
+        Model.import_data(fields_names, rows)
+        self.load_tab(tab)
+        self.save()
+        return tab
+
+    def binary_response(self, tab_id, record_key, field_name):
+        tab = self._tab(tab_id, kind='window')
+        record = tab['records'][record_key]
+        values = decode_value(record['values'])
+        content = values.get(field_name) or b''
+        if not isinstance(content, bytes) and record.get('id'):
+            Model = self.pool.get(tab['model'])
+            content = getattr(Model(record['id']), field_name) or b''
+        view = decode_value(tab.get('view', {}))
+        definition = view.get('fields', {}).get(field_name, {})
+        filename = values.get(definition.get('filename')) or field_name
+        filename = secure_filename(str(filename)) or field_name
+        mimetype = mimetypes.guess_type(filename)[0]
+        response = Response(
+            content, content_type=mimetype or 'application/octet-stream')
+        response.headers['Content-Disposition'] = (
+            'attachment; filename="%s"' % filename)
+        return response
+
+    def state_token(self):
+        raw = json.dumps(
+            encode_value(self.interface.data),
+            sort_keys=True, separators=(',', ':')).encode()
+        return base64.urlsafe_b64encode(raw[:48]).decode()

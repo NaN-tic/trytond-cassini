@@ -1,0 +1,8 @@
+include README
+include RNG_SUPPORT.md
+include tryton.cfg
+include *.xml
+include tailwind.config.js
+recursive-include locale *.po
+recursive-include static *
+recursive-include tests *.py *.cfg

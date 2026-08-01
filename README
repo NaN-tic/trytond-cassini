@@ -1,0 +1,151 @@
+Cassini
+===========
+
+Cassini is a server-stateful Tryton web client built with Voyager,
+Dominate and HTMX.
+
+The browser is intentionally thin. Each workspace, open tab, search, selected
+record, view and unsaved field value is persisted in ``cassini.workspace``.
+Reloading a browser therefore reconstructs the complete interface.
+
+Client capabilities
+-------------------
+
+The client provides Tryton authentication (including authentication
+challenges), logout, the user menu, global search and server-persistent user
+preferences. Tryton actions open as persistent tabs. Supported action types
+include window actions, wizards, reports and URLs.
+
+Window actions support tree views (read-only and editable), form, list-form
+and day, week and month calendar views. The renderer handles the form and tree
+elements and attributes from Tryton's Relax NG schemas: states, notebooks,
+groups and panes, prefixes and suffixes, optional and hierarchical columns,
+totals, sequences, visual states, nested grid dimensions, expandable groups,
+factors, symbols, scan-code forms, domain tabs, sorting, pagination and
+calendar colours. Field values use Tryton's native types and the form lifecycle
+combines defaults, ``on_change`` and ``on_change_with`` in one server request.
+Relation widgets use Tryton's ``autocomplete`` RPC and provide open/create
+actions; a record created from a relation is linked back into the unfinished
+origin record. One2many and many2many fields use Sao-style embedded panels
+with their own tree/form switch, current-position badge, previous/next
+navigation and create, open, delete and undelete actions.
+
+Form fields do not invent labels: only an XML ``label`` element renders one.
+Required labels are bold and optional labels use normal weight, without adding
+an asterisk.
+
+Records can be loaded, selected, created, edited, saved in batches, reverted,
+duplicated and deleted. The toolbar also exposes model buttons, related
+actions, reports, attachments, notes, logs, revisions, CSV import and generic
+or predefined CSV exports. It follows Sao's icon order and groups action,
+relate, print and export entries in pop-up menus. Search occupies its own wide
+row below those actions, with field-aware suggestions, a field filter pop-up,
+user search bookmarks and record navigation. Optional tree columns use Sao's
+hamburger menu, with select-all immediately below it. A single row click
+selects it and a double click opens its alternate view, while clicks on fields
+and controls retain their own behaviour. Hierarchical trees and menu branches
+start collapsed and progressively expand with the same arrow icons. Binary
+values and generated reports use dedicated download endpoints.
+
+The shell has a persistent three-button control for no side panel, the menu
+and the help panel. The buttons are mutually exclusive and show the selected
+state. Both panels open on the left and can be resized horizontally, following
+Sao's desktop layout, and always end exactly at the bottom of the viewport
+with their own scrolling content. The global search sits immediately beside
+this control and uses the same localized
+``Search or chat`` wording as ``nantic_connection``. The light/dark theme is
+compiled with Tailwind CSS. Core Tryton notifications, preferences, help and
+logout are grouped in the icon-based user menu.
+
+The help panel follows the accordion, layout and icon set from
+``roots/private/sao/custom.js``. It includes the assistant, contextual
+documentation, updates and support tickets. The assistant supports persisted
+and NaN-specific conversations, Markdown responses, confirmation requests,
+file, clipboard and drag-and-drop attachments, screenshots, screen recordings,
+speech recognition, text-to-speech and conversation artifacts. Enter sends a
+message while Shift+Enter inserts a line break. Remote assistance uses the same
+confirmation flow and lazily initializes Surfly only after it is accepted.
+When ``nantic_connection`` is activated, the assistant talks directly to
+``nantic.chat.conversation`` and sends the active model, current record,
+selection, domain, context, company and language. The conversation identifier,
+expanded menu branches, active accordion section and panel state survive
+reloads.
+
+State and fragment model
+------------------------
+
+Every field mutation is sent to the server, including fields without an
+``on_change``. Text input uses a cancellable debounce: a newer keystroke
+replaces the queued request. When a response affects the component that
+contains the focused control, the control's live node, value, focus and
+selection are preserved; controls which are no longer focused accept the
+server-rendered value. A workspace row is locked before it is read and updated, so
+concurrent requests from different browser tabs cannot overwrite newer state.
+All state-dependent endpoints explicitly disable rendered-component caching.
+Voyager's cache remains enabled for immutable components and per-user
+preferences. The route map is built once per database/site prefix instead of
+being rebuilt on every HTMX request; Tryton's own invalidated caches remain
+the authority for views, fields, toolbars and access rules.
+
+Every response includes ``Server-Timing`` and ``X-Cassini-Ms``. The
+Playwright warm-action regression test rejects a cached tab opening that takes
+50 ms or more, while keeping roughly 7 ms as the optimisation target.
+
+Endpoints normally return the smallest affected Dominate fragment. Related
+fragments use HTMX out-of-band swaps. Multi-fragment screen and field responses
+are streamed with buffering disabled, so an already rendered fragment can
+leave the server while later fragments are being prepared. The included
+JavaScript fallback implements the required HTMX subset for environments where
+the CDN is unavailable.
+
+Voyager endpoint URLs may carry typed component values in their query string.
+The client binds those values before rendering, which keeps row buttons,
+open-row navigation, optional columns, selections and configured exports
+consistent for both HTMX and the JavaScript fallback. All components rendered
+during one HTTP request reuse the same locked state engine.
+
+Reusable infrastructure
+-----------------------
+
+``state.py`` contains the framework-neutral state document, serialisation,
+component registry and fragment response helpers. Applications which do not
+use Tryton XML views can register a component renderer with
+``register_state_component`` and store their state in the same workspace.
+The ``StatefulComponent`` base class exposes persistent component state, while
+the ``/component/<name>`` endpoints render a registered component and merge
+JSON state updates without requiring an XML view.
+
+``engine.py`` adapts Tryton actions, models, defaults, on-change methods,
+wizards and reports to that state document.
+
+``/<database>/cassini/demo`` is a small complete application made only
+from custom Dominate components. Its draft title, counter and task components
+use the same state and fragment infrastructure and deliberately contain no XML
+view. It is both a runnable example and a template for new websites.
+
+The Tailwind output is reproducible from the module directory with::
+
+    npx tailwindcss@3.4.17 -c tailwind.config.js \
+        -i static/tailwind-input.css -o static/tailwind-output.css --minify
+
+Usage and tests
+---------------
+
+After activating the module, the web client is available below
+``/<database>/cassini/``. The first request creates a Voyager site of type
+``cassini`` when the database does not already contain one.
+
+The scenario suite combines integration tests and Playwright browser tests for
+workspace type preservation, login/logout, CRUD, editable trees, multiple
+persistent drafts, defaults and on-change, preferences, wizards, reports,
+downloads, exports, imports and record actions. A browser matrix covers every
+Sao form widget name, row and instance buttons, multiple selection, optional
+columns, form/list-form/calendar views, view switching, relation
+completion/creation, revisions, editable calendars, calendar modes and
+scan-code submission. A dedicated tree scenario covers collapsed hierarchy,
+persistent expansion, visual states, totals and sequence reordering. A
+separate browser scenario proves that a custom component without an XML view
+persists typed state through its generic endpoint. The shell/demo scenario
+covers the Sao toolbar ordering and icons, column hamburger, search completion,
+theme and shell persistence, welcome/help panels and the complete no-XML
+application with unfinished drafts.

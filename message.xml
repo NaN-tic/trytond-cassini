@@ -1,0 +1,1022 @@
+<?xml version="1.0"?>
+<tryton>
+    <data grouped="1">
+        <record model="ir.message" id="msg_close_all_tabs_13474f23">
+            <field name="text">Close all tabs?</field>
+        </record>
+        <record model="ir.message" id="msg_preferences_require_all_open_tabs_to_be_closed_cd2cbb8b">
+            <field name="text">Preferences require all open tabs to be closed.</field>
+        </record>
+        <record model="ir.message" id="msg_any_unsaved_changes_will_be_reviewed_before_each_e060252c">
+            <field name="text">Any unsaved changes will be reviewed before each tab is closed.</field>
+        </record>
+        <record model="ir.message" id="msg_close_tabs_and_continue_e7c9cae2">
+            <field name="text">Close tabs and continue</field>
+        </record>
+        <record model="ir.message" id="msg_open_preferences_a9e9fa76">
+            <field name="text">open preferences</field>
+        </record>
+        <record model="ir.message" id="msg_fields_d_modified_field_in_records_d_record_5ead030d">
+            <field name="text">%(fields)d modified field in %(records)d record</field>
+        </record>
+        <record model="ir.message" id="msg_fields_d_modified_field_in_records_d_records_05605ab9">
+            <field name="text">%(fields)d modified field in %(records)d records</field>
+        </record>
+        <record model="ir.message" id="msg_fields_d_modified_fields_in_records_d_record_18298cfa">
+            <field name="text">%(fields)d modified fields in %(records)d record</field>
+        </record>
+        <record model="ir.message" id="msg_fields_d_modified_fields_in_records_d_records_24ebf815">
+            <field name="text">%(fields)d modified fields in %(records)d records</field>
+        </record>
+        <record model="ir.message" id="msg_a_cassini_session_can_only_have_one_workspace_4bb90d57">
+            <field name="text">A Cassini session can only have one workspace.</field>
+        </record>
+        <record model="ir.message" id="msg_a_bookmark_name_and_search_are_required_ff1ec299">
+            <field name="text">A bookmark name and search are required</field>
+        </record>
+        <record model="ir.message" id="msg_a_component_name_and_callable_renderer_are_requi_b2469de4">
+            <field name="text">A component name and callable renderer are required</field>
+        </record>
+        <record model="ir.message" id="msg_a_maximum_of_five_attachments_is_allowed_59377610">
+            <field name="text">A maximum of five attachments is allowed.</field>
+        </record>
+        <record model="ir.message" id="msg_a_new_task_0123ff8c">
+            <field name="text">A new task</field>
+        </record>
+        <record model="ir.message" id="msg_action_97c89a4d">
+            <field name="text">Action</field>
+        </record>
+        <record model="ir.message" id="msg_add_61cc55aa">
+            <field name="text">Add</field>
+        </record>
+        <record model="ir.message" id="msg_add_menu_s_to_favorites_54d6fc2b">
+            <field name="text">Add %(menu)s to favorites</field>
+        </record>
+        <record model="ir.message" id="msg_add_to_favorites_cb10094b">
+            <field name="text">Add to favorites</field>
+        </record>
+        <record model="ir.message" id="msg_all_notifications_a0293096">
+            <field name="text">All notifications</field>
+        </record>
+        <record model="ir.message" id="msg_all_updates_4fb41adb">
+            <field name="text">All updates</field>
+        </record>
+        <record model="ir.message" id="msg_allow_3ad0e369">
+            <field name="text">Allow</field>
+        </record>
+        <record model="ir.message" id="msg_application_updates_are_available_when_nantic_co_e555b958">
+            <field name="text">Application updates are available when nantic_connection is installed.</field>
+        </record>
+        <record model="ir.message" id="msg_ask_the_assistant_77cb061d">
+            <field name="text">Ask the assistant…</field>
+        </record>
+        <record model="ir.message" id="msg_assistant_8010d1f4">
+            <field name="text">Assistant</field>
+        </record>
+        <record model="ir.message" id="msg_assistant_is_working_a2f4f7a9">
+            <field name="text">Assistant is working</field>
+        </record>
+        <record model="ir.message" id="msg_attach_files_137135db">
+            <field name="text">Attach files</field>
+        </record>
+        <record model="ir.message" id="msg_attach_recording_39ea08e5">
+            <field name="text">Attach recording</field>
+        </record>
+        <record model="ir.message" id="msg_attach_screenshot_5c4e7b7a">
+            <field name="text">Attach screenshot</field>
+        </record>
+        <record model="ir.message" id="msg_attachment_83a56249">
+            <field name="text">Attachment</field>
+        </record>
+        <record model="ir.message" id="msg_attachments_6771ade6">
+            <field name="text">Attachments</field>
+        </record>
+        <record model="ir.message" id="msg_back_b52b36b7">
+            <field name="text">Back</field>
+        </record>
+        <record model="ir.message" id="msg_back_to_sao_db603a5d">
+            <field name="text">Back to Sao</field>
+        </record>
+        <record model="ir.message" id="msg_bookmark_name_b98f2462">
+            <field name="text">Bookmark Name</field>
+        </record>
+        <record model="ir.message" id="msg_bookmark_this_filter_ef9d613d">
+            <field name="text">Bookmark this filter</field>
+        </record>
+        <record model="ir.message" id="msg_bookmarks_ca3cddd2">
+            <field name="text">Bookmarks</field>
+        </record>
+        <record model="ir.message" id="msg_calendar_adab5090">
+            <field name="text">Calendar</field>
+        </record>
+        <record model="ir.message" id="msg_calendar_mode_b81c6e7a">
+            <field name="text">Calendar mode</field>
+        </record>
+        <record model="ir.message" id="msg_cancel_77dfd213">
+            <field name="text">Cancel</field>
+        </record>
+        <record model="ir.message" id="msg_cassini_2d134f72">
+            <field name="text">Cassini</field>
+        </record>
+        <record model="ir.message" id="msg_change_preferences_and_company_39e7588a">
+            <field name="text">Change preferences and company</field>
+        </record>
+        <record model="ir.message" id="msg_choose_a_csv_file_to_import_76db3980">
+            <field name="text">Choose a CSV file to import</field>
+        </record>
+        <record model="ir.message" id="msg_choose_a_nan_da8cf98a">
+            <field name="text">Choose a NaN</field>
+        </record>
+        <record model="ir.message" id="msg_choose_a_related_record_28888328">
+            <field name="text">Choose a related record</field>
+        </record>
+        <record model="ir.message" id="msg_choose_a_related_record_to_add_eb9e6c48">
+            <field name="text">Choose a related record to add</field>
+        </record>
+        <record model="ir.message" id="msg_choose_what_to_do_before_you_action_s_d0dc0f53">
+            <field name="text">Choose what to do before you %(action)s.</field>
+        </record>
+        <record model="ir.message" id="msg_choose_whether_to_save_the_changes_4e1d8171">
+            <field name="text">Choose whether to save the changes</field>
+        </record>
+        <record model="ir.message" id="msg_clear_719ea396">
+            <field name="text">Clear</field>
+        </record>
+        <record model="ir.message" id="msg_clear_the_field_720a27d5">
+            <field name="text">Clear the field</field>
+        </record>
+        <record model="ir.message" id="msg_close_bbfa773e">
+            <field name="text">Close</field>
+        </record>
+        <record model="ir.message" id="msg_close_tab_s_44fb9a1d">
+            <field name="text">Close %(tab)s</field>
+        </record>
+        <record model="ir.message" id="msg_close_tab_16759802">
+            <field name="text">Close Tab</field>
+        </record>
+        <record model="ir.message" id="msg_close_tab_296b59cd">
+            <field name="text">Close tab</field>
+        </record>
+        <record model="ir.message" id="msg_close_without_saving_e4591957">
+            <field name="text">Close without saving</field>
+        </record>
+        <record model="ir.message" id="msg_code_adac6937">
+            <field name="text">Code</field>
+        </record>
+        <record model="ir.message" id="msg_collapse_node_f535e70f">
+            <field name="text">Collapse node</field>
+        </record>
+        <record model="ir.message" id="msg_columns_cf723c59">
+            <field name="text">Columns</field>
+        </record>
+        <record model="ir.message" id="msg_component_state_must_be_a_json_object_2aaeef0a">
+            <field name="text">Component state must be a JSON object</field>
+        </record>
+        <record model="ir.message" id="msg_component_state_must_be_valid_json_2b221121">
+            <field name="text">Component state must be valid JSON</field>
+        </record>
+        <record model="ir.message" id="msg_confirm_action_50649c5c">
+            <field name="text">Confirm action</field>
+        </record>
+        <record model="ir.message" id="msg_continue_2e026239">
+            <field name="text">Continue</field>
+        </record>
+        <record model="ir.message" id="msg_continue_without_saving_c3f92b60">
+            <field name="text">Continue without saving</field>
+        </record>
+        <record model="ir.message" id="msg_continuing_without_saving_permanently_discards_t_689f4bf7">
+            <field name="text">Continuing without saving permanently discards the current draft.</field>
+        </record>
+        <record model="ir.message" id="msg_conversation_artifacts_91e250c2">
+            <field name="text">Conversation artifacts</field>
+        </record>
+        <record model="ir.message" id="msg_conversations_07c59b44">
+            <field name="text">Conversations</field>
+        </record>
+        <record model="ir.message" id="msg_could_not_save_the_column_widths_56544d9c">
+            <field name="text">Could not save the column widths.</field>
+        </record>
+        <record model="ir.message" id="msg_counter_component_f4344847">
+            <field name="text">Counter component</field>
+        </record>
+        <record model="ir.message" id="msg_create_6e157c5d">
+            <field name="text">Create</field>
+        </record>
+        <record model="ir.message" id="msg_create_the_related_record_from_its_own_window_8d981274">
+            <field name="text">Create the related record from its own window</field>
+        </record>
+        <record model="ir.message" id="msg_created_at_f1c69716">
+            <field name="text">Created at</field>
+        </record>
+        <record model="ir.message" id="msg_created_by_5d73cc30">
+            <field name="text">Created by</field>
+        </record>
+        <record model="ir.message" id="msg_create_52f25bb9">
+            <field name="text">Create…</field>
+        </record>
+        <record model="ir.message" id="msg_creating_related_records_is_not_allowed_e35ea2bb">
+            <field name="text">Creating related records is not allowed</field>
+        </record>
+        <record model="ir.message" id="msg_current_record_78ea9689">
+            <field name="text">Current record</field>
+        </record>
+        <record model="ir.message" id="msg_current_values_a9f69b86">
+            <field name="text">Current values</field>
+        </record>
+        <record model="ir.message" id="msg_data_e5e429bc">
+            <field name="text">Data</field>
+        </record>
+        <record model="ir.message" id="msg_day_987b9ced">
+            <field name="text">Day</field>
+        </record>
+        <record model="ir.message" id="msg_decrement_0b826d21">
+            <field name="text">Decrement</field>
+        </record>
+        <record model="ir.message" id="msg_default_808d7dca">
+            <field name="text">Default</field>
+        </record>
+        <record model="ir.message" id="msg_delete_f6fdbe48">
+            <field name="text">Delete</field>
+        </record>
+        <record model="ir.message" id="msg_delete_the_selected_records_5b0cfc5e">
+            <field name="text">Delete the selected records?</field>
+        </record>
+        <record model="ir.message" id="msg_deleting_related_records_is_not_allowed_d1d5c481">
+            <field name="text">Deleting related records is not allowed</field>
+        </record>
+        <record model="ir.message" id="msg_demo_e52c854d">
+            <field name="text">Demo</field>
+        </record>
+        <record model="ir.message" id="msg_deny_53577bb5">
+            <field name="text">Deny</field>
+        </record>
+        <record model="ir.message" id="msg_details_dc3decbb">
+            <field name="text">Details</field>
+        </record>
+        <record model="ir.message" id="msg_discard_the_unsaved_changes_to_this_record_834e9915">
+            <field name="text">Discard the unsaved changes to this record?</field>
+        </record>
+        <record model="ir.message" id="msg_documentation_9e9cf322">
+            <field name="text">Documentation</field>
+        </record>
+        <record model="ir.message" id="msg_documentation_is_available_when_nantic_connectio_1770c8ee">
+            <field name="text">Documentation is available when nantic_connection is installed.</field>
+        </record>
+        <record model="ir.message" id="msg_domains_a0d641b3">
+            <field name="text">Domains</field>
+        </record>
+        <record model="ir.message" id="msg_download_a479c9c3">
+            <field name="text">Download</field>
+        </record>
+        <record model="ir.message" id="msg_duplicate_972d5737">
+            <field name="text">Duplicate</field>
+        </record>
+        <record model="ir.message" id="msg_expand_node_d171e0ba">
+            <field name="text">Expand node</field>
+        </record>
+        <record model="ir.message" id="msg_export_selected_fields_dcaf5482">
+            <field name="text">Export selected fields</field>
+        </record>
+        <record model="ir.message" id="msg_false_97cdbdc7">
+            <field name="text">False</field>
+        </record>
+        <record model="ir.message" id="msg_favorites_07b3e447">
+            <field name="text">Favorites</field>
+        </record>
+        <record model="ir.message" id="msg_filters_96e57821">
+            <field name="text">Filters</field>
+        </record>
+        <record model="ir.message" id="msg_find_df251b06">
+            <field name="text">Find</field>
+        </record>
+        <record model="ir.message" id="msg_form_80446347">
+            <field name="text">Form</field>
+        </record>
+        <record model="ir.message" id="msg_from_3f66052a">
+            <field name="text">From</field>
+        </record>
+        <record model="ir.message" id="msg_global_search_a2b8a166">
+            <field name="text">Global search</field>
+        </record>
+        <record model="ir.message" id="msg_global_shortcuts_e73da767">
+            <field name="text">Global shortcuts</field>
+        </record>
+        <record model="ir.message" id="msg_help_c47ae153">
+            <field name="text">Help</field>
+        </record>
+        <record model="ir.message" id="msg_help_and_updates_2d6c4caf">
+            <field name="text">Help and Updates</field>
+        </record>
+        <record model="ir.message" id="msg_id_89f89c02">
+            <field name="text">ID</field>
+        </record>
+        <record model="ir.message" id="msg_image_actions_06299f75">
+            <field name="text">Image actions</field>
+        </record>
+        <record model="ir.message" id="msg_import_d6fbc9d2">
+            <field name="text">Import</field>
+        </record>
+        <record model="ir.message" id="msg_increment_d12f1fab">
+            <field name="text">Increment</field>
+        </record>
+        <record model="ir.message" id="msg_install_nantic_connection_to_enable_the_integrat_9ff426a1">
+            <field name="text">Install nantic_connection to enable the integrated assistant.</field>
+        </record>
+        <record model="ir.message" id="msg_invalid_column_field_f153419b">
+            <field name="text">Invalid column field</field>
+        </record>
+        <record model="ir.message" id="msg_invalid_column_occurrences_8a340960">
+            <field name="text">Invalid column occurrences</field>
+        </record>
+        <record model="ir.message" id="msg_invalid_column_width_80fa17ee">
+            <field name="text">Invalid column width</field>
+        </record>
+        <record model="ir.message" id="msg_invalid_column_widths_4c58dd24">
+            <field name="text">Invalid column widths</field>
+        </record>
+        <record model="ir.message" id="msg_invalid_decimal_value_6aa118ee">
+            <field name="text">Invalid decimal value</field>
+        </record>
+        <record model="ir.message" id="msg_keyboard_shortcuts_26669547">
+            <field name="text">Keyboard shortcuts</field>
+        </record>
+        <record model="ir.message" id="msg_list_form_17b2b303">
+            <field name="text">List Form</field>
+        </record>
+        <record model="ir.message" id="msg_logout_e43d612e">
+            <field name="text">Logout</field>
+        </record>
+        <record model="ir.message" id="msg_logs_126dd3b7">
+            <field name="text">Logs</field>
+        </record>
+        <record model="ir.message" id="msg_menu_57f5f5ef">
+            <field name="text">Menu</field>
+        </record>
+        <record model="ir.message" id="msg_message_68f4145f">
+            <field name="text">Message</field>
+        </record>
+        <record model="ir.message" id="msg_modified_at_e0978c14">
+            <field name="text">Modified at</field>
+        </record>
+        <record model="ir.message" id="msg_modified_by_83f5aabd">
+            <field name="text">Modified by</field>
+        </record>
+        <record model="ir.message" id="msg_month_082bc378">
+            <field name="text">Month</field>
+        </record>
+        <record model="ir.message" id="msg_nans_413257a0">
+            <field name="text">NaNs</field>
+        </record>
+        <record model="ir.message" id="msg_nans_and_goblins_0f7f7736">
+            <field name="text">NaNs and goblins</field>
+        </record>
+        <record model="ir.message" id="msg_new_6403f2b7">
+            <field name="text">New</field>
+        </record>
+        <record model="ir.message" id="msg_new_conversation_7f031b1a">
+            <field name="text">New conversation</field>
+        </record>
+        <record model="ir.message" id="msg_new_event_2ef3795c">
+            <field name="text">New event</field>
+        </record>
+        <record model="ir.message" id="msg_new_event_on_date_s_c9302309">
+            <field name="text">New event on %(date)s</field>
+        </record>
+        <record model="ir.message" id="msg_new_record_c6e29531">
+            <field name="text">New record</field>
+        </record>
+        <record model="ir.message" id="msg_next_bc981983">
+            <field name="text">Next</field>
+        </record>
+        <record model="ir.message" id="msg_next_record_daadf068">
+            <field name="text">Next record</field>
+        </record>
+        <record model="ir.message" id="msg_next_tab_84c508a2">
+            <field name="text">Next tab</field>
+        </record>
+        <record model="ir.message" id="msg_no_816c52fd">
+            <field name="text">No</field>
+        </record>
+        <record model="ir.message" id="msg_no_actions_2c06c907">
+            <field name="text">No actions</field>
+        </record>
+        <record model="ir.message" id="msg_no_bookmarks_74d6658a">
+            <field name="text">No bookmarks</field>
+        </record>
+        <record model="ir.message" id="msg_no_documentation_found_3fc39952">
+            <field name="text">No documentation found.</field>
+        </record>
+        <record model="ir.message" id="msg_no_events_e339ba73">
+            <field name="text">No events</field>
+        </record>
+        <record model="ir.message" id="msg_no_favorites_yet_95bc6801">
+            <field name="text">No favorites yet</field>
+        </record>
+        <record model="ir.message" id="msg_no_matching_records_748bd377">
+            <field name="text">No matching records</field>
+        </record>
+        <record model="ir.message" id="msg_no_notifications_at_this_time_a5ee0b24">
+            <field name="text">No notifications at this time</field>
+        </record>
+        <record model="ir.message" id="msg_no_optional_columns_ca04d390">
+            <field name="text">No optional columns</field>
+        </record>
+        <record model="ir.message" id="msg_no_record_selected_26e10911">
+            <field name="text">No record selected</field>
+        </record>
+        <record model="ir.message" id="msg_no_records_04dfe4ba">
+            <field name="text">No records</field>
+        </record>
+        <record model="ir.message" id="msg_no_results_b993b0c5">
+            <field name="text">No results</field>
+        </record>
+        <record model="ir.message" id="msg_no_side_panel_b7063937">
+            <field name="text">No side panel</field>
+        </record>
+        <record model="ir.message" id="msg_no_tasks_yet_1562a21c">
+            <field name="text">No tasks yet</field>
+        </record>
+        <record model="ir.message" id="msg_no_updates_available_6360c5ff">
+            <field name="text">No updates available.</field>
+        </record>
+        <record model="ir.message" id="msg_note_2c924e30">
+            <field name="text">Note</field>
+        </record>
+        <record model="ir.message" id="msg_notebook_pages_4b91df6a">
+            <field name="text">Notebook pages</field>
+        </record>
+        <record model="ir.message" id="msg_notes_70440046">
+            <field name="text">Notes</field>
+        </record>
+        <record model="ir.message" id="msg_notification_c18f8f25">
+            <field name="text">Notification</field>
+        </record>
+        <record model="ir.message" id="msg_ok_9ce3bd42">
+            <field name="text">OK</field>
+        </record>
+        <record model="ir.message" id="msg_open_cf9b7706">
+            <field name="text">Open</field>
+        </record>
+        <record model="ir.message" id="msg_open_full_documentation_26f18528">
+            <field name="text">Open full documentation</field>
+        </record>
+        <record model="ir.message" id="msg_open_link_d2de1a28">
+            <field name="text">Open link</field>
+        </record>
+        <record model="ir.message" id="msg_open_tabs_b4d5aeaf">
+            <field name="text">Open tabs</field>
+        </record>
+        <record model="ir.message" id="msg_open_the_record_3288615f">
+            <field name="text">Open the record</field>
+        </record>
+        <record model="ir.message" id="msg_open_tickets_1af99e72">
+            <field name="text">Open tickets</field>
+        </record>
+        <record model="ir.message" id="msg_optional_columns_50272a7e">
+            <field name="text">Optional columns</field>
+        </record>
+        <record model="ir.message" id="msg_page_page_d_ad5fcb7e">
+            <field name="text">Page %(page)d</field>
+        </record>
+        <record model="ir.message" id="msg_page_title_015b7398">
+            <field name="text">Page title</field>
+        </record>
+        <record model="ir.message" id="msg_password_8be3c943">
+            <field name="text">Password</field>
+        </record>
+        <record model="ir.message" id="msg_persistent_draft_839bc80e">
+            <field name="text">Persistent draft</field>
+        </record>
+        <record model="ir.message" id="msg_preferences_9dfd349e">
+            <field name="text">Preferences</field>
+        </record>
+        <record model="ir.message" id="msg_preferences_are_not_open_32e0913e">
+            <field name="text">Preferences are not open</field>
+        </record>
+        <record model="ir.message" id="msg_previous_50f94286">
+            <field name="text">Previous</field>
+        </record>
+        <record model="ir.message" id="msg_previous_record_c6d21226">
+            <field name="text">Previous record</field>
+        </record>
+        <record model="ir.message" id="msg_previous_tab_75dd5109">
+            <field name="text">Previous tab</field>
+        </record>
+        <record model="ir.message" id="msg_print_5b221e9c">
+            <field name="text">Print</field>
+        </record>
+        <record model="ir.message" id="msg_record_1c54132b">
+            <field name="text">Record</field>
+        </record>
+        <record model="ir.message" id="msg_record_pages_ef9cedb4">
+            <field name="text">Record pages</field>
+        </record>
+        <record model="ir.message" id="msg_records_e51c5525">
+            <field name="text">Records</field>
+        </record>
+        <record model="ir.message" id="msg_relate_0289b666">
+            <field name="text">Relate</field>
+        </record>
+        <record model="ir.message" id="msg_relation_actions_eace41a0">
+            <field name="text">Relation actions</field>
+        </record>
+        <record model="ir.message" id="msg_reload_now_the_unfinished_value_stays_here_a3da1541">
+            <field name="text">Reload now: the unfinished value stays here.</field>
+        </record>
+        <record model="ir.message" id="msg_reload_undo_b896471c">
+            <field name="text">Reload/Undo</field>
+        </record>
+        <record model="ir.message" id="msg_remote_assistance_9e29c2bd">
+            <field name="text">Remote assistance</field>
+        </record>
+        <record model="ir.message" id="msg_remote_assistance_could_not_be_initialized_95820921">
+            <field name="text">Remote assistance could not be initialized.</field>
+        </record>
+        <record model="ir.message" id="msg_remote_assistance_did_not_load_19908242">
+            <field name="text">Remote assistance did not load.</field>
+        </record>
+        <record model="ir.message" id="msg_remove_e963907d">
+            <field name="text">Remove</field>
+        </record>
+        <record model="ir.message" id="msg_remove_file_s_7b17974a">
+            <field name="text">Remove %(file)s</field>
+        </record>
+        <record model="ir.message" id="msg_remove_menu_s_from_favorites_8d18cec8">
+            <field name="text">Remove %(menu)s from favorites</field>
+        </record>
+        <record model="ir.message" id="msg_remove_from_favorites_b6ddf62b">
+            <field name="text">Remove from favorites</field>
+        </record>
+        <record model="ir.message" id="msg_remove_this_bookmark_2437ede7">
+            <field name="text">Remove this bookmark</field>
+        </record>
+        <record model="ir.message" id="msg_removing_related_records_is_not_allowed_f977e41d">
+            <field name="text">Removing related records is not allowed</field>
+        </record>
+        <record model="ir.message" id="msg_resize_f52dc753">
+            <field name="text">Resize</field>
+        </record>
+        <record model="ir.message" id="msg_resize_column_s_column_df283138">
+            <field name="text">Resize %(column)s column</field>
+        </record>
+        <record model="ir.message" id="msg_revisions_2dba7961">
+            <field name="text">Revisions</field>
+        </record>
+        <record model="ir.message" id="msg_save_efc007a3">
+            <field name="text">Save</field>
+        </record>
+        <record model="ir.message" id="msg_save_and_close_2164d00c">
+            <field name="text">Save and close</field>
+        </record>
+        <record model="ir.message" id="msg_save_and_continue_3b033f4c">
+            <field name="text">Save and continue</field>
+        </record>
+        <record model="ir.message" id="msg_save_and_switch_c3efae95">
+            <field name="text">Save and switch</field>
+        </record>
+        <record model="ir.message" id="msg_save_as_f313a0b1">
+            <field name="text">Save as</field>
+        </record>
+        <record model="ir.message" id="msg_save_validates_the_record_and_writes_the_changes_a0fcbd39">
+            <field name="text">Save validates the record and writes the changes to Tryton.</field>
+        </record>
+        <record model="ir.message" id="msg_scan_28cba55d">
+            <field name="text">Scan</field>
+        </record>
+        <record model="ir.message" id="msg_scan_or_enter_a_code_2e05dc81">
+            <field name="text">Scan or enter a code</field>
+        </record>
+        <record model="ir.message" id="msg_screen_capture_is_not_available_ae53045e">
+            <field name="text">Screen capture is not available.</field>
+        </record>
+        <record model="ir.message" id="msg_screen_recording_is_not_available_ec251484">
+            <field name="text">Screen recording is not available.</field>
+        </record>
+        <record model="ir.message" id="msg_search_bce06414">
+            <field name="text">Search</field>
+        </record>
+        <record model="ir.message" id="msg_search_a_record_b847f64e">
+            <field name="text">Search a record</field>
+        </record>
+        <record model="ir.message" id="msg_search_and_add_608ea3e6">
+            <field name="text">Search and add</field>
+        </record>
+        <record model="ir.message" id="msg_search_documentation_ea548d20">
+            <field name="text">Search documentation</field>
+        </record>
+        <record model="ir.message" id="msg_search_documentation_210f8161">
+            <field name="text">Search documentation…</field>
+        </record>
+        <record model="ir.message" id="msg_search_for_records_before_adding_a_bookmark_6e4f214b">
+            <field name="text">Search for records before adding a bookmark</field>
+        </record>
+        <record model="ir.message" id="msg_search_navigation_4aba141f">
+            <field name="text">Search navigation</field>
+        </record>
+        <record model="ir.message" id="msg_search_records_2495e622">
+            <field name="text">Search records</field>
+        </record>
+        <record model="ir.message" id="msg_search_c2030252">
+            <field name="text">Search 🔍︎</field>
+        </record>
+        <record model="ir.message" id="msg_search_or_chat_with_the_assistant_958b3539">
+            <field name="text">Search 🔍︎ or chat with the assistant✦</field>
+        </record>
+        <record model="ir.message" id="msg_search_f54fbca1">
+            <field name="text">Search…</field>
+        </record>
+        <record model="ir.message" id="msg_select_85982229">
+            <field name="text">Select</field>
+        </record>
+        <record model="ir.message" id="msg_select_a_record_before_scanning_e4e5cbd8">
+            <field name="text">Select a record before scanning</field>
+        </record>
+        <record model="ir.message" id="msg_select_a_record_first_d76e3fba">
+            <field name="text">Select a record first</field>
+        </record>
+        <record model="ir.message" id="msg_select_a_saved_record_first_f7386e0a">
+            <field name="text">Select a saved record first</field>
+        </record>
+        <record model="ir.message" id="msg_select_all_records_e89606db">
+            <field name="text">Select all records</field>
+        </record>
+        <record model="ir.message" id="msg_select_record_809d3f3a">
+            <field name="text">Select record</field>
+        </record>
+        <record model="ir.message" id="msg_selected_record_actions_fbfc04de">
+            <field name="text">Selected record actions</field>
+        </record>
+        <record model="ir.message" id="msg_send_9bc2575c">
+            <field name="text">Send</field>
+        </record>
+        <record model="ir.message" id="msg_show_active_records_a48c1c6e">
+            <field name="text">Show active records</field>
+        </record>
+        <record model="ir.message" id="msg_show_inactive_records_156bf187">
+            <field name="text">Show inactive records</field>
+        </record>
+        <record model="ir.message" id="msg_show_this_help_3ab981f8">
+            <field name="text">Show this help</field>
+        </record>
+        <record model="ir.message" id="msg_show_hide_access_keys_26bbd1af">
+            <field name="text">Show/Hide access keys</field>
+        </record>
+        <record model="ir.message" id="msg_side_panel_7907c33b">
+            <field name="text">Side panel</field>
+        </record>
+        <record model="ir.message" id="msg_sign_in_ada2e9e9">
+            <field name="text">Sign in</field>
+        </record>
+        <record model="ir.message" id="msg_sign_in_with_your_tryton_account_62adb31f">
+            <field name="text">Sign in with your Tryton account.</field>
+        </record>
+        <record model="ir.message" id="msg_speech_recognition_is_not_available_cdb1a588">
+            <field name="text">Speech recognition is not available</field>
+        </record>
+        <record model="ir.message" id="msg_speech_recognition_is_not_available_478ab226">
+            <field name="text">Speech recognition is not available.</field>
+        </record>
+        <record model="ir.message" id="msg_speech_to_text_eaf1450c">
+            <field name="text">Speech to text</field>
+        </record>
+        <record model="ir.message" id="msg_start_a_conversation_the_active_model_record_sel_3c282288">
+            <field name="text">Start a conversation. The active model, record, selection, domain and language are sent as context.</field>
+        </record>
+        <record model="ir.message" id="msg_start_a_support_session_by_sharing_the_current_b_48331194">
+            <field name="text">Start a support session by sharing the current browser tab.</field>
+        </record>
+        <record model="ir.message" id="msg_start_or_select_a_conversation_first_c272b817">
+            <field name="text">Start or select a conversation first</field>
+        </record>
+        <record model="ir.message" id="msg_start_with_a_nan_c6986d09">
+            <field name="text">Start with a NaN</field>
+        </record>
+        <record model="ir.message" id="msg_support_f32d5a3b">
+            <field name="text">Support</field>
+        </record>
+        <record model="ir.message" id="msg_support_tickets_46b7e6e0">
+            <field name="text">Support tickets</field>
+        </record>
+        <record model="ir.message" id="msg_support_tickets_are_available_when_nantic_connec_e51580c1">
+            <field name="text">Support tickets are available when nantic_connection is installed.</field>
+        </record>
+        <record model="ir.message" id="msg_switch_3e44c920">
+            <field name="text">Switch</field>
+        </record>
+        <record model="ir.message" id="msg_switch_light_dark_mode_59ee09c8">
+            <field name="text">Switch light/dark mode</field>
+        </record>
+        <record model="ir.message" id="msg_switch_view_5c89ea0f">
+            <field name="text">Switch view</field>
+        </record>
+        <record model="ir.message" id="msg_switch_without_saving_edc21c18">
+            <field name="text">Switch without saving</field>
+        </record>
+        <record model="ir.message" id="msg_tab_s_is_not_a_s_tab_f909d1b2">
+            <field name="text">Tab %s is not a %s tab</field>
+        </record>
+        <record model="ir.message" id="msg_tab_shortcuts_47d9e482">
+            <field name="text">Tab shortcuts</field>
+        </record>
+        <record model="ir.message" id="msg_task_component_2e8f98bd">
+            <field name="text">Task component</field>
+        </record>
+        <record model="ir.message" id="msg_text_to_speech_did_not_return_audio_c5294036">
+            <field name="text">Text to speech did not return audio</field>
+        </record>
+        <record model="ir.message" id="msg_text_to_speech_is_not_available_1adbb213">
+            <field name="text">Text to speech is not available</field>
+        </record>
+        <record model="ir.message" id="msg_the_csv_file_is_empty_2bf21a83">
+            <field name="text">The CSV file is empty</field>
+        </record>
+        <record model="ir.message" id="msg_the_assistant_needs_confirmation_to_continue_0c406f24">
+            <field name="text">The assistant needs confirmation to continue.</field>
+        </record>
+        <record model="ir.message" id="msg_the_assistant_voice_is_not_available_c73be59e">
+            <field name="text">The assistant voice is not available.</field>
+        </record>
+        <record model="ir.message" id="msg_the_audio_could_not_be_transcribed_e456ff0c">
+            <field name="text">The audio could not be transcribed.</field>
+        </record>
+        <record model="ir.message" id="msg_the_first_csv_row_must_contain_tryton_field_name_f2143a77">
+            <field name="text">The first CSV row must contain Tryton field names</field>
+        </record>
+        <record model="ir.message" id="msg_the_microphone_could_not_be_started_7315ef3a">
+            <field name="text">The microphone could not be started.</field>
+        </record>
+        <record model="ir.message" id="msg_the_recording_could_not_be_started_59a9df19">
+            <field name="text">The recording could not be started.</field>
+        </record>
+        <record model="ir.message" id="msg_the_related_record_is_already_saved_4c1532df">
+            <field name="text">The related record is already saved</field>
+        </record>
+        <record model="ir.message" id="msg_the_screenshot_could_not_be_captured_2a406353">
+            <field name="text">The screenshot could not be captured.</field>
+        </record>
+        <record model="ir.message" id="msg_the_server_could_not_complete_this_action_7b5aae69">
+            <field name="text">The server could not complete this action.</field>
+        </record>
+        <record model="ir.message" id="msg_this_action_opens_an_external_address_c6ee0d49">
+            <field name="text">This action opens an external address.</field>
+        </record>
+        <record model="ir.message" id="msg_this_download_is_no_longer_available_f25d5e7d">
+            <field name="text">This download is no longer available</field>
+        </record>
+        <record model="ir.message" id="msg_this_help_resource_is_not_installed_6a3a043e">
+            <field name="text">This help resource is not installed</field>
+        </record>
+        <record model="ir.message" id="msg_this_menu_does_not_define_an_action_4c2a49f3">
+            <field name="text">This menu does not define an action</field>
+        </record>
+        <record model="ir.message" id="msg_this_model_does_not_keep_revisions_144217b6">
+            <field name="text">This model does not keep revisions</field>
+        </record>
+        <record model="ir.message" id="msg_this_page_uses_no_tryton_xml_view_dominate_rende_1d1e0110">
+            <field name="text">This page uses no Tryton XML view. Dominate renders its custom components, HTMX updates fragments and the same workspace stores every draft.</field>
+        </record>
+        <record model="ir.message" id="msg_this_relation_field_is_read_only_601788be">
+            <field name="text">This relation field is read-only</field>
+        </record>
+        <record model="ir.message" id="msg_this_relation_is_not_readable_4153f601">
+            <field name="text">This relation is not readable</field>
+        </record>
+        <record model="ir.message" id="msg_this_search_bookmark_can_not_be_removed_915790df">
+            <field name="text">This search bookmark can not be removed</field>
+        </record>
+        <record model="ir.message" id="msg_this_tab_is_not_a_relation_draft_5142b2a7">
+            <field name="text">This tab is not a relation draft</field>
+        </record>
+        <record model="ir.message" id="msg_to_ae79ea1e">
+            <field name="text">To</field>
+        </record>
+        <record model="ir.message" id="msg_today_24345a14">
+            <field name="text">Today</field>
+        </record>
+        <record model="ir.message" id="msg_toggle_assistant_voice_56746db4">
+            <field name="text">Toggle assistant voice</field>
+        </record>
+        <record model="ir.message" id="msg_toggle_task_75db9591">
+            <field name="text">Toggle task</field>
+        </record>
+        <record model="ir.message" id="msg_toolbar_action_s_not_found_3642237e">
+            <field name="text">Toolbar action %s not found</field>
+        </record>
+        <record model="ir.message" id="msg_total_b25928c6">
+            <field name="text">Total</field>
+        </record>
+        <record model="ir.message" id="msg_track_tickets_created_from_the_assistant_and_add_e5b6f65d">
+            <field name="text">Track tickets created from the assistant and add comments without losing your current workspace.</field>
+        </record>
+        <record model="ir.message" id="msg_tree_99f5ff63">
+            <field name="text">Tree</field>
+        </record>
+        <record model="ir.message" id="msg_true_88b33e4e">
+            <field name="text">True</field>
+        </record>
+        <record model="ir.message" id="msg_tryton_menu_485fb53e">
+            <field name="text">Tryton menu</field>
+        </record>
+        <record model="ir.message" id="msg_undelete_9b2a9354">
+            <field name="text">Undelete</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_button_s_dadea476">
+            <field name="text">Unknown button %s</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_calendar_direction_1f910ffa">
+            <field name="text">Unknown calendar direction</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_calendar_mode_93f78891">
+            <field name="text">Unknown calendar mode</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_calendar_record_44fcacb1">
+            <field name="text">Unknown calendar record</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_conversation_156667a3">
+            <field name="text">Unknown conversation</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_demo_action_10fbddda">
+            <field name="text">Unknown demo action</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_demo_task_83617687">
+            <field name="text">Unknown demo task</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_documentation_action_c4e647e8">
+            <field name="text">Unknown documentation action</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_domain_tab_cb641669">
+            <field name="text">Unknown domain tab</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_favorite_action_4bce58a9">
+            <field name="text">Unknown favorite action</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_field_s_e452e987">
+            <field name="text">Unknown field %s</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_help_resource_864e56bf">
+            <field name="text">Unknown help resource</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_help_section_e66dc646">
+            <field name="text">Unknown help section</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_leave_action_00e5198e">
+            <field name="text">Unknown leave action</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_menu_action_98c01a12">
+            <field name="text">Unknown menu action</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_menu_item_a2359449">
+            <field name="text">Unknown menu item</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_notification_2557bc8b">
+            <field name="text">Unknown notification</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_optional_column_8ec99f22">
+            <field name="text">Unknown optional column</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_page_direction_0debded0">
+            <field name="text">Unknown page direction</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_predefined_export_34a1f5a0">
+            <field name="text">Unknown predefined export</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_preference_field_s_554b39ef">
+            <field name="text">Unknown preference field %s</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_preference_record_ef3a4eaa">
+            <field name="text">Unknown preference record</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_preferences_page_2498ce21">
+            <field name="text">Unknown preferences page</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_record_ad246024">
+            <field name="text">Unknown record</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_record_s_431ef202">
+            <field name="text">Unknown record %s</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_record_direction_6bdcbf15">
+            <field name="text">Unknown record direction</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_related_record_975cef55">
+            <field name="text">Unknown related record</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_related_resource_f8dcd623">
+            <field name="text">Unknown related resource</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_relation_field_45919c86">
+            <field name="text">Unknown relation field</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_relation_draft_e129b8dc">
+            <field name="text">Unknown relation draft</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_relation_parent_c938ac42">
+            <field name="text">Unknown relation parent</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_revision_549a4778">
+            <field name="text">Unknown revision</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_search_bookmark_aa59fe27">
+            <field name="text">Unknown search bookmark</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_sequence_direction_8ab4546e">
+            <field name="text">Unknown sequence direction</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_shell_action_b8c205b2">
+            <field name="text">Unknown shell action</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_sort_field_790ee4b9">
+            <field name="text">Unknown sort field</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_state_component_s_150ad0be">
+            <field name="text">Unknown state component %s</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_tab_e1e8dfe0">
+            <field name="text">Unknown tab</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_tab_s_3482ea05">
+            <field name="text">Unknown tab %s</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_tree_node_9ae3e928">
+            <field name="text">Unknown tree node</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_tree_record_2c68dc91">
+            <field name="text">Unknown tree record</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_wizard_field_s_d02f6297">
+            <field name="text">Unknown wizard field %s</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_x2many_action_b57d2104">
+            <field name="text">Unknown x2many action</field>
+        </record>
+        <record model="ir.message" id="msg_unread_updates_32d00893">
+            <field name="text">Unread updates</field>
+        </record>
+        <record model="ir.message" id="msg_unsaved_2ab06e25">
+            <field name="text">Unsaved</field>
+        </record>
+        <record model="ir.message" id="msg_unsaved_changes_29267269">
+            <field name="text">Unsaved changes</field>
+        </record>
+        <record model="ir.message" id="msg_unsupported_action_type_s_9c66a81e">
+            <field name="text">Unsupported action type %s</field>
+        </record>
+        <record model="ir.message" id="msg_unsupported_tab_type_cd25cf8c">
+            <field name="text">Unsupported tab type</field>
+        </record>
+        <record model="ir.message" id="msg_update_fb91e24f">
+            <field name="text">Update</field>
+        </record>
+        <record model="ir.message" id="msg_updates_c76d1807">
+            <field name="text">Updates</field>
+        </record>
+        <record model="ir.message" id="msg_user_9f8a2389">
+            <field name="text">User</field>
+        </record>
+        <record model="ir.message" id="msg_user_and_notifications_3393b7f2">
+            <field name="text">User and notifications</field>
+        </record>
+        <record model="ir.message" id="msg_user_menu_a2d8625b">
+            <field name="text">User menu</field>
+        </record>
+        <record model="ir.message" id="msg_view_s_is_not_part_of_this_action_c97ba4f2">
+            <field name="text">View %s is not part of this action</field>
+        </record>
+        <record model="ir.message" id="msg_view_logs_4c3958dd">
+            <field name="text">View logs</field>
+        </record>
+        <record model="ir.message" id="msg_views_24be6128">
+            <field name="text">Views</field>
+        </record>
+        <record model="ir.message" id="msg_cassini_state_infrastructure_ae6a45d3">
+            <field name="text">Cassini state infrastructure</field>
+        </record>
+        <record model="ir.message" id="msg_week_f82be68a">
+            <field name="text">Week</field>
+        </record>
+        <record model="ir.message" id="msg_what_do_you_want_to_do_8d4f6ef5">
+            <field name="text">What do you want to do?</field>
+        </record>
+        <record model="ir.message" id="msg_wizard_has_no_current_view_ae22a488">
+            <field name="text">Wizard has no current view</field>
+        </record>
+        <record model="ir.message" id="msg_yes_5397e058">
+            <field name="text">Yes</field>
+        </record>
+        <record model="ir.message" id="msg_you_905cb326">
+            <field name="text">You</field>
+        </record>
+        <record model="ir.message" id="msg_close_this_tab_f30f909d">
+            <field name="text">close this tab</field>
+        </record>
+        <record model="ir.message" id="msg_create_another_record_08c7017f">
+            <field name="text">create another record</field>
+        </record>
+        <record model="ir.message" id="msg_open_another_record_06e5fa39">
+            <field name="text">open another record</field>
+        </record>
+        <record model="ir.message" id="msg_switch_view_023c59a0">
+            <field name="text">switch view</field>
+        </record>
+    </data>
+</tryton>
