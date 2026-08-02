@@ -92,10 +92,20 @@ class TestRecordActions(WebTestCase):
             'aria-label', 'Window actions: Cassini Record Actions')
         expect(page.locator('.vs-window-heading-label')).to_have_text(
             'Cassini Record Actions')
+        table_top = page.locator('.vs-table-wrap').bounding_box()['y']
+        toolbar_height = page.locator('.vs-toolbar').bounding_box()['height']
         window_menu.locator('.vs-window-title').click()
         expect(page.locator('.vs-toolbar')).to_have_css('z-index', '150')
         expect(window_menu.locator(
             '.vs-window-menu-list')).to_have_css('z-index', '155')
+        expect(window_menu.locator(
+            '.vs-window-menu-list')).to_have_css('position', 'absolute')
+        self.assertAlmostEqual(
+            page.locator('.vs-table-wrap').bounding_box()['y'],
+            table_top, delta=1)
+        self.assertAlmostEqual(
+            page.locator('.vs-toolbar').bounding_box()['height'],
+            toolbar_height, delta=1)
         window_menu.locator('.vs-window-title').click()
         group_row = group_name.locator('xpath=ancestor::tr')
         group_position = group_row.evaluate(
@@ -194,12 +204,53 @@ class TestRecordActions(WebTestCase):
         expect(rows).to_have_count(initial_rows + 1)
 
         window_menu.locator('.vs-window-title').click()
+        window_menu.get_by_role(
+            'menuitem', name='Export selected fields',
+            exact=True).click()
+        export_dialog = page.get_by_role(
+            'dialog', name='CSV Export: Cassini Record Actions')
+        expect(export_dialog).to_be_visible()
+        expect(export_dialog.get_by_text(
+            'All Fields', exact=True)).to_be_visible()
+        expect(export_dialog.get_by_text(
+            'Fields Selected', exact=True)).to_be_visible()
+        expect(export_dialog.locator(
+            '[data-csv-selected-field="name"]')).to_have_count(1)
+        parent_field = export_dialog.locator(
+            '[data-csv-field-choice][data-csv-field="parent"]')
+        with page.expect_response(
+                lambda response: '/csv/fields' in response.url):
+            parent_field.locator(
+                'xpath=ancestor::li[1]').locator(
+                    '[data-csv-expand]').click()
+        expect(parent_field.locator(
+            'xpath=ancestor::li[1]').locator(
+                ':scope > .vs-csv-field-children')).to_contain_text('Name')
+        export_dialog.locator('[name="export_name"]').fill(
+            'Cassini Group Export')
+        with page.expect_response(
+                lambda response: response.url.endswith('/export/save')):
+            export_dialog.get_by_role(
+                'button', name='Save Export', exact=True).click()
+        export_dialog = page.get_by_role(
+            'dialog', name='CSV Export: Cassini Record Actions')
+        expect(export_dialog.get_by_role(
+            'button', name='Cassini Group Export',
+            exact=True)).to_be_visible()
+        export_dialog.get_by_role(
+            'button', name='Cassini Group Export', exact=True).click()
+        export_dialog.get_by_text(
+            'CSV Parameters', exact=True).click()
+        export_dialog.locator('[name="delimiter"]').fill(';')
         with page.expect_download() as download_info:
-            window_menu.get_by_role(
-                'menuitem', name='Export selected fields',
-                exact=True).click()
+            export_dialog.get_by_role(
+                'button', name='Save As...', exact=True).click()
         download = download_info.value
         self.assertEqual(download.suggested_filename, 'res_group.csv')
+        export_content = download.path().read_text()
+        self.assertIn('Cassini Action Group', export_content)
+        export_dialog.get_by_role(
+            'button', name='Close', exact=True).click()
 
         window_menu.locator('.vs-window-title').click()
         window_menu.get_by_role(
@@ -213,14 +264,30 @@ class TestRecordActions(WebTestCase):
         expect(rows).to_have_count(initial_rows)
 
         window_menu.locator('.vs-window-title').click()
+        window_menu.locator('.vs-window-menu-list').evaluate(
+            'menu => { menu.scrollTop = menu.scrollHeight; }')
+        window_menu.get_by_role(
+            'menuitem', name='Import', exact=True).click()
+        import_dialog = page.get_by_role(
+            'dialog', name='CSV Import: Cassini Record Actions')
+        expect(import_dialog).to_be_visible()
+        import_dialog.locator('[name="file"]').set_input_files({
+            'name': 'groups.csv',
+            'mimeType': 'text/csv',
+            'buffer': b'Name\nCassini Imported Group\n',
+            })
+        with page.expect_response(
+                lambda response: response.url.endswith(
+                    '/import/autodetect')):
+            import_dialog.get_by_role(
+                'button', name='Auto-Detect', exact=True).click()
+        expect(import_dialog.locator(
+            '[data-csv-selected-field="name"]')).to_have_count(1)
+        expect(import_dialog.locator('[name="skip"]')).to_have_value('1')
         with page.expect_response(
                 lambda response: response.url.endswith('/import')):
-            window_menu.locator(
-                '.vs-import-form input[type="file"]').set_input_files({
-                    'name': 'groups.csv',
-                    'mimeType': 'text/csv',
-                    'buffer': b'name\nCassini Imported Group\n',
-                    })
+            import_dialog.get_by_role(
+                'button', name='Import', exact=True).click()
         expect(page.get_by_text(
                 'Cassini Imported Group', exact=True)).to_be_visible()
         expect(rows).to_have_count(initial_rows + 1)

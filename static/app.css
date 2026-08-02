@@ -1068,10 +1068,16 @@ button.vs-menu-group:focus-visible {
     padding: .7rem 1rem;
     border-bottom: 1px solid var(--vs-line);
     background: var(--vs-panel);
+    overflow: visible;
 }
 
 .vs-window-menu {
+    position: relative;
+    display: block;
+    width: 2.45rem;
     min-width: 0;
+    height: 2.45rem;
+    flex: 0 0 2.45rem;
 }
 
 .vs-window-heading {
@@ -1151,10 +1157,16 @@ button.vs-menu-group:focus-visible {
 }
 
 .vs-window-menu-list {
+    position: absolute;
+    top: calc(100% + .35rem);
     right: auto;
     left: 0;
     width: min(24rem, calc(100vw - 3rem));
     max-height: min(44rem, calc(100vh - 7rem));
+}
+
+.vs-window-menu > .vs-window-menu-list {
+    position: absolute;
 }
 
 .vs-popup-heading {
@@ -1175,7 +1187,7 @@ button.vs-menu-group:focus-visible {
     border-top: 0;
 }
 
-.vs-popup-item-icon {
+.vs-popup-item.vs-popup-item-icon {
     display: flex;
     flex-direction: row;
     gap: .55rem;
@@ -1467,16 +1479,6 @@ button.vs-menu-group:focus-visible {
 
 .vs-page-navigation .vs-icon-button:last-child {
     border-radius: 0 .5rem .5rem 0;
-}
-
-.vs-notebook > .vs-local-tabs .vs-local-tab-active::after {
-    position: absolute;
-    right: 0;
-    bottom: -2px;
-    left: 0;
-    height: 3px;
-    background: var(--vs-panel);
-    content: '';
 }
 
 .vs-filter-menu {
@@ -2325,8 +2327,26 @@ textarea.vs-input {
 }
 
 .vs-notebook-tabs {
+    position: relative;
     grid-column: 1 / -1;
     padding: 0 .75rem;
+    border-bottom: 0;
+}
+
+.vs-notebook-tabs::after {
+    position: absolute;
+    z-index: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 1px;
+    background: var(--vs-line);
+    content: '';
+}
+
+.vs-notebook-tabs .vs-tab-list {
+    position: relative;
+    z-index: 1;
 }
 
 .vs-notebook {
@@ -2571,11 +2591,6 @@ textarea.vs-input {
 .vs-tree-toggle .vs-icon {
     width: 1rem;
     height: 1rem;
-}
-
-.vs-sequence-controls {
-    display: flex;
-    margin-top: .25rem;
 }
 
 .vs-help-panel {
@@ -3195,9 +3210,61 @@ textarea.vs-input {
     min-width: 2.5rem;
 }
 
-.vs-table .vs-select-column.vs-sequence-column {
-    width: 5rem;
-    min-width: 5rem;
+.vs-table .vs-drag-column {
+    width: 2rem;
+    min-width: 2rem;
+    padding-inline: .25rem;
+    text-align: center;
+}
+
+.vs-drag-column > .vs-icon {
+    width: .95rem;
+    height: .95rem;
+    opacity: .45;
+}
+
+.vs-tree-drag-handle {
+    display: inline-flex;
+    width: 1.5rem;
+    height: 1.7rem;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    border-radius: .25rem;
+    color: var(--vs-muted);
+    touch-action: none;
+}
+
+.vs-tree-drag-handle:hover,
+.vs-tree-drag-handle:focus-visible {
+    background: var(--vs-primary-soft);
+    color: var(--vs-primary);
+    outline: none;
+}
+
+.vs-tree-drag-handle:active {
+    cursor: grabbing;
+}
+
+.vs-tree-drag-handle .vs-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.vs-row-dragging {
+    opacity: .42;
+}
+
+.vs-row-drop-before > td {
+    box-shadow: inset 0 2px var(--vs-primary);
+}
+
+.vs-row-drop-after > td {
+    box-shadow: inset 0 -2px var(--vs-primary);
+}
+
+.vs-row-drop-inside > td {
+    background: var(--vs-primary-soft);
 }
 
 .vs-tree-header-controls {
@@ -3224,6 +3291,10 @@ textarea.vs-input {
 }
 
 .vs-row-current {
+    background: var(--vs-primary-soft);
+}
+
+.vs-row-selected {
     background: var(--vs-primary-soft);
 }
 
@@ -3294,6 +3365,7 @@ textarea.vs-input {
     flex-direction: column;
     gap: .35rem;
     align-items: center;
+    justify-content: center;
     justify-self: start;
     padding: .35rem .45rem;
     border: 0;
@@ -3733,6 +3805,261 @@ textarea.vs-input {
     border-radius: .85rem;
     background: var(--vs-panel);
     box-shadow: 0 25px 80px rgb(0 0 0 / 25%);
+}
+
+.vs-modal.vs-csv-dialog {
+    width: min(76rem, calc(100vw - 4rem));
+    overflow: hidden;
+}
+
+.vs-csv-dialog > form {
+    display: grid;
+    max-height: calc(100vh - 6.5rem);
+    grid-template-rows: auto minmax(15rem, 1fr) auto auto auto auto;
+    gap: .85rem;
+}
+
+.vs-csv-dialog h2,
+.vs-csv-dialog h3 {
+    margin: 0;
+}
+
+.vs-csv-dialog h3 {
+    padding: .55rem .7rem;
+    border-bottom: 1px solid var(--vs-line);
+    background: var(--vs-panel-soft);
+    font-size: .88rem;
+    font-weight: 650;
+}
+
+.vs-csv-fields-layout {
+    display: grid;
+    min-height: 15rem;
+    grid-template-columns: minmax(0, 1fr) 9rem minmax(0, 1fr);
+    gap: .75rem;
+}
+
+.vs-csv-fields-panel {
+    display: grid;
+    min-width: 0;
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid var(--vs-line);
+    border-radius: .45rem;
+}
+
+.vs-csv-all-fields,
+.vs-csv-field-children,
+.vs-csv-selected-fields,
+.vs-csv-profile-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.vs-csv-all-fields,
+.vs-csv-selected-fields {
+    min-height: 0;
+    overflow: auto;
+    padding: .3rem;
+}
+
+.vs-csv-field-children {
+    padding-left: 1.1rem;
+}
+
+.vs-csv-field-row {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+}
+
+.vs-csv-field-expander,
+.vs-csv-field-expander-spacer {
+    display: inline-grid;
+    width: 1.5rem;
+    min-width: 1.5rem;
+    height: 1.65rem;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: var(--vs-muted);
+}
+
+.vs-csv-field-expander {
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: transform .12s ease;
+}
+
+.vs-csv-field-expander.vs-expanded {
+    transform: rotate(90deg);
+}
+
+.vs-csv-field-choice {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    padding: .28rem .4rem;
+    border: 0;
+    border-radius: .25rem;
+    background: transparent;
+    color: var(--vs-ink);
+    cursor: pointer;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vs-csv-field-choice:hover,
+.vs-csv-field-choice.vs-selected,
+.vs-csv-selected-field:hover,
+.vs-csv-selected-field.vs-selected,
+.vs-csv-profile:hover,
+.vs-csv-profile.vs-selected {
+    background: var(--vs-primary-soft);
+    color: var(--vs-primary-dark);
+}
+
+.vs-csv-field-actions {
+    display: grid;
+    align-content: start;
+    gap: .45rem;
+}
+
+.vs-csv-field-actions .vs-button {
+    width: 100%;
+    justify-content: flex-start;
+    gap: .4rem;
+}
+
+.vs-csv-field-actions .vs-icon,
+.vs-csv-selected-field .vs-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.vs-csv-selected-field {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .45rem;
+    align-items: center;
+    padding: .32rem .45rem;
+    border-radius: .25rem;
+    cursor: pointer;
+}
+
+.vs-csv-selected-field > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vs-csv-selected-field[draggable="true"] .vs-icon {
+    cursor: grab;
+    color: var(--vs-muted);
+}
+
+.vs-csv-drag-handle {
+    color: var(--vs-muted);
+    cursor: grab;
+    font-size: .78rem;
+    letter-spacing: -.28rem;
+}
+
+.vs-csv-selected-field.vs-dragging {
+    opacity: .45;
+}
+
+.vs-csv-chooser,
+.vs-csv-parameter-fields {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: .65rem 1rem;
+    align-items: end;
+}
+
+.vs-csv-chooser .vs-field {
+    min-width: 12rem;
+    flex: 1 1 14rem;
+}
+
+.vs-csv-chooser .vs-check-label,
+.vs-csv-parameter-fields .vs-check-label {
+    min-height: 2rem;
+}
+
+.vs-csv-profiles {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .6rem;
+    align-items: center;
+}
+
+.vs-csv-profiles h3 {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.vs-csv-profile-list {
+    display: flex;
+    min-width: 0;
+    gap: .3rem;
+    overflow-x: auto;
+}
+
+.vs-csv-profile {
+    padding: .32rem .55rem;
+    border: 1px solid var(--vs-line);
+    border-radius: .35rem;
+    background: var(--vs-panel);
+    color: var(--vs-ink);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.vs-csv-parameters {
+    border-top: 1px solid var(--vs-line);
+    border-bottom: 1px solid var(--vs-line);
+}
+
+.vs-csv-parameters > summary {
+    padding: .5rem 0;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.vs-csv-parameter-fields {
+    padding: 0 0 .65rem;
+}
+
+.vs-csv-parameter-fields .vs-field {
+    min-width: 10rem;
+    flex: 0 1 18rem;
+}
+
+.vs-csv-parameter-fields .vs-csv-character {
+    min-width: 6rem;
+    flex-basis: 7rem;
+}
+
+@media (max-width: 760px) {
+    .vs-modal.vs-csv-dialog {
+        width: 100%;
+    }
+
+    .vs-csv-fields-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .vs-csv-field-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 .vs-wizard-dialog {

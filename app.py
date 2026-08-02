@@ -1,4 +1,8 @@
 import base64
+import codecs
+import csv
+import encodings.aliases
+import io
 import json
 import mimetypes
 import re
@@ -10,7 +14,7 @@ from xml.etree import ElementTree
 
 import dominate
 from dominate.tags import (
-    a, article, aside, button, details, div, form, h1, h2, h4,
+    a, article, aside, button, details, div, form, h1, h2, h3, h4,
     header, iframe, img, input_, label, li, link, main, meta, nav, option, p,
     script, section, select, span, strong, summary, textarea, ul)
 from dominate.util import raw
@@ -38,6 +42,14 @@ from .widgets import HierarchyWidget, WidgetRenderer, dom_id
 APP_TYPE = 'cassini'
 STATIC = '/cassini-static'
 HELP_ICONS = '/cassini-help-icons/'
+CSV_ENCODINGS = tuple(sorted({
+        name.replace('_', '-')
+        for name in (
+            list(encodings.aliases.aliases)
+            + list(encodings.aliases.aliases.values())
+            + ['utf-8', 'utf-8-sig', 'cp1252'])
+        if name
+        }))
 
 
 def optional_model(name):
@@ -261,6 +273,469 @@ def revision_dialog(tab):
                 hx_target='#modal',
                 hx_swap='innerHTML')
     return backdrop
+
+
+def csv_tab(engine, tab_id):
+    tab = engine.interface.get_tab(tab_id)
+    if not tab or tab.get('kind') != 'window':
+        raise ValueError(translate('Unknown tab'))
+    return tab
+
+
+def csv_field_label(Model, field_name):
+    try:
+        return Model._convert_field_names([field_name.split('/')])[0]
+    except (AttributeError, KeyError, TypeError, ValueError):
+        return field_name
+
+
+def csv_resolve_model(Model, path, import_=False):
+    if not path:
+        return Model
+    for item in path.split('/'):
+        name = item.split(':lang=', 1)[0]
+        if name.endswith('.translated'):
+            name = name[:-len('.translated')]
+        field = Model._fields.get(name)
+        if not field or not hasattr(field, 'get_target'):
+            raise ValueError(translate('Unknown CSV field "%(field)s"',
+                    field=path))
+        if import_ and field._type != 'one2many':
+            raise ValueError(translate(
+                    'Only one-to-many fields can be expanded for import'))
+        Model = field.get_target()
+    return Model
+
+
+def csv_field_definitions(engine, tab, Model):
+    context = engine.context(decode_value(tab.get('context', {})))
+    with Transaction().set_context(context):
+        return Model.fields_get()
+
+
+def csv_languages():
+    Lang = Pool().get('ir.lang')
+    return Lang.search([('translatable', '=', True)], order=[('name', 'ASC')])
+
+
+def csv_relation_host(tab_id, kind, path):
+    return 'csv-fields-%s-%s-%s' % (
+        kind, tab_id, dom_id(path))
+
+
+def csv_field_nodes(engine, tab, kind, Model=None, prefix=''):
+    Root = Pool().get(tab['model'])
+    if Model is None:
+        Model = csv_resolve_model(
+            Root, prefix.rstrip('/'), import_=kind == 'import')
+    definitions = csv_field_definitions(engine, tab, Model)
+    languages = csv_languages()
+    CSVRelationFields = Pool().get('cassini.csv.relation.fields')
+    result = []
+    ordered = sorted(
+        definitions.items(),
+        key=lambda item: (item[1].get('string') or item[0]).casefold())
+    for name, definition in ordered:
+        if kind == 'import' and definition.get('readonly') and name != 'id':
+            continue
+        path = prefix + name
+        field_type = definition.get('type')
+        relation = definition.get('relation')
+        expandable = bool(
+            relation and (
+                kind == 'export' or field_type == 'one2many'))
+        translated = bool(definition.get('translate'))
+        with li(cls='vs-csv-field') as item:
+            with div(cls='vs-csv-field-row'):
+                if expandable or translated:
+                    expand = button(
+                        '›', type='button',
+                        cls='vs-csv-field-expander',
+                        aria_label=translate('Expand field'),
+                        data_csv_expand='true')
+                    if expandable:
+                        expand['hx-get'] = CSVRelationFields.url(
+                            tab=tab['id'], kind=kind, path=path)
+                        expand['hx-target'] = '#' + csv_relation_host(
+                            tab['id'], kind, path)
+                        expand['hx-swap'] = 'outerHTML'
+                        expand['hx-trigger'] = 'click once'
+                else:
+                    span('', cls='vs-csv-field-expander-spacer')
+                button(
+                    definition.get('string') or name,
+                    type='button', cls='vs-csv-field-choice',
+                    title=csv_field_label(Root, path),
+                    data_csv_field_choice='true',
+                    data_csv_field=path,
+                    data_csv_label=csv_field_label(Root, path))
+            if expandable:
+                ul(
+                    id=csv_relation_host(tab['id'], kind, path),
+                    cls='vs-csv-field-children', hidden=True)
+            elif translated:
+                with ul(
+                        id=csv_relation_host(tab['id'], kind, path),
+                        cls='vs-csv-field-children', hidden=True):
+                    for language in languages:
+                        language_path = '%s:lang=%s' % (
+                            path, language.code)
+                        with li(cls='vs-csv-field'):
+                            with div(cls='vs-csv-field-row'):
+                                span(
+                                    '',
+                                    cls='vs-csv-field-expander-spacer')
+                                button(
+                                    language.name, type='button',
+                                    cls='vs-csv-field-choice',
+                                    title=csv_field_label(
+                                        Root, language_path),
+                                    data_csv_field_choice='true',
+                                    data_csv_field=language_path,
+                                    data_csv_label=csv_field_label(
+                                        Root, language_path))
+        result.append(item)
+        if kind == 'export' and field_type == 'selection':
+            translated_path = path + '.translated'
+            with li(cls='vs-csv-field') as translated_item:
+                with div(cls='vs-csv-field-row'):
+                    span('', cls='vs-csv-field-expander-spacer')
+                    button(
+                        translate('%(field)s (string)',
+                            field=definition.get('string') or name),
+                        type='button', cls='vs-csv-field-choice',
+                        data_csv_field_choice='true',
+                        data_csv_field=translated_path,
+                        data_csv_label=csv_field_label(
+                            Root, translated_path))
+            result.append(translated_item)
+        elif kind == 'export' and field_type == 'reference':
+            for suffix, label_ in (
+                    ('.translated', translate(
+                        '%(field)s (model name)',
+                        field=definition.get('string') or name)),
+                    ('/rec_name', translate(
+                        '%(field)s/Record Name',
+                        field=definition.get('string') or name))):
+                reference_path = path + suffix
+                with li(cls='vs-csv-field') as reference_item:
+                    with div(cls='vs-csv-field-row'):
+                        span('', cls='vs-csv-field-expander-spacer')
+                        button(
+                            label_, type='button',
+                            cls='vs-csv-field-choice',
+                            data_csv_field_choice='true',
+                            data_csv_field=reference_path,
+                            data_csv_label=csv_field_label(
+                                Root, reference_path))
+                result.append(reference_item)
+    return result
+
+
+def csv_selected_fields(tab, fields_names, labels=None):
+    labels = labels or {}
+    with ul(
+            id='csv-selected-fields-' + tab['id'],
+            cls='vs-csv-selected-fields',
+            data_csv_selected_list='true') as selected:
+        for field_name in fields_names:
+            with li(
+                    cls='vs-csv-selected-field', draggable='true',
+                    data_csv_selected_field=field_name):
+                icon('drag')
+                span(
+                    labels.get(field_name) or csv_field_label(
+                        Pool().get(tab['model']), field_name))
+                input_(
+                    type='hidden', name='fields', value=field_name)
+    return selected
+
+
+def csv_export_definitions(tab):
+    Export = Pool().get('ir.export')
+    return Export.get(tab['model'], [
+            'name', 'header', 'records', 'ignore_search_limit',
+            'export_fields.name'])
+
+
+def csv_export_initial_fields(tab):
+    Model = Pool().get(tab['model'])
+    view = decode_value(tab.get('view', {}))
+    result = []
+    for name, definition in view.get('fields', {}).items():
+        if name not in Model._fields:
+            continue
+        if definition.get('type') == 'selection':
+            name += '.translated'
+        elif definition.get('type') == 'reference':
+            result.extend([name + '.translated', name + '/rec_name'])
+            continue
+        if name not in result:
+            result.append(name)
+    return result
+
+
+def csv_export_profile_data(tab, definition):
+    fields_names = [
+        line['name']
+        for line in definition.get('export_fields.', [])]
+    return {
+        'id': definition['id'],
+        'name': definition['name'],
+        'header': bool(definition.get('header')),
+        'records': definition.get('records') or 'selected',
+        'ignore_search_limit': bool(
+            definition.get('ignore_search_limit')),
+        'fields': [{
+                'name': name,
+                'label': csv_field_label(
+                    Pool().get(tab['model']), name),
+                } for name in fields_names],
+        }
+
+
+def csv_dialog(engine, tab, kind):
+    ExportRecords = Pool().get('cassini.export.records')
+    ImportRecords = Pool().get('cassini.import.records')
+    Autodetect = Pool().get('cassini.csv.import.autodetect')
+    SaveExport = Pool().get('cassini.csv.export.save')
+    DeleteExport = Pool().get('cassini.csv.export.delete')
+    CloseDialog = Pool().get('cassini.csv.dialog.close')
+    form_id = 'csv-%s-form-%s' % (kind, tab['id'])
+    if kind == 'export':
+        title = translate('CSV Export: %(name)s', name=tab['title'])
+        fields_names = csv_export_initial_fields(tab)
+        action = ExportRecords.url(tab=tab['id'])
+    else:
+        title = translate('CSV Import: %(name)s', name=tab['title'])
+        fields_names = []
+        action = ImportRecords.url(tab=tab['id'])
+    with div(
+            cls='vs-modal-backdrop',
+            data_close_url=CloseDialog.url(tab=tab['id'])) as backdrop:
+        with section(
+                role='dialog', aria_modal='true',
+                aria_labelledby='csv-dialog-title-' + tab['id'],
+                cls='vs-modal vs-csv-dialog'):
+            with form(
+                    id=form_id, action=action,
+                    method='get' if kind == 'export' else 'post',
+                    enctype=(
+                        'multipart/form-data'
+                        if kind == 'import' else None),
+                    data_csv_dialog=kind) as csv_form:
+                if kind == 'import':
+                    csv_form['hx-post'] = action
+                    csv_form['hx-target'] = '#screen-' + tab['id']
+                    csv_form['hx-swap'] = 'outerHTML'
+                    csv_form['hx-encoding'] = 'multipart/form-data'
+                h2(title, id='csv-dialog-title-' + tab['id'])
+                with div(cls='vs-csv-fields-layout'):
+                    with section(cls='vs-csv-fields-panel'):
+                        h3(translate('All Fields'))
+                        with ul(cls='vs-csv-all-fields'):
+                            csv_field_nodes(engine, tab, kind)
+                    with div(cls='vs-csv-field-actions'):
+                        with button(
+                                type='button', cls='vs-button',
+                                data_csv_add='true'):
+                            icon('add')
+                            span(translate('Add'))
+                        with button(
+                                type='button', cls='vs-button',
+                                data_csv_remove='true'):
+                            icon('remove')
+                            span(translate('Remove'))
+                        with button(
+                                type='button', cls='vs-button',
+                                data_csv_clear='true'):
+                            icon('clear')
+                            span(translate('Clear'))
+                        if kind == 'import':
+                            with button(
+                                    type='button', cls='vs-button',
+                                    hx_post=Autodetect.url(tab=tab['id']),
+                                    hx_include='closest form',
+                                    hx_encoding='multipart/form-data',
+                                    hx_target=(
+                                        '#csv-selected-fields-'
+                                        + tab['id']),
+                                    hx_swap='outerHTML'):
+                                icon('search')
+                                span(translate('Auto-Detect'))
+                        else:
+                            with button(
+                                    type='button', cls='vs-button',
+                                    hx_post=SaveExport.url(tab=tab['id']),
+                                    hx_include='closest form',
+                                    hx_target='#modal',
+                                    hx_swap='innerHTML'):
+                                icon('save')
+                                span(translate('Save Export'))
+                            with button(
+                                    type='submit', cls='vs-button',
+                                    formtarget='_blank'):
+                                icon('public')
+                                span(translate('URL Export'))
+                            with button(
+                                    type='button', cls='vs-button',
+                                    hx_post=DeleteExport.url(tab=tab['id']),
+                                    hx_include='closest form',
+                                    hx_target='#modal',
+                                    hx_swap='innerHTML'):
+                                icon('delete')
+                                span(translate('Delete Export'))
+                    with section(cls='vs-csv-fields-panel'):
+                        h3(translate('Fields Selected'))
+                        csv_selected_fields(tab, fields_names)
+                if kind == 'export':
+                    profiles = csv_export_definitions(tab)
+                    with div(cls='vs-csv-chooser'):
+                        with label(cls='vs-field'):
+                            span(translate('Export Name'), cls='vs-label')
+                            input_(
+                                type='text', name='export_name',
+                                cls='vs-input', autocomplete='off')
+                        input_(type='hidden', name='profile_id', value='')
+                        with label(cls='vs-field'):
+                            span(translate('Export'), cls='vs-label')
+                            with select(name='records', cls='vs-input'):
+                                option(
+                                    translate('Selected Records'),
+                                    value='selected', selected=(
+                                        bool(tab.get('selected')) or None))
+                                option(
+                                    translate('Listed Records'),
+                                    value='listed', selected=(
+                                        not tab.get('selected') or None))
+                        with label(cls='vs-check-label'):
+                            input_(
+                                type='checkbox', name='ignore_search_limit')
+                            span(translate('Ignore search limit'))
+                    with section(cls='vs-csv-profiles'):
+                        h3(translate('Predefined Exports'))
+                        with ul(cls='vs-csv-profile-list'):
+                            for definition in profiles:
+                                profile = csv_export_profile_data(
+                                    tab, definition)
+                                with li():
+                                    button(
+                                        definition['name'], type='button',
+                                        cls='vs-csv-profile',
+                                        data_csv_profile=json.dumps(profile))
+                else:
+                    with div(cls='vs-csv-chooser'):
+                        with label(cls='vs-field'):
+                            span(translate('File to Import'), cls='vs-label')
+                            input_(
+                                type='file', name='file', required=True,
+                                accept='.csv,text/csv', cls='vs-input')
+                with details(cls='vs-csv-parameters'):
+                    summary(translate('CSV Parameters'))
+                    with div(cls='vs-csv-parameter-fields'):
+                        if kind == 'import':
+                            with label(cls='vs-field'):
+                                span(translate('Encoding'), cls='vs-label')
+                                with select(name='encoding', cls='vs-input'):
+                                    for encoding in CSV_ENCODINGS:
+                                        option(
+                                            encoding, value=encoding,
+                                            selected=(
+                                                encoding == 'utf-8'
+                                                or None))
+                            with label(cls='vs-field'):
+                                span(
+                                    translate('Lines to Skip'),
+                                    cls='vs-label')
+                                input_(
+                                    type='number', min='0', value='0',
+                                    name='skip', cls='vs-input')
+                        else:
+                            with label(cls='vs-check-label'):
+                                input_(
+                                    type='checkbox', name='locale',
+                                    checked=True)
+                                span(translate('Use locale format'))
+                            with label(cls='vs-check-label'):
+                                input_(
+                                    type='checkbox', name='header',
+                                    checked=True)
+                                span(translate('Add Field Names'))
+                        with label(cls='vs-field vs-csv-character'):
+                            span(translate('Delimiter'), cls='vs-label')
+                            input_(
+                                type='text', maxlength='1', required=True,
+                                value=',', name='delimiter', cls='vs-input')
+                        with label(cls='vs-field vs-csv-character'):
+                            span(translate('Quote Char'), cls='vs-label')
+                            input_(
+                                type='text', maxlength='1', required=True,
+                                value='"', name='quotechar', cls='vs-input')
+                with div(cls='vs-dialog-actions'):
+                    button(
+                        (translate('Close')
+                            if kind == 'export' else translate('Cancel')),
+                        type='button', cls='vs-button',
+                        hx_post=CloseDialog.url(tab=tab['id']),
+                        hx_target='#modal', hx_swap='innerHTML')
+                    button(
+                        (translate('Save As...')
+                            if kind == 'export' else translate('Import')),
+                        type='submit', cls='vs-button vs-button-primary')
+    return backdrop
+
+
+def csv_import_path(engine, tab, header):
+    Root = Pool().get(tab['model'])
+    Model = Root
+    path = []
+    parts = header.split('/')
+    languages = csv_languages()
+    for index, part in enumerate(parts):
+        definitions = csv_field_definitions(engine, tab, Model)
+        name = part.split(':lang=', 1)[0]
+        language = (
+            part.split(':lang=', 1)[1]
+            if ':lang=' in part else None)
+        definition = definitions.get(name)
+        if definition is None:
+            match = None
+            for candidate, candidate_definition in definitions.items():
+                label_ = candidate_definition.get('string') or candidate
+                if part in {candidate, label_}:
+                    match = (candidate, None)
+                    break
+                if candidate_definition.get('translate'):
+                    for lang in languages:
+                        if part == '%s (%s)' % (label_, lang.name):
+                            match = (candidate, lang.code)
+                            break
+                    if match:
+                        break
+            if not match:
+                raise ValueError(translate(
+                        'Unknown column header "%(header)s"',
+                        header=header))
+            name, language = match
+            definition = definitions[name]
+        if definition.get('readonly') and name != 'id':
+            raise ValueError(translate(
+                    'The field "%(field)s" is read-only',
+                    field=definition.get('string') or name))
+        value = name
+        if language:
+            if not definition.get('translate'):
+                raise ValueError(translate(
+                        'Unknown column header "%(header)s"',
+                        header=header))
+            value += ':lang=' + language
+        path.append(value)
+        if index < len(parts) - 1:
+            if definition.get('type') != 'one2many':
+                raise ValueError(translate(
+                        'Only one-to-many fields can be expanded for import'))
+            Model = Model._fields[name].get_target()
+    return '/'.join(path)
 
 
 def message_response(message, description='', level='error'):
@@ -3551,17 +4026,17 @@ class ToggleTreeNode(SaoEndpoint):
 class MoveTreeRecord(SaoEndpoint):
     'Move a Cassini Tree Record'
     __name__ = 'cassini.move.tree.record'
-    _url = (
-        '/tab/<string:tab>/tree/<string:record>/move/<string:direction>')
+    _url = '/tab/<string:tab>/tree/move'
 
     tab = fields.Char('Tab')
     record = fields.Char('Record')
-    direction = fields.Char('Direction')
+    target = fields.Char('Target')
+    position = fields.Char('Position')
 
     @handle_endpoint_errors
     def render(self):
         self.engine.move_tree_record(
-            self.tab, self.record, self.direction)
+            self.tab, self.record, self.target, self.position)
         tab = self.engine.interface.get_tab(self.tab)
         return screen_response(self.engine, tab)
 
@@ -3595,12 +4070,24 @@ class SelectRecord(SaoEndpoint):
     row = fields.Boolean('Row')
     silent = fields.Boolean('Silent')
     open = fields.Boolean('Open')
+    selection = fields.Char('Selection')
+    current = fields.Char('Current')
 
     @handle_endpoint_errors
     def render(self):
+        selection = None
+        if self.selection is not None:
+            try:
+                selection = json.loads(self.selection)
+            except (TypeError, ValueError):
+                raise ValueError(translate('Unknown record'))
+            if not isinstance(selection, list):
+                raise ValueError(translate('Unknown record'))
+            selection = [str(key) for key in selection]
         self.engine.select_record(
             self.tab, self.record,
-            None if self.row else bool(self.selected))
+            None if self.row else bool(self.selected),
+            selection=selection, current=self.current)
         if self.silent and not self.open:
             return Response('', status=204)
         if self.open:
@@ -3753,7 +4240,8 @@ class RelationAutocomplete(SaoEndpoint):
             open_=bool(query),
             modal_target=(
                 '#relation-modal'
-                if endpoint == 'preferences' else '#modal'))
+                if endpoint == 'preferences' else '#modal'),
+            input_id=field_id + '-input')
 
 
 class RelationSearch(SaoEndpoint):
@@ -4215,11 +4703,7 @@ class OpenRelationNew(SaoEndpoint):
         for name, value in renderer.relation_defaults(definition).items():
             context['default_' + name] = value
         if self.query:
-            Relation = Pool().get(relation)
-            rec_name = Relation._rec_name
-            if rec_name in Relation._fields:
-                context.setdefault(
-                    'default_' + rec_name, self.query.strip())
+            context.setdefault('default_rec_name', self.query)
         if relation_field and parent_id:
             relation_parent_field = Pool().get(relation)._fields.get(
                 relation_field)
@@ -4268,7 +4752,13 @@ class X2ManyAction(SaoEndpoint):
     field = fields.Char('Field')
     action = fields.Char('Action')
     item = fields.Char('Item')
+    target = fields.Char('Target')
+    position = fields.Char('Position')
     value = fields.Char('Value')
+    selected = fields.Boolean('Selected')
+    selection = fields.Char('Selection')
+    current = fields.Char('Current')
+    mode = fields.Char('Mode')
 
     @handle_endpoint_errors
     def render(self):
@@ -4285,7 +4775,7 @@ class X2ManyAction(SaoEndpoint):
             [definition.get('relation')])[definition.get('relation')]
         if self.action in {
                 'delete', 'remove', 'undelete', 'add', 'new',
-                'move-up', 'move-down'}:
+                'move'}:
             if readonly:
                 raise ValueError(translate('This relation field is read-only'))
             if (
@@ -4300,6 +4790,9 @@ class X2ManyAction(SaoEndpoint):
                         translate('Deleting related records is not allowed'))
             if self.action == 'add' and not relation_access['read']:
                 raise ValueError(translate('This relation is not readable'))
+            if self.action == 'move' and not relation_access['write']:
+                raise ValueError(
+                    translate('Reordering related records is not allowed'))
             if (
                     self.action == 'new'
                     and (
@@ -4341,13 +4834,43 @@ class X2ManyAction(SaoEndpoint):
         current = state.get('current')
         if current not in keys:
             current = keys[0] if keys else None
+        stored_selection = state.get('selected')
+        selected = (
+            [key for key in stored_selection if key in keys]
+            if stored_selection is not None else
+            [current] if current else [])
+        state['selected'] = selected
 
         changed = {self.field}
         update_value = False
         if self.action == 'select':
             if self.item not in keys:
                 raise ValueError(translate('Unknown related record'))
-            current = self.item
+            if self.selection is not None:
+                try:
+                    selected = json.loads(self.selection)
+                except (TypeError, ValueError):
+                    raise ValueError(translate('Unknown related record'))
+                if (
+                        not isinstance(selected, list)
+                        or any(str(key) not in keys for key in selected)):
+                    raise ValueError(translate('Unknown related record'))
+                selected = list(dict.fromkeys(
+                        str(key) for key in selected))
+                current = (
+                    self.current if self.current in keys else
+                    selected[0] if selected else None)
+            elif self.mode == 'toggle':
+                if self.selected and self.item not in selected:
+                    selected.append(self.item)
+                    current = self.item
+                elif not self.selected and self.item in selected:
+                    selected.remove(self.item)
+                    current = selected[0] if selected else None
+            else:
+                current = self.item
+                selected = [self.item]
+            state['selected'] = selected
         elif self.action == 'column':
             Relation = Pool().get(definition['relation'])
             if self.item not in Relation._fields:
@@ -4462,36 +4985,51 @@ class X2ManyAction(SaoEndpoint):
             defaults['__key__'] = current
             relation_values.append(defaults)
             update_value = True
-        elif self.action in {'move-up', 'move-down'}:
-            match = next((
-                    index for index, (key, _value) in enumerate(active)
-                    if key == self.item), None)
-            if match is None:
+        elif self.action == 'move':
+            active_keys = [key for key, _value in active]
+            if self.item not in active_keys or self.target not in active_keys:
                 raise ValueError(translate('Unknown related record'))
-            target = match + (-1 if self.action == 'move-up' else 1)
-            if 0 <= target < len(relation_values):
-                relation_values[match], relation_values[target] = (
-                    relation_values[target], relation_values[match])
-                relation_view = renderer.x2many_view(
-                    definition, attributes, state.get('view', modes[0]))
-                root = ElementTree.fromstring(
-                    relation_view.get('arch') or '<tree/>')
-                sequence = root.attrib.get('sequence')
-                if sequence:
-                    for position, item in enumerate(relation_values, 1):
-                        if isinstance(item, dict) and item.get('id'):
-                            draft = decode_value(item.get('values', {}))
-                            draft[sequence] = position * 10
-                            relation_values[position - 1] = {
-                                'id': item['id'], 'values': draft}
-                        elif isinstance(item, dict):
-                            item[sequence] = position * 10
-                update_value = True
+            if self.position not in {'before', 'after'}:
+                raise ValueError(translate('Unknown tree drop position'))
+            source_index = active_keys.index(self.item)
+            target_index = active_keys.index(self.target)
+            item = relation_values.pop(source_index)
+            if source_index < target_index:
+                target_index -= 1
+            if self.position == 'after':
+                target_index += 1
+            relation_values.insert(target_index, item)
+            relation_view = renderer.x2many_view(
+                definition, attributes, state.get('view', modes[0]))
+            root = ElementTree.fromstring(
+                relation_view.get('arch') or '<tree/>')
+            sequence = root.attrib.get('sequence')
+            Relation = Pool().get(definition['relation'])
+            if not sequence or sequence not in Relation._fields:
+                raise ValueError(
+                    translate('This tree can not be reordered'))
+            for index, item in enumerate(relation_values, 1):
+                sequence_value = index * 10
+                if isinstance(item, dict) and item.get('id'):
+                    draft = decode_value(item.get('values', {}))
+                    draft[sequence] = sequence_value
+                    relation_values[index - 1] = {
+                        'id': item['id'], 'values': draft}
+                elif isinstance(item, dict):
+                    item[sequence] = sequence_value
+                else:
+                    relation_values[index - 1] = {
+                        'id': int(item),
+                        'values': {sequence: sequence_value},
+                        }
+            update_value = True
             current = self.item
         else:
             raise ValueError(translate('Unknown x2many action'))
 
         state['current'] = current
+        if self.action not in {'select', 'column', 'toggle'}:
+            state['selected'] = [current] if current else []
         if update_value:
             (
                 tab, stored, view, renderer,
@@ -4530,12 +5068,21 @@ class X2ManyAction(SaoEndpoint):
         if self.field in visible_changed:
             visible_changed.remove(self.field)
         visible_changed.insert(0, self.field)
-        fragments = [
-            Fragment(
-                dom_id('field', self.tab, self.record, name),
-                renderer.render(name, field_attributes(view, name)))
-            for name in visible_changed
-            ]
+        focus_state = None
+        if self.action == 'new':
+            focus_state = stored.setdefault(
+                'x2many', {}).setdefault(self.field, {})
+            focus_state['_focus_record'] = current
+        try:
+            fragments = [
+                Fragment(
+                    dom_id('field', self.tab, self.record, name),
+                    renderer.render(name, field_attributes(view, name)))
+                for name in visible_changed
+                ]
+        finally:
+            if focus_state is not None:
+                focus_state.pop('_focus_record', None)
         if endpoint == 'record':
             fragments.append(Fragment(
                     'toolbar-' + self.tab,
@@ -5062,6 +5609,181 @@ class RunToolbarAction(SaoEndpoint):
                 'HX-Push-Url': active_workspace_url(engine)})
 
 
+class ShowCSVExport(SaoEndpoint):
+    'Show Cassini CSV Export'
+    __name__ = 'cassini.csv.export.show'
+    _url = '/tab/<string:tab>/export/dialog'
+
+    tab = fields.Char('Tab')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = csv_tab(self.engine, self.tab)
+        return html_response(csv_dialog(self.engine, tab, 'export'))
+
+
+class ShowCSVImport(SaoEndpoint):
+    'Show Cassini CSV Import'
+    __name__ = 'cassini.csv.import.show'
+    _url = '/tab/<string:tab>/import/dialog'
+
+    tab = fields.Char('Tab')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = csv_tab(self.engine, self.tab)
+        if not tab.get('access', {}).get('create', True):
+            raise ValueError(translate('You are not allowed to import records'))
+        return html_response(csv_dialog(self.engine, tab, 'import'))
+
+
+class CSVRelationFields(SaoEndpoint):
+    'Cassini CSV Relation Fields'
+    __name__ = 'cassini.csv.relation.fields'
+    _url = '/tab/<string:tab>/csv/fields'
+
+    tab = fields.Char('Tab')
+    kind = fields.Char('Kind')
+    path = fields.Char('Path')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = csv_tab(self.engine, self.tab)
+        if self.kind not in {'export', 'import'}:
+            raise ValueError(translate('Unknown CSV operation'))
+        Root = Pool().get(tab['model'])
+        Model = csv_resolve_model(
+            Root, self.path, import_=self.kind == 'import')
+        with ul(
+                id=csv_relation_host(self.tab, self.kind, self.path),
+                cls='vs-csv-field-children') as host:
+            csv_field_nodes(
+                self.engine, tab, self.kind, Model,
+                prefix=self.path + '/')
+        return html_response(host)
+
+
+class AutodetectCSVImport(SaoEndpoint):
+    'Autodetect Cassini CSV Import'
+    __name__ = 'cassini.csv.import.autodetect'
+    _url = '/tab/<string:tab>/import/autodetect'
+
+    tab = fields.Char('Tab')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = csv_tab(self.engine, self.tab)
+        request = current_request()
+        uploaded = request.files.get('file') if request else None
+        if not uploaded or not uploaded.filename:
+            raise ValueError(translate('You must select an import file first.'))
+        encoding = request.form.get('encoding') or 'utf-8'
+        delimiter, quotechar = SaoEngine._csv_parameters(
+            request.form.get('delimiter'), request.form.get('quotechar'))
+        try:
+            codecs.lookup(encoding)
+            text = uploaded.read().decode(encoding)
+        except (LookupError, UnicodeDecodeError) as exception:
+            raise ValueError(translate(
+                    'The CSV file could not be decoded with %(encoding)s',
+                    encoding=encoding)) from exception
+        if text.startswith('\ufeff'):
+            text = text[1:]
+        reader = csv.reader(
+            io.StringIO(text), delimiter=delimiter, quotechar=quotechar)
+        try:
+            headers = next(reader)
+        except StopIteration:
+            raise ValueError(translate('The CSV file is empty'))
+        if not headers or any(not header for header in headers):
+            raise ValueError(translate(
+                    'The first CSV row must contain field names'))
+        fields_names = [
+            csv_import_path(self.engine, tab, header)
+            for header in headers]
+        return html_response(
+            csv_selected_fields(tab, fields_names),
+            {'HX-Trigger': json.dumps({'cassini-csv-autodetected': {}})})
+
+
+class SaveCSVExport(SaoEndpoint):
+    'Save Cassini CSV Export'
+    __name__ = 'cassini.csv.export.save'
+    _url = '/tab/<string:tab>/export/save'
+
+    tab = fields.Char('Tab')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = csv_tab(self.engine, self.tab)
+        request = current_request()
+        fields_names = request.form.getlist('fields')
+        if not fields_names:
+            raise ValueError(translate('Select at least one field'))
+        export_id = request.form.get('profile_id')
+        name = (request.form.get('export_name') or '').strip()
+        Export = Pool().get('ir.export')
+        values = {
+            'name': name,
+            'header': bool(request.form.get('header')),
+            'records': request.form.get('records') or 'selected',
+            'ignore_search_limit': bool(
+                request.form.get('ignore_search_limit')),
+            }
+        if export_id:
+            Export.update(int(export_id), values, fields_names)
+        else:
+            if not name:
+                raise ValueError(translate(
+                        'Enter a name for the export'))
+            values.update({
+                    'resource': tab['model'],
+                    'export_fields': [
+                        {'name': field_name}
+                        for field_name in fields_names],
+                    })
+            Export.set(values)
+        Model = Pool().get(tab['model'])
+        tab['toolbar'] = encode_value(Model.view_toolbar_get())
+        self.engine.save()
+        return html_response(csv_dialog(self.engine, tab, 'export'))
+
+
+class DeleteCSVExport(SaoEndpoint):
+    'Delete Cassini CSV Export'
+    __name__ = 'cassini.csv.export.delete'
+    _url = '/tab/<string:tab>/export/delete'
+
+    tab = fields.Char('Tab')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = csv_tab(self.engine, self.tab)
+        request = current_request()
+        export_id = request.form.get('profile_id') if request else None
+        if not export_id:
+            raise ValueError(translate('Select a predefined export'))
+        Export = Pool().get('ir.export')
+        Export.unset(int(export_id))
+        Model = Pool().get(tab['model'])
+        tab['toolbar'] = encode_value(Model.view_toolbar_get())
+        self.engine.save()
+        return html_response(csv_dialog(self.engine, tab, 'export'))
+
+
+class CloseCSVDialog(SaoEndpoint):
+    'Close Cassini CSV Dialog'
+    __name__ = 'cassini.csv.dialog.close'
+    _url = '/tab/<string:tab>/csv/close'
+
+    tab = fields.Char('Tab')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = csv_tab(self.engine, self.tab)
+        return screen_and_close_modal_response(self.engine, tab)
+
+
 class ExportRecords(SaoEndpoint):
     'Export Cassini Records'
     __name__ = 'cassini.export.records'
@@ -5072,7 +5794,19 @@ class ExportRecords(SaoEndpoint):
 
     @handle_endpoint_errors
     def render(self):
-        return self.engine.export(self.tab, self.export_id)
+        request = current_request()
+        if self.export_id:
+            return self.engine.export(self.tab, self.export_id)
+        return self.engine.export(
+            self.tab,
+            fields_names=request.args.getlist('fields'),
+            header=bool(request.args.get('header')),
+            records=request.args.get('records') or 'listed',
+            ignore_search_limit=bool(
+                request.args.get('ignore_search_limit')),
+            delimiter=request.args.get('delimiter') or ',',
+            quotechar=request.args.get('quotechar') or '"',
+            locale_format=bool(request.args.get('locale')))
 
 
 class ImportRecords(SaoEndpoint):
@@ -5088,9 +5822,15 @@ class ImportRecords(SaoEndpoint):
         uploaded = request.files.get('file') if request else None
         if not uploaded or not uploaded.filename:
             raise ValueError(translate('Choose a CSV file to import'))
-        self.engine.import_csv(self.tab, uploaded.read())
+        self.engine.import_csv(
+            self.tab, uploaded.read(),
+            fields_names=request.form.getlist('fields'),
+            encoding=request.form.get('encoding') or 'utf-8',
+            skip=request.form.get('skip') or 0,
+            delimiter=request.form.get('delimiter') or ',',
+            quotechar=request.form.get('quotechar') or '"')
         tab = self.engine.interface.get_tab(self.tab)
-        return screen_response(self.engine, tab)
+        return screen_and_close_modal_response(self.engine, tab)
 
 
 class ShowRevisions(SaoEndpoint):

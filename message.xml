@@ -46,6 +46,12 @@
         <record model="ir.message" id="msg_a_maximum_of_five_attachments_is_allowed_59377610">
             <field name="text">A maximum of five attachments is allowed.</field>
         </record>
+        <record model="ir.message" id="msg_a_flat_tree_can_not_contain_child_records_4884a147">
+            <field name="text">A flat tree can not contain child records</field>
+        </record>
+        <record model="ir.message" id="msg_a_tree_record_can_not_contain_itself_80215368">
+            <field name="text">A tree record can not contain itself</field>
+        </record>
         <record model="ir.message" id="msg_a_new_task_0123ff8c">
             <field name="text">A new task</field>
         </record>
@@ -508,6 +514,12 @@
         <record model="ir.message" id="msg_relate_0289b666">
             <field name="text">Relate</field>
         </record>
+        <record model="ir.message" id="msg_reorder_33d9978c">
+            <field name="text">Reorder</field>
+        </record>
+        <record model="ir.message" id="msg_reordering_related_records_is_not_allowed_27448124">
+            <field name="text">Reordering related records is not allowed</field>
+        </record>
         <record model="ir.message" id="msg_relation_actions_eace41a0">
             <field name="text">Relation actions</field>
         </record>
@@ -730,9 +742,6 @@
         <record model="ir.message" id="msg_the_audio_could_not_be_transcribed_e456ff0c">
             <field name="text">The audio could not be transcribed.</field>
         </record>
-        <record model="ir.message" id="msg_the_first_csv_row_must_contain_tryton_field_name_f2143a77">
-            <field name="text">The first CSV row must contain Tryton field names</field>
-        </record>
         <record model="ir.message" id="msg_the_microphone_could_not_be_started_7315ef3a">
             <field name="text">The microphone could not be started.</field>
         </record>
@@ -771,6 +780,12 @@
         </record>
         <record model="ir.message" id="msg_this_relation_is_not_readable_4153f601">
             <field name="text">This relation is not readable</field>
+        </record>
+        <record model="ir.message" id="msg_this_tree_can_not_be_reordered_092df402">
+            <field name="text">This tree can not be reordered</field>
+        </record>
+        <record model="ir.message" id="msg_this_tree_is_read_only_85c4a7b3">
+            <field name="text">This tree is read-only</field>
         </record>
         <record model="ir.message" id="msg_this_search_bookmark_can_not_be_removed_915790df">
             <field name="text">This search bookmark can not be removed</field>
@@ -910,9 +925,6 @@
         <record model="ir.message" id="msg_unknown_search_bookmark_aa59fe27">
             <field name="text">Unknown search bookmark</field>
         </record>
-        <record model="ir.message" id="msg_unknown_sequence_direction_8ab4546e">
-            <field name="text">Unknown sequence direction</field>
-        </record>
         <record model="ir.message" id="msg_unknown_shell_action_b8c205b2">
             <field name="text">Unknown shell action</field>
         </record>
@@ -930,6 +942,9 @@
         </record>
         <record model="ir.message" id="msg_unknown_tree_node_9ae3e928">
             <field name="text">Unknown tree node</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_tree_drop_position_82861af2">
+            <field name="text">Unknown tree drop position</field>
         </record>
         <record model="ir.message" id="msg_unknown_tree_record_2c68dc91">
             <field name="text">Unknown tree record</field>
@@ -1089,6 +1104,135 @@
         </record>
         <record model="ir.message" id="msg_preview_f1fbb2b4">
             <field name="text">Preview</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_csv_field_field_s_cf9f5720">
+            <field name="text">Unknown CSV field "%(field)s"</field>
+        </record>
+        <record model="ir.message" id="msg_only_one_to_many_fields_can_be_expanded_for_impo_55c575a0">
+            <field name="text">Only one-to-many fields can be expanded for import</field>
+        </record>
+        <record model="ir.message" id="msg_expand_field_1b8c62b9">
+            <field name="text">Expand field</field>
+        </record>
+        <record model="ir.message" id="msg_field_s_string_787b9f04">
+            <field name="text">%(field)s (string)</field>
+        </record>
+        <record model="ir.message" id="msg_field_s_model_name_f777e4c5">
+            <field name="text">%(field)s (model name)</field>
+        </record>
+        <record model="ir.message" id="msg_field_s_record_name_72e24512">
+            <field name="text">%(field)s/Record Name</field>
+        </record>
+        <record model="ir.message" id="msg_csv_export_name_s_59629579">
+            <field name="text">CSV Export: %(name)s</field>
+        </record>
+        <record model="ir.message" id="msg_csv_import_name_s_3756e85a">
+            <field name="text">CSV Import: %(name)s</field>
+        </record>
+        <record model="ir.message" id="msg_all_fields_f51c7336">
+            <field name="text">All Fields</field>
+        </record>
+        <record model="ir.message" id="msg_auto_detect_518fc452">
+            <field name="text">Auto-Detect</field>
+        </record>
+        <record model="ir.message" id="msg_save_export_6e133815">
+            <field name="text">Save Export</field>
+        </record>
+        <record model="ir.message" id="msg_url_export_3fe35e36">
+            <field name="text">URL Export</field>
+        </record>
+        <record model="ir.message" id="msg_delete_export_9ce2d612">
+            <field name="text">Delete Export</field>
+        </record>
+        <record model="ir.message" id="msg_fields_selected_ed301cf7">
+            <field name="text">Fields Selected</field>
+        </record>
+        <record model="ir.message" id="msg_export_name_2ffae16e">
+            <field name="text">Export Name</field>
+        </record>
+        <record model="ir.message" id="msg_export_f3e4fadb">
+            <field name="text">Export</field>
+        </record>
+        <record model="ir.message" id="msg_selected_records_8ac0df07">
+            <field name="text">Selected Records</field>
+        </record>
+        <record model="ir.message" id="msg_listed_records_3da40c09">
+            <field name="text">Listed Records</field>
+        </record>
+        <record model="ir.message" id="msg_ignore_search_limit_12bcdad5">
+            <field name="text">Ignore search limit</field>
+        </record>
+        <record model="ir.message" id="msg_predefined_exports_3af8b314">
+            <field name="text">Predefined Exports</field>
+        </record>
+        <record model="ir.message" id="msg_file_to_import_b5fa1ece">
+            <field name="text">File to Import</field>
+        </record>
+        <record model="ir.message" id="msg_csv_parameters_7523082c">
+            <field name="text">CSV Parameters</field>
+        </record>
+        <record model="ir.message" id="msg_encoding_5821fec7">
+            <field name="text">Encoding</field>
+        </record>
+        <record model="ir.message" id="msg_lines_to_skip_2ee6a49f">
+            <field name="text">Lines to Skip</field>
+        </record>
+        <record model="ir.message" id="msg_use_locale_format_f03d0fa2">
+            <field name="text">Use locale format</field>
+        </record>
+        <record model="ir.message" id="msg_add_field_names_786e8fa5">
+            <field name="text">Add Field Names</field>
+        </record>
+        <record model="ir.message" id="msg_delimiter_5e96ff2a">
+            <field name="text">Delimiter</field>
+        </record>
+        <record model="ir.message" id="msg_quote_char_214076d9">
+            <field name="text">Quote Char</field>
+        </record>
+        <record model="ir.message" id="msg_save_as_d8916376">
+            <field name="text">Save As...</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_column_header_header_s_d970625b">
+            <field name="text">Unknown column header "%(header)s"</field>
+        </record>
+        <record model="ir.message" id="msg_the_field_field_s_is_read_only_a302f8bd">
+            <field name="text">The field "%(field)s" is read-only</field>
+        </record>
+        <record model="ir.message" id="msg_you_are_not_allowed_to_import_records_a5a4b9b2">
+            <field name="text">You are not allowed to import records</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_csv_operation_b1c9f818">
+            <field name="text">Unknown CSV operation</field>
+        </record>
+        <record model="ir.message" id="msg_you_must_select_an_import_file_first_017de126">
+            <field name="text">You must select an import file first.</field>
+        </record>
+        <record model="ir.message" id="msg_the_csv_file_could_not_be_decoded_with_encoding__f12698f7">
+            <field name="text">The CSV file could not be decoded with %(encoding)s</field>
+        </record>
+        <record model="ir.message" id="msg_the_first_csv_row_must_contain_field_names_b82d7ac5">
+            <field name="text">The first CSV row must contain field names</field>
+        </record>
+        <record model="ir.message" id="msg_select_at_least_one_field_e1839336">
+            <field name="text">Select at least one field</field>
+        </record>
+        <record model="ir.message" id="msg_enter_a_name_for_the_export_3d4e17a7">
+            <field name="text">Enter a name for the export</field>
+        </record>
+        <record model="ir.message" id="msg_select_a_predefined_export_893ce241">
+            <field name="text">Select a predefined export</field>
+        </record>
+        <record model="ir.message" id="msg_the_csv_delimiter_must_be_one_character_ae41c2fd">
+            <field name="text">The CSV delimiter must be one character</field>
+        </record>
+        <record model="ir.message" id="msg_the_csv_quote_character_must_be_one_character_bd6c63dc">
+            <field name="text">The CSV quote character must be one character</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_csv_record_selection_1005a5c9">
+            <field name="text">Unknown CSV record selection</field>
+        </record>
+        <record model="ir.message" id="msg_select_at_least_one_field_to_import_ecb61539">
+            <field name="text">Select at least one field to import</field>
         </record>
     </data>
 </tryton>

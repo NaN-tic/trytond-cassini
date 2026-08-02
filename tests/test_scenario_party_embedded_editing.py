@@ -91,6 +91,10 @@ class TestPartyEmbeddedEditing(WebTestCase):
         expect(address_name).to_have_value('Edited Embedded Address')
 
         contacts = page.locator('[data-field="contact_mechanisms"]')
+        expect(contacts.locator(
+            'col[data-column-field="party"]')).to_have_count(0)
+        expect(contacts.get_by_role(
+            'columnheader', name='Party', exact=True)).to_have_count(0)
         self.assertEqual(
             contacts.locator('.vs-table-wrap').get_attribute(
                 'data-editable-tree'),
@@ -107,14 +111,42 @@ class TestPartyEmbeddedEditing(WebTestCase):
         expect(url_icon.locator('img.vs-icon')).to_have_count(1)
         expect(url_icon).not_to_contain_text('party@example.test')
         contact_value.fill('edited@example.test')
+        contacts.get_by_role(
+            'button', name='New', exact=True).click()
+        expect(page.locator('.vs-relation-record-dialog')).to_have_count(0)
+        contacts = page.locator('[data-field="contact_mechanisms"]')
+        expect(contacts.locator('.vs-x2many-row')).to_have_count(2)
+        inline_contact = contacts.locator('.vs-x2many-row').last
+        expect(inline_contact.locator(
+            '[data-field="type"] select')).to_be_editable()
+        expect(inline_contact.locator(
+            '[data-field="type"] select')).to_be_focused()
+        expect(inline_contact.locator(
+            '[data-field="value"] input')).to_be_editable()
+        with page.expect_response(
+                lambda response: response.url.endswith('/field/type')):
+            inline_contact.locator(
+                '[data-field="type"] select').select_option('email')
+        page.wait_for_timeout(100)
+        contacts = page.locator('[data-field="contact_mechanisms"]')
+        inline_contact = contacts.locator('.vs-x2many-row').last
+        inline_contact.locator('[data-field="value"] input').fill(
+            'second@example.test')
+        page.wait_for_timeout(600)
+
+        contacts = page.locator('[data-field="contact_mechanisms"]')
+        inline_contact = contacts.locator('.vs-x2many-row').last
         with page.expect_response(
                 lambda response: response.url.endswith(
                     '/x2many/new')):
-            contact_value.press('Enter')
-        expect(contacts.locator('.vs-x2many-row')).to_have_count(2)
+            inline_contact.locator(
+                '[data-field="value"] input').press('Enter')
+        expect(contacts.locator('.vs-x2many-row')).to_have_count(3)
 
         contacts = page.locator('[data-field="contact_mechanisms"]')
         new_contact = contacts.locator('.vs-x2many-row').last
+        expect(new_contact.locator(
+            '[data-field="type"] select')).to_be_focused()
         with page.expect_response(
                 lambda response: response.url.endswith('/field/type')):
             new_contact.locator(
@@ -123,8 +155,46 @@ class TestPartyEmbeddedEditing(WebTestCase):
         contacts = page.locator('[data-field="contact_mechanisms"]')
         new_contact = contacts.locator('.vs-x2many-row').last
         new_contact.locator('[data-field="value"] input').fill(
-            'second@example.test')
+            'third@example.test')
         page.wait_for_timeout(600)
+
+        contacts = page.locator('[data-field="contact_mechanisms"]')
+        contact_rows = contacts.locator('.vs-x2many-row')
+        expect(contact_rows.locator(
+            '[data-tree-drag-handle]')).to_have_count(3)
+        with page.expect_response(
+                lambda response: response.url.endswith('/x2many/select')):
+            contact_rows.first.locator(
+                '[data-field="value"]').click()
+        with page.expect_response(
+                lambda response: response.url.endswith('/x2many/select')):
+            contact_rows.nth(1).locator(
+                '[data-field="value"]').click(modifiers=['Control'])
+        expect(contacts.locator(
+            '.vs-select-column input[aria-label="Select record"]:checked'
+            )).to_have_count(2)
+        expect(contacts.locator('.vs-row-selected')).to_have_count(2)
+        with page.expect_response(
+                lambda response: response.url.endswith('/x2many/select')):
+            contact_rows.nth(2).locator(
+                '[data-field="value"]').click(modifiers=['Shift'])
+        expect(contacts.locator(
+            '.vs-select-column input[aria-label="Select record"]:checked'
+            )).to_have_count(2)
+        expect(contact_rows.first.locator(
+            '.vs-select-column input[aria-label="Select record"]'
+            )).not_to_be_checked()
+        third_contact = contact_rows.last
+        first_contact = contact_rows.first
+        with page.expect_response(
+                lambda response: response.url.endswith('/x2many/move')):
+            third_contact.locator('[data-tree-drag-handle]').drag_to(
+                first_contact,
+                target_position={'x': 20, 'y': 1})
+        contacts = page.locator('[data-field="contact_mechanisms"]')
+        expect(contacts.locator(
+            '.vs-x2many-row [data-field="value"] input').first
+            ).to_have_value('third@example.test')
 
         categories = page.locator('[data-field="categories"]')
         category_input = categories.locator('[data-x2many-add-input]')
@@ -146,6 +216,7 @@ class TestPartyEmbeddedEditing(WebTestCase):
             )).to_have_value('Edited Embedded Address')
         contact_values = page.locator(
             '[data-field="contact_mechanisms"] [data-field="value"] input')
-        expect(contact_values).to_have_count(2)
-        expect(contact_values.nth(0)).to_have_value('edited@example.test')
-        expect(contact_values.nth(1)).to_have_value('second@example.test')
+        expect(contact_values).to_have_count(3)
+        expect(contact_values.nth(0)).to_have_value('third@example.test')
+        expect(contact_values.nth(1)).to_have_value('edited@example.test')
+        expect(contact_values.nth(2)).to_have_value('second@example.test')

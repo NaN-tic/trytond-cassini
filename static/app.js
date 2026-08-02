@@ -219,6 +219,34 @@
             getComputedStyle(element).visibility !== "hidden");
     }
 
+    function x2manyFocusSelector(trigger) {
+        if (trigger?.matches?.(
+                "[data-x2many-inline-new], [data-editable-tree-new]")) {
+            return trigger.getAttribute("hx-target");
+        }
+        return null;
+    }
+
+    function focusNewX2ManyRow(selector) {
+        if (!selector) {
+            return;
+        }
+        window.requestAnimationFrame(function () {
+            const relation = document.querySelector(selector);
+            const row = relation?.querySelector(
+                ".vs-x2many-row-current");
+            const controls = Array.from(row?.querySelectorAll(
+                ".vs-field input, .vs-field select, " +
+                ".vs-field textarea") || []).filter(element =>
+                    isVisible(element) && !element.disabled &&
+                    !element.readOnly && element.type !== "hidden" &&
+                    element.tabIndex !== -1);
+            const control = controls.find(
+                element => element.autofocus) || controls[0];
+            control?.focus({preventScroll: true});
+        });
+    }
+
     function focusInitialForm(forceModal=false) {
         const modalScreen = Array.from(document.querySelectorAll(
             forceModal ? ".vs-modal-backdrop .vs-screen" :
@@ -1682,7 +1710,8 @@
 
     function treeRowFromEvent(event, allowFieldControls) {
         if (event.target.closest(
-                ".vs-select-column, button, a, summary, details") ||
+                ".vs-select-column, .vs-drag-column, " +
+                "button, a, summary, details") ||
                 (!allowFieldControls && event.target.closest(
                     "input, select, textarea, label, " +
                     "[contenteditable='true']"))) {
@@ -1691,26 +1720,336 @@
         return event.target.closest(".vs-row");
     }
 
-    function markTreeRowSelected(row) {
+    function markTreeRowSelected(row, event, multiple) {
         const tree = row.closest(".vs-table-wrap");
         if (!tree) {
-            return;
+            return null;
         }
-        for (const candidate of tree.querySelectorAll(".vs-row")) {
-            const selected = candidate === row;
-            candidate.classList.toggle("vs-row-current", selected);
+        const table = row.closest("table");
+        const rows = Array.from(table?.tBodies[0]?.rows || []).filter(
+            candidate => candidate.matches(".vs-row"));
+        let current = rows.find(
+            candidate => candidate.classList.contains("vs-row-current"));
+        let selected = new Set(rows.filter(candidate => {
+            const checkbox = candidate.querySelector(
+                "td.vs-select-column input[name='selected']");
+            return checkbox?.checked;
+        }));
+        if (multiple && event.shiftKey) {
+            current = current || rows[0];
+            const start = rows.indexOf(current);
+            const end = rows.indexOf(row);
+            const first = Math.min(start, end);
+            const last = Math.max(start, end);
+            selected = new Set(rows.slice(first, last + 1));
+        } else if (multiple && (event.ctrlKey || event.metaKey)) {
+            if (selected.has(row)) {
+                selected.delete(row);
+                current = rows.find(candidate => selected.has(candidate));
+            } else {
+                selected.add(row);
+                current = row;
+            }
+        } else {
+            selected = new Set([row]);
+            current = row;
+        }
+        for (const candidate of rows) {
+            const isSelected = selected.has(candidate);
+            candidate.classList.toggle("vs-row-selected", isSelected);
+            candidate.classList.toggle("vs-row-current", candidate === current);
             const checkbox = candidate.querySelector(
                 "td.vs-select-column input[name='selected']");
             if (checkbox) {
-                checkbox.checked = selected;
+                checkbox.checked = isSelected;
             }
         }
         const selectAll = tree.querySelector(
             "thead .vs-select-column input[name='selected']");
         if (selectAll) {
-            selectAll.checked = false;
+            selectAll.checked = Boolean(rows.length) &&
+                selected.size === rows.length;
+            selectAll.indeterminate = Boolean(selected.size) &&
+                selected.size < rows.length;
+        }
+        return {
+            records: rows.filter(candidate => selected.has(candidate)).map(
+                candidate => candidate.dataset.record),
+            current: current?.dataset.record || "",
+        };
+    }
+
+    let treeDragState = null;
+
+    function clearTreeDropState() {
+        if (!treeDragState) {
+            return;
+        }
+        treeDragState.tree.querySelectorAll(
+            ".vs-row-drop-before, .vs-row-drop-after, " +
+            ".vs-row-drop-inside").forEach(row => row.classList.remove(
+                "vs-row-drop-before", "vs-row-drop-after",
+                "vs-row-drop-inside"));
+        treeDragState.row.classList.remove("vs-row-dragging");
+        treeDragState = null;
+    }
+
+    document.addEventListener("dragstart", function (event) {
+        const handle = event.target.closest?.("[data-tree-drag-handle]");
+        const row = handle?.closest(".vs-row");
+        const tree = row?.closest("[data-tree-reorder]");
+        if (!handle || !row || !tree || !event.dataTransfer) {
+            return;
+        }
+        treeDragState = {tree: tree, row: row, target: null, position: null};
+        row.classList.add("vs-row-dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", row.dataset.record || "");
+        event.dataTransfer.setDragImage(row, 8, 8);
+    });
+
+    document.addEventListener("dragover", function (event) {
+        if (!treeDragState) {
+            return;
+        }
+        const target = event.target.closest?.(".vs-row");
+        if (!target || target === treeDragState.row ||
+                target.closest("[data-tree-reorder]") !== treeDragState.tree) {
+            return;
+        }
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        treeDragState.tree.querySelectorAll(
+            ".vs-row-drop-before, .vs-row-drop-after, " +
+            ".vs-row-drop-inside").forEach(row => row.classList.remove(
+                "vs-row-drop-before", "vs-row-drop-after",
+                "vs-row-drop-inside"));
+        const rectangle = target.getBoundingClientRect();
+        const position = (
+            treeDragState.tree.dataset.treeChildren === "true" &&
+            (event.ctrlKey || event.metaKey))
+            ? "inside"
+            : event.clientY < rectangle.top + rectangle.height / 2
+                ? "before" : "after";
+        target.classList.add("vs-row-drop-" + position);
+        treeDragState.target = target;
+        treeDragState.position = position;
+    });
+
+    document.addEventListener("drop", function (event) {
+        if (!treeDragState?.target) {
+            return;
+        }
+        event.preventDefault();
+        const state = treeDragState;
+        const action = state.tree.querySelector("[data-tree-move-action]");
+        const source = state.row.dataset.record;
+        const target = state.target.dataset.record;
+        const position = state.position;
+        clearTreeDropState();
+        if (!action || !source || !target || !position) {
+            return;
+        }
+        const values = {target: target, position: position};
+        values[
+            action.dataset.treeMoveKind === "relation" ? "item" : "record"
+        ] = source;
+        action.setAttribute("hx-vals", JSON.stringify(values));
+        action.click();
+    });
+
+    document.addEventListener("dragend", clearTreeDropState);
+
+    function addCSVSelectedField(list, field, label) {
+        if (!list || !field || Array.from(list.children).some(
+                item => item.dataset.csvSelectedField === field)) {
+            return;
+        }
+        const item = document.createElement("li");
+        item.className = "vs-csv-selected-field";
+        item.draggable = true;
+        item.dataset.csvSelectedField = field;
+        const handle = document.createElement("span");
+        handle.className = "vs-csv-drag-handle";
+        handle.textContent = "⋮⋮";
+        handle.setAttribute("aria-hidden", "true");
+        const text = document.createElement("span");
+        text.textContent = label || field;
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "fields";
+        input.value = field;
+        item.append(handle, text, input);
+        list.append(item);
+    }
+
+    function applyCSVExportProfile(button) {
+        const form = button.closest("[data-csv-dialog='export']");
+        const list = form?.querySelector("[data-csv-selected-list]");
+        if (!form || !list) {
+            return;
+        }
+        let profile;
+        try {
+            profile = JSON.parse(button.dataset.csvProfile || "{}");
+        } catch (error) {
+            return;
+        }
+        form.querySelectorAll("[data-csv-profile]").forEach(candidate => {
+            candidate.classList.toggle("vs-selected", candidate === button);
+        });
+        list.replaceChildren();
+        (profile.fields || []).forEach(field => {
+            addCSVSelectedField(list, field.name, field.label);
+        });
+        const id = form.querySelector("[name='profile_id']");
+        const name = form.querySelector("[name='export_name']");
+        const records = form.querySelector("[name='records']");
+        const header = form.querySelector("[name='header']");
+        const ignore = form.querySelector("[name='ignore_search_limit']");
+        if (id) {
+            id.value = profile.id || "";
+        }
+        if (name) {
+            name.value = profile.name || "";
+        }
+        if (records) {
+            records.value = profile.records || "selected";
+        }
+        if (header) {
+            header.checked = Boolean(profile.header);
+        }
+        if (ignore) {
+            ignore.checked = Boolean(profile.ignore_search_limit);
         }
     }
+
+    document.addEventListener("click", function (event) {
+        const expand = event.target.closest?.("[data-csv-expand]");
+        if (expand) {
+            const target = expand.getAttribute("hx-target");
+            const host = target ? document.querySelector(target) :
+                expand.closest(".vs-csv-field")?.querySelector(
+                    ":scope > .vs-csv-field-children");
+            if (host) {
+                host.hidden = !host.hidden;
+                expand.classList.toggle("vs-expanded", !host.hidden);
+            }
+            return;
+        }
+        const choice = event.target.closest?.("[data-csv-field-choice]");
+        if (choice) {
+            const allFields = choice.closest(".vs-csv-all-fields");
+            if (!(event.ctrlKey || event.metaKey)) {
+                allFields?.querySelectorAll(
+                    "[data-csv-field-choice].vs-selected").forEach(
+                    selected => selected.classList.remove("vs-selected"));
+            }
+            choice.classList.toggle("vs-selected");
+            return;
+        }
+        const add = event.target.closest?.("[data-csv-add]");
+        if (add) {
+            const form = add.closest("[data-csv-dialog]");
+            const list = form?.querySelector("[data-csv-selected-list]");
+            form?.querySelectorAll(
+                "[data-csv-field-choice].vs-selected").forEach(choice => {
+                addCSVSelectedField(
+                    list, choice.dataset.csvField,
+                    choice.dataset.csvLabel || choice.textContent.trim());
+                choice.classList.remove("vs-selected");
+            });
+            return;
+        }
+        const selected = event.target.closest?.(
+            "[data-csv-selected-field]");
+        if (selected) {
+            const list = selected.closest("[data-csv-selected-list]");
+            if (!(event.ctrlKey || event.metaKey)) {
+                list?.querySelectorAll(
+                    "[data-csv-selected-field].vs-selected").forEach(
+                    item => item.classList.remove("vs-selected"));
+            }
+            selected.classList.toggle("vs-selected");
+            return;
+        }
+        const remove = event.target.closest?.("[data-csv-remove]");
+        if (remove) {
+            remove.closest("[data-csv-dialog]")?.querySelectorAll(
+                "[data-csv-selected-field].vs-selected").forEach(
+                item => item.remove());
+            return;
+        }
+        const clear = event.target.closest?.("[data-csv-clear]");
+        if (clear) {
+            clear.closest("[data-csv-dialog]")?.querySelector(
+                "[data-csv-selected-list]")?.replaceChildren();
+            return;
+        }
+        const profile = event.target.closest?.("[data-csv-profile]");
+        if (profile) {
+            applyCSVExportProfile(profile);
+        }
+    });
+
+    document.addEventListener("dblclick", function (event) {
+        const choice = event.target.closest?.("[data-csv-field-choice]");
+        if (!choice) {
+            return;
+        }
+        const list = choice.closest("[data-csv-dialog]")?.querySelector(
+            "[data-csv-selected-list]");
+        addCSVSelectedField(
+            list, choice.dataset.csvField,
+            choice.dataset.csvLabel || choice.textContent.trim());
+        choice.classList.remove("vs-selected");
+    });
+
+    let csvDraggedField = null;
+    document.addEventListener("dragstart", function (event) {
+        const item = event.target.closest?.("[data-csv-selected-field]");
+        if (!item || !event.dataTransfer) {
+            return;
+        }
+        csvDraggedField = item;
+        item.classList.add("vs-dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData(
+            "text/plain", item.dataset.csvSelectedField || "");
+    });
+    document.addEventListener("dragover", function (event) {
+        if (!csvDraggedField) {
+            return;
+        }
+        const target = event.target.closest?.("[data-csv-selected-field]");
+        if (!target || target === csvDraggedField ||
+                target.parentElement !== csvDraggedField.parentElement) {
+            return;
+        }
+        event.preventDefault();
+        const rectangle = target.getBoundingClientRect();
+        target.parentElement.insertBefore(
+            csvDraggedField,
+            event.clientY < rectangle.top + rectangle.height / 2
+                ? target : target.nextSibling);
+    });
+    document.addEventListener("drop", function (event) {
+        if (csvDraggedField) {
+            event.preventDefault();
+        }
+    });
+    document.addEventListener("dragend", function () {
+        csvDraggedField?.classList.remove("vs-dragging");
+        csvDraggedField = null;
+    });
+    document.body.addEventListener(
+        "cassini-csv-autodetected", function () {
+            const skip = document.querySelector(
+                "[data-csv-dialog='import'] [name='skip']");
+            if (skip) {
+                skip.value = "1";
+            }
+        });
 
     function attachmentDropTarget(event) {
         return event.target.closest?.("[data-attachment-drop]");
@@ -2119,12 +2458,27 @@
         }
         const row = treeRowFromEvent(event, true);
         if (row) {
-            markTreeRowSelected(row);
+            const selectAction = row.querySelector(
+                "[data-row-select-action]");
+            const selectionKind = selectAction?.dataset.rowSelectionKind;
+            const multipleSelection =
+                selectionKind === "screen" || selectionKind === "relation";
+            const selection = markTreeRowSelected(
+                row, event, multipleSelection);
             window.clearTimeout(rowClickTimer);
             rowClickTimer = window.setTimeout(function () {
-                const selectAction = row.querySelector(
-                    "[data-row-select-action]");
                 if (selectAction) {
+                    if (multipleSelection && selection) {
+                        const values = {
+                            selection: JSON.stringify(selection.records),
+                            current: selection.current,
+                        };
+                        if (selectionKind === "relation") {
+                            values.item = row.dataset.record;
+                        }
+                        selectAction.setAttribute(
+                            "hx-vals", JSON.stringify(values));
+                    }
                     selectAction.click();
                 }
                 rowClickTimer = null;
@@ -2737,7 +3091,7 @@
             window.location.replace(url.href);
         }
     });
-    document.addEventListener("htmx:afterSwap", function () {
+    document.addEventListener("htmx:afterSwap", function (event) {
         restoreFocus();
         initializeSearchCompletions();
         focusPendingSearch();
@@ -2968,6 +3322,7 @@
             restoreFocus();
             initializeSearchCompletions();
             scheduleInitialFormFocus();
+            focusNewX2ManyRow(x2manyFocusSelector(element));
         } catch (error) {
             if (error.name === "AbortError") {
                 return;

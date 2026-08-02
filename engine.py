@@ -1,7 +1,9 @@
 import base64
+import codecs
 import csv
 import io
 import json
+import math
 import mimetypes
 import uuid
 from datetime import date, datetime, time, timedelta
@@ -1257,17 +1259,32 @@ class SaoEngine:
         self.save()
         return tab
 
-    def move_tree_record(self, tab_id, record_key, direction):
+    def move_tree_record(
+            self, tab_id, record_key, target_key, position):
         tab = self._tab(tab_id, kind='window')
         order = tab.get('record_order', [])
-        if record_key not in order:
+        if record_key not in order or target_key not in order:
             raise ValueError(translate('Unknown tree record'))
+        if position not in {'before', 'after', 'inside'}:
+            raise ValueError(translate('Unknown tree drop position'))
+        if record_key == target_key:
+            return tab
         view = decode_value(tab.get('view', {}))
+        root = ElementTree.fromstring(view.get('arch') or '<tree/>')
+        sequence = root.attrib.get('sequence')
+        Model = self.pool.get(tab['model'])
+        if not sequence or sequence not in Model._fields:
+            raise ValueError(translate('This tree can not be reordered'))
+        if (
+                not tab.get('access', {}).get('write', True)
+                or decode_value(tab.get('context', {})).get('_datetime')):
+            raise ValueError(translate('This tree is read-only'))
+
         child_field = view.get('field_childs')
-        siblings = list(order)
+        children = {}
+        parent_by_child = {}
+        roots = list(order)
         if child_field:
-            children = {}
-            parent_by_child = {}
             for key in order:
                 child_keys = [
                     str(record_id)
@@ -1279,38 +1296,97 @@ class SaoEngine:
                 children[key] = child_keys
                 parent_by_child.update({
                         child_key: key for child_key in child_keys})
-            parent = parent_by_child.get(record_key)
-            if parent:
-                siblings = children[parent]
-            else:
-                siblings = [
-                    key for key in order
-                    if key not in parent_by_child]
-        index = siblings.index(record_key)
-        target = (
-            index - 1 if direction == 'up'
-            else index + 1 if direction == 'down'
-            else None)
-        if target is None:
-            raise ValueError(translate('Unknown sequence direction'))
-        if target < 0 or target >= len(siblings):
-            return tab
-        target_key = siblings[target]
-        record_position = order.index(record_key)
-        target_position = order.index(target_key)
-        order[record_position], order[target_position] = (
-            order[target_position], order[record_position])
-        root = ElementTree.fromstring(view.get('arch') or '<tree/>')
-        sequence = root.attrib.get('sequence')
-        if sequence:
-            for position, key in enumerate(order, 1):
+            roots = [
+                key for key in order if key not in parent_by_child]
+
+        source_parent = parent_by_child.get(record_key)
+        source_siblings = (
+            children[source_parent] if source_parent else roots)
+        target_parent = parent_by_child.get(target_key)
+        if position == 'inside':
+            if not child_field:
+                raise ValueError(
+                    translate('A flat tree can not contain child records'))
+            destination_parent = target_key
+            destination_siblings = children[target_key]
+            destination_index = len(destination_siblings)
+        else:
+            destination_parent = target_parent
+            destination_siblings = (
+                children[target_parent] if target_parent else roots)
+            destination_index = destination_siblings.index(target_key)
+            if position == 'after':
+                destination_index += 1
+
+        ancestor = destination_parent
+        while ancestor:
+            if ancestor == record_key:
+                raise ValueError(
+                    translate('A tree record can not contain itself'))
+            ancestor = parent_by_child.get(ancestor)
+
+        source_index = source_siblings.index(record_key)
+        source_siblings.pop(source_index)
+        if (
+                source_siblings is destination_siblings
+                and source_index < destination_index):
+            destination_index -= 1
+        destination_siblings.insert(destination_index, record_key)
+
+        if child_field:
+            for parent_key in {source_parent, destination_parent} - {None}:
+                values = decode_value(
+                    tab['records'][parent_key].get('values', {}))
+                values[child_field] = [
+                    tab['records'][key].get('id') or key
+                    for key in children[parent_key]]
+                tab['records'][parent_key]['values'] = encode_value(values)
+            if source_parent != destination_parent:
+                relation_field = getattr(
+                    Model._fields.get(child_field), 'field', None)
+                if relation_field and relation_field in Model._fields:
+                    record = tab['records'][record_key]
+                    values = decode_value(record.get('values', {}))
+                    values[relation_field] = (
+                        tab['records'][destination_parent].get('id')
+                        if destination_parent else None)
+                    record['values'] = encode_value(values)
+                    record['dirty'] = sorted(
+                        set(record.get('dirty', [])) | {relation_field})
+
+            reordered = []
+            visited = set()
+
+            def append_record(key):
+                if key in visited:
+                    return
+                visited.add(key)
+                reordered.append(key)
+                for child_key in children.get(key, []):
+                    append_record(child_key)
+
+            for key in roots:
+                append_record(key)
+            for key in order:
+                append_record(key)
+            order[:] = reordered
+        else:
+            order[:] = roots
+
+        sequence_groups = [source_siblings]
+        if destination_siblings is not source_siblings:
+            sequence_groups.append(destination_siblings)
+        for siblings in sequence_groups:
+            for index, key in enumerate(siblings, 1):
                 record = tab['records'][key]
                 values = decode_value(record.get('values', {}))
-                values[sequence] = position * 10
+                values[sequence] = index * 10
                 record['values'] = encode_value(values)
                 record['dirty'] = sorted(
                     set(record.get('dirty', [])) | {sequence})
-            tab['dirty'] = True
+        tab['dirty'] = True
+        tab['current_record'] = record_key
+        tab['selected'] = [record_key]
         self.save()
         return tab
 
@@ -1387,18 +1463,29 @@ class SaoEngine:
         self.save()
         return tab
 
-    def select_record(self, tab_id, record_key, selected=None):
+    def select_record(
+            self, tab_id, record_key, selected=None,
+            selection=None, current=None):
         tab = self._tab(tab_id, kind='window')
         if record_key not in tab['records']:
             raise KeyError(translate('Unknown record %s') % record_key)
-        tab['current_record'] = record_key
-        selected_keys = tab.setdefault('selected', [])
-        if selected is None:
-            tab['selected'] = [record_key]
-        elif selected is True and record_key not in selected_keys:
-            selected_keys.append(record_key)
-        elif selected is False and record_key in selected_keys:
-            selected_keys.remove(record_key)
+        if selection is not None:
+            if any(key not in tab['records'] for key in selection):
+                raise KeyError(translate('Unknown record %s') % record_key)
+            selection = list(dict.fromkeys(selection))
+            tab['selected'] = selection
+            tab['current_record'] = (
+                current if current in tab['records'] else
+                selection[0] if selection else None)
+        else:
+            tab['current_record'] = record_key
+            selected_keys = tab.setdefault('selected', [])
+            if selected is None:
+                tab['selected'] = [record_key]
+            elif selected is True and record_key not in selected_keys:
+                selected_keys.append(record_key)
+            elif selected is False and record_key in selected_keys:
+                selected_keys.remove(record_key)
         self.save()
         return tab['records'][record_key]
 
@@ -2268,9 +2355,74 @@ class SaoEngine:
                 str(filename or '').encode('utf-8')).decode('ascii'))
         return response
 
-    def export(self, tab_id, export_id=None):
+    @staticmethod
+    def _csv_parameters(delimiter, quotechar):
+        delimiter = delimiter or ','
+        quotechar = quotechar or '"'
+        if len(delimiter) != 1:
+            raise ValueError(translate(
+                    'The CSV delimiter must be one character'))
+        if len(quotechar) != 1:
+            raise ValueError(translate(
+                    'The CSV quote character must be one character'))
+        return delimiter, quotechar
+
+    @staticmethod
+    def _csv_value(value, locale_format, language):
+        if value is None:
+            return ''
+        if isinstance(value, bytes):
+            return base64.b64encode(value).decode('ascii')
+        if not locale_format:
+            if isinstance(value, datetime):
+                return value.isoformat(sep=' ')
+            if isinstance(value, (date, time)):
+                return value.isoformat()
+            if isinstance(value, timedelta):
+                return value.total_seconds()
+            if isinstance(value, bool):
+                return int(value)
+            return value
+        if isinstance(value, datetime):
+            zone = timezone.get_tzinfo(
+                Transaction().context.get('timezone', 'UTC'))
+            if value.tzinfo is None:
+                value = value.replace(tzinfo=timezone.UTC)
+            return language.strftime(value.astimezone(zone).replace(
+                    tzinfo=None))
+        if isinstance(value, (date, time)):
+            return language.strftime(value)
+        if isinstance(value, timedelta):
+            return str(value)
+        if isinstance(value, bool):
+            return language.format('%d', int(value), grouping=True)
+        if isinstance(value, (Decimal, float, int)):
+            if isinstance(value, float):
+                if not math.isfinite(value):
+                    return str(value)
+                raw = format(Decimal(str(value)), 'f')
+            else:
+                raw = format(value, 'f')
+            if '.' in raw:
+                integer, fraction = raw.split('.', 1)
+                fraction = fraction.rstrip('0')
+            else:
+                integer, fraction = raw, ''
+            formatted = language.format(
+                '%d', int(integer or '0'), grouping=True)
+            if fraction:
+                formatted += language.decimal_point + fraction
+            return formatted
+        return value
+
+    def export(
+            self, tab_id, export_id=None, fields_names=None, header=True,
+            records='listed', ignore_search_limit=False,
+            delimiter=',', quotechar='"', locale_format=True):
         tab = self._tab(tab_id, kind='window')
         Model = self.pool.get(tab['model'])
+        delimiter, quotechar = self._csv_parameters(
+            delimiter, quotechar)
         export_definition = None
         if export_id:
             toolbar = decode_value(tab.get('toolbar', {}))
@@ -2286,31 +2438,63 @@ class SaoEngine:
                 field['name']
                 for field in export_definition.get('export_fields.', [])]
             header = bool(export_definition.get('header'))
-            if export_definition.get('records') == 'listed':
-                keys = tab.get('record_order', [])
-            else:
-                keys = (
-                    tab.get('selected')
-                    or [tab.get('current_record')])
+            records = export_definition.get('records') or 'selected'
+            ignore_search_limit = bool(
+                export_definition.get('ignore_search_limit'))
             filename = export_definition['name']
         else:
-            view = decode_value(tab['view'])
-            fields_names = [
-                name for name in view.get('fields', {})
-                if name in Model._fields
-                and Model._fields[name]._type not in {'binary', 'one2many'}
-                ]
-            header = True
-            keys = tab.get('selected') or tab.get('record_order', [])
+            fields_names = list(fields_names or [])
             filename = tab['model'].replace('.', '_')
-        ids = [
-            tab['records'][key]['id'] for key in keys
-            if key in tab['records'] and tab['records'][key].get('id')
-            ]
-        rows = Model.export_data(
-            [Model(id_) for id_ in ids], fields_names, header=header)
+        if not fields_names:
+            raise ValueError(translate('Select at least one field'))
+        if records not in {'selected', 'listed'}:
+            raise ValueError(translate('Unknown CSV record selection'))
+        view = decode_value(tab['view'])
+        context = self.context(decode_value(tab.get('context', {})))
+        if not tab.get('active_only', True):
+            context['active_test'] = False
+        with Transaction().set_context(context):
+            if records == 'selected':
+                keys = tab.get('selected') or (
+                    [tab.get('current_record')]
+                    if tab.get('current_record') else [])
+                ids = [
+                    tab['records'][key]['id'] for key in keys
+                    if key in tab['records']
+                    and tab['records'][key].get('id')]
+                rows = Model.export_data(
+                    [Model(id_) for id_ in ids],
+                    fields_names, header=header)
+            elif view.get('field_childs'):
+                ids = [
+                    tab['records'][key]['id']
+                    for key in tab.get('record_order', [])
+                    if key in tab['records']
+                    and tab['records'][key].get('id')]
+                rows = Model.export_data(
+                    [Model(id_) for id_ in ids],
+                    fields_names, header=header)
+            else:
+                domain = self._update_window_counts(tab, Model, view)
+                rows = Model.export_data_domain(
+                    domain, fields_names,
+                    offset=(
+                        0 if ignore_search_limit
+                        else tab.get('offset', 0)),
+                    limit=(
+                        None if ignore_search_limit
+                        else tab.get('limit', 1000)),
+                    order=decode_value(tab.get('order')),
+                    header=header)
+            Lang = self.pool.get('ir.lang')
+            language = Lang.get(Transaction().language)
+            rows = [[
+                    self._csv_value(value, locale_format, language)
+                    for value in row]
+                for row in rows]
         output = io.StringIO()
-        writer = csv.writer(output)
+        writer = csv.writer(
+            output, delimiter=delimiter, quotechar=quotechar)
         writer.writerows(rows)
         response = Response(
             output.getvalue(), content_type='text/csv; charset=utf-8')
@@ -2318,21 +2502,39 @@ class SaoEngine:
             'attachment; filename="%s.csv"' % secure_filename(filename))
         return response
 
-    def import_csv(self, tab_id, content):
+    def import_csv(
+            self, tab_id, content, fields_names=None, encoding='utf-8',
+            skip=0, delimiter=',', quotechar='"'):
         tab = self._tab(tab_id, kind='window')
         Model = self.pool.get(tab['model'])
-        text = content.decode('utf-8-sig')
-        rows = list(csv.reader(io.StringIO(text)))
+        delimiter, quotechar = self._csv_parameters(
+            delimiter, quotechar)
+        try:
+            codecs.lookup(encoding)
+            text = content.decode(encoding)
+        except (LookupError, UnicodeDecodeError) as exception:
+            raise ValueError(translate(
+                    'The CSV file could not be decoded with %(encoding)s',
+                    encoding=encoding)) from exception
+        if text.startswith('\ufeff'):
+            text = text[1:]
+        rows = list(csv.reader(
+                io.StringIO(text), delimiter=delimiter,
+                quotechar=quotechar))
         if not rows:
             raise ValueError(translate('The CSV file is empty'))
-        fields_names = rows.pop(0)
+        skip = max(0, int(skip or 0))
+        if fields_names:
+            rows = rows[skip:]
+        else:
+            fields_names = rows.pop(0)
         if not fields_names or any(not name for name in fields_names):
             raise ValueError(
-                translate('The first CSV row must contain Tryton field names'))
-        Model.import_data(fields_names, rows)
+                translate('Select at least one field to import'))
+        count = Model.import_data(fields_names, rows)
         self.load_tab(tab)
         self.save()
-        return tab
+        return tab, count
 
     def binary_response(self, tab_id, record_key, field_name):
         tab = self._tab(tab_id, kind='window')

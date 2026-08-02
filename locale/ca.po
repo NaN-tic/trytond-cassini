@@ -54,6 +54,14 @@ msgctxt "model:ir.message,text:msg_a_maximum_of_five_attachments_is_allowed_5937
 msgid "A maximum of five attachments is allowed."
 msgstr "Es permeten cinc fitxers adjunts com a màxim."
 
+msgctxt "model:ir.message,text:msg_a_flat_tree_can_not_contain_child_records_4884a147"
+msgid "A flat tree can not contain child records"
+msgstr "Un arbre pla no pot contenir registres fills"
+
+msgctxt "model:ir.message,text:msg_a_tree_record_can_not_contain_itself_80215368"
+msgid "A tree record can not contain itself"
+msgstr "Un registre de l'arbre no es pot contenir a si mateix"
+
 msgctxt "model:ir.message,text:msg_a_new_task_0123ff8c"
 msgid "A new task"
 msgstr "Una tasca nova"
@@ -678,6 +686,14 @@ msgctxt "model:ir.message,text:msg_relate_0289b666"
 msgid "Relate"
 msgstr "Relacionat"
 
+msgctxt "model:ir.message,text:msg_reorder_33d9978c"
+msgid "Reorder"
+msgstr "Reordena"
+
+msgctxt "model:ir.message,text:msg_reordering_related_records_is_not_allowed_27448124"
+msgid "Reordering related records is not allowed"
+msgstr "No està permès reordenar els registres relacionats"
+
 msgctxt "model:ir.message,text:msg_relation_actions_eace41a0"
 msgid "Relation actions"
 msgstr "Accions de la relació"
@@ -970,10 +986,6 @@ msgctxt "model:ir.message,text:msg_the_audio_could_not_be_transcribed_e456ff0c"
 msgid "The audio could not be transcribed."
 msgstr "No s'ha pogut transcriure l'àudio."
 
-msgctxt "model:ir.message,text:msg_the_first_csv_row_must_contain_tryton_field_name_f2143a77"
-msgid "The first CSV row must contain Tryton field names"
-msgstr "La primera fila del CSV ha de contenir noms de camps del Tryton"
-
 msgctxt "model:ir.message,text:msg_the_microphone_could_not_be_started_7315ef3a"
 msgid "The microphone could not be started."
 msgstr "No s'ha pogut iniciar el micròfon."
@@ -1025,6 +1037,14 @@ msgstr "Aquest camp de relació és de només lectura"
 msgctxt "model:ir.message,text:msg_this_relation_is_not_readable_4153f601"
 msgid "This relation is not readable"
 msgstr "Aquesta relació no es pot llegir"
+
+msgctxt "model:ir.message,text:msg_this_tree_can_not_be_reordered_092df402"
+msgid "This tree can not be reordered"
+msgstr "Aquest arbre no es pot reordenar"
+
+msgctxt "model:ir.message,text:msg_this_tree_is_read_only_85c4a7b3"
+msgid "This tree is read-only"
+msgstr "Aquest arbre és només de lectura"
 
 msgctxt "model:ir.message,text:msg_this_search_bookmark_can_not_be_removed_915790df"
 msgid "This search bookmark can not be removed"
@@ -1206,10 +1226,6 @@ msgctxt "model:ir.message,text:msg_unknown_search_bookmark_aa59fe27"
 msgid "Unknown search bookmark"
 msgstr "No s'ha trobat: adreça d’interès de cerca"
 
-msgctxt "model:ir.message,text:msg_unknown_sequence_direction_8ab4546e"
-msgid "Unknown sequence direction"
-msgstr "No s'ha trobat: direcció de seqüència"
-
 msgctxt "model:ir.message,text:msg_unknown_shell_action_b8c205b2"
 msgid "Unknown shell action"
 msgstr "No s'ha trobat: acció de la interfície"
@@ -1233,6 +1249,10 @@ msgstr "No s'ha trobat: pestanya %s"
 msgctxt "model:ir.message,text:msg_unknown_tree_node_9ae3e928"
 msgid "Unknown tree node"
 msgstr "No s'ha trobat: node de l’arbre"
+
+msgctxt "model:ir.message,text:msg_unknown_tree_drop_position_82861af2"
+msgid "Unknown tree drop position"
+msgstr "No s'ha trobat: posició de destinació de l'arbre"
 
 msgctxt "model:ir.message,text:msg_unknown_tree_record_2c68dc91"
 msgid "Unknown tree record"
@@ -2532,3 +2552,175 @@ msgstr "Accions del recurs"
 msgctxt "model:ir.message,text:msg_preview_f1fbb2b4"
 msgid "Preview"
 msgstr "Previsualitza"
+
+msgctxt "model:ir.message,text:msg_unknown_csv_field_field_s_cf9f5720"
+msgid "Unknown CSV field \"%(field)s\""
+msgstr "Camp CSV \"%(field)s\" desconegut"
+
+msgctxt "model:ir.message,text:msg_only_one_to_many_fields_can_be_expanded_for_impo_55c575a0"
+msgid "Only one-to-many fields can be expanded for import"
+msgstr "Només es poden desplegar camps un-a-molts per importar"
+
+msgctxt "model:ir.message,text:msg_expand_field_1b8c62b9"
+msgid "Expand field"
+msgstr "Desplega el camp"
+
+msgctxt "model:ir.message,text:msg_field_s_string_787b9f04"
+msgid "%(field)s (string)"
+msgstr "%(field)s (text)"
+
+msgctxt "model:ir.message,text:msg_field_s_model_name_f777e4c5"
+msgid "%(field)s (model name)"
+msgstr "%(field)s (nom del model)"
+
+msgctxt "model:ir.message,text:msg_field_s_record_name_72e24512"
+msgid "%(field)s/Record Name"
+msgstr "%(field)s/Nom del registre"
+
+msgctxt "model:ir.message,text:msg_csv_export_name_s_59629579"
+msgid "CSV Export: %(name)s"
+msgstr "Exportació CSV: %(name)s"
+
+msgctxt "model:ir.message,text:msg_csv_import_name_s_3756e85a"
+msgid "CSV Import: %(name)s"
+msgstr "Importació CSV: %(name)s"
+
+msgctxt "model:ir.message,text:msg_all_fields_f51c7336"
+msgid "All Fields"
+msgstr "Tots els camps"
+
+msgctxt "model:ir.message,text:msg_auto_detect_518fc452"
+msgid "Auto-Detect"
+msgstr "Detecció automàtica"
+
+msgctxt "model:ir.message,text:msg_save_export_6e133815"
+msgid "Save Export"
+msgstr "Desa l'exportació"
+
+msgctxt "model:ir.message,text:msg_url_export_3fe35e36"
+msgid "URL Export"
+msgstr "URL d'exportació"
+
+msgctxt "model:ir.message,text:msg_delete_export_9ce2d612"
+msgid "Delete Export"
+msgstr "Suprimeix l'exportació"
+
+msgctxt "model:ir.message,text:msg_fields_selected_ed301cf7"
+msgid "Fields Selected"
+msgstr "Camps seleccionats"
+
+msgctxt "model:ir.message,text:msg_export_name_2ffae16e"
+msgid "Export Name"
+msgstr "Nom de l'exportació"
+
+msgctxt "model:ir.message,text:msg_export_f3e4fadb"
+msgid "Export"
+msgstr "Exportació"
+
+msgctxt "model:ir.message,text:msg_selected_records_8ac0df07"
+msgid "Selected Records"
+msgstr "Registres seleccionats"
+
+msgctxt "model:ir.message,text:msg_listed_records_3da40c09"
+msgid "Listed Records"
+msgstr "Registres llistats"
+
+msgctxt "model:ir.message,text:msg_ignore_search_limit_12bcdad5"
+msgid "Ignore search limit"
+msgstr "Ignora el límit de cerca"
+
+msgctxt "model:ir.message,text:msg_predefined_exports_3af8b314"
+msgid "Predefined Exports"
+msgstr "Exportacions predefinides"
+
+msgctxt "model:ir.message,text:msg_file_to_import_b5fa1ece"
+msgid "File to Import"
+msgstr "Fitxer a importar"
+
+msgctxt "model:ir.message,text:msg_csv_parameters_7523082c"
+msgid "CSV Parameters"
+msgstr "Paràmetres CSV"
+
+msgctxt "model:ir.message,text:msg_encoding_5821fec7"
+msgid "Encoding"
+msgstr "Codificació"
+
+msgctxt "model:ir.message,text:msg_lines_to_skip_2ee6a49f"
+msgid "Lines to Skip"
+msgstr "Línies a ometre"
+
+msgctxt "model:ir.message,text:msg_use_locale_format_f03d0fa2"
+msgid "Use locale format"
+msgstr "Utilitza el format local"
+
+msgctxt "model:ir.message,text:msg_add_field_names_786e8fa5"
+msgid "Add Field Names"
+msgstr "Afegeix els noms dels camps"
+
+msgctxt "model:ir.message,text:msg_delimiter_5e96ff2a"
+msgid "Delimiter"
+msgstr "Delimitador"
+
+msgctxt "model:ir.message,text:msg_quote_char_214076d9"
+msgid "Quote Char"
+msgstr "Caràcter de cometes"
+
+msgctxt "model:ir.message,text:msg_save_as_d8916376"
+msgid "Save As..."
+msgstr "Anomena i desa..."
+
+msgctxt "model:ir.message,text:msg_unknown_column_header_header_s_d970625b"
+msgid "Unknown column header \"%(header)s\""
+msgstr "Capçalera de columna \"%(header)s\" desconeguda"
+
+msgctxt "model:ir.message,text:msg_the_field_field_s_is_read_only_a302f8bd"
+msgid "The field \"%(field)s\" is read-only"
+msgstr "El camp \"%(field)s\" és de només lectura"
+
+msgctxt "model:ir.message,text:msg_you_are_not_allowed_to_import_records_a5a4b9b2"
+msgid "You are not allowed to import records"
+msgstr "No teniu permís per importar registres"
+
+msgctxt "model:ir.message,text:msg_unknown_csv_operation_b1c9f818"
+msgid "Unknown CSV operation"
+msgstr "Operació CSV desconeguda"
+
+msgctxt "model:ir.message,text:msg_you_must_select_an_import_file_first_017de126"
+msgid "You must select an import file first."
+msgstr "Primer heu de seleccionar un fitxer d'importació."
+
+msgctxt "model:ir.message,text:msg_the_csv_file_could_not_be_decoded_with_encoding__f12698f7"
+msgid "The CSV file could not be decoded with %(encoding)s"
+msgstr "No s'ha pogut descodificar el fitxer CSV amb %(encoding)s"
+
+msgctxt "model:ir.message,text:msg_the_first_csv_row_must_contain_field_names_b82d7ac5"
+msgid "The first CSV row must contain field names"
+msgstr "La primera fila del CSV ha de contenir noms de camps"
+
+msgctxt "model:ir.message,text:msg_select_at_least_one_field_e1839336"
+msgid "Select at least one field"
+msgstr "Seleccioneu almenys un camp"
+
+msgctxt "model:ir.message,text:msg_enter_a_name_for_the_export_3d4e17a7"
+msgid "Enter a name for the export"
+msgstr "Introduïu un nom per a l'exportació"
+
+msgctxt "model:ir.message,text:msg_select_a_predefined_export_893ce241"
+msgid "Select a predefined export"
+msgstr "Seleccioneu una exportació predefinida"
+
+msgctxt "model:ir.message,text:msg_the_csv_delimiter_must_be_one_character_ae41c2fd"
+msgid "The CSV delimiter must be one character"
+msgstr "El delimitador CSV ha de tenir un caràcter"
+
+msgctxt "model:ir.message,text:msg_the_csv_quote_character_must_be_one_character_bd6c63dc"
+msgid "The CSV quote character must be one character"
+msgstr "El caràcter de cometes CSV ha de tenir un caràcter"
+
+msgctxt "model:ir.message,text:msg_unknown_csv_record_selection_1005a5c9"
+msgid "Unknown CSV record selection"
+msgstr "Selecció de registres CSV desconeguda"
+
+msgctxt "model:ir.message,text:msg_select_at_least_one_field_to_import_ecb61539"
+msgid "Select at least one field to import"
+msgstr "Seleccioneu almenys un camp per importar"

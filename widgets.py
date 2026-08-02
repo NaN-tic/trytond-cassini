@@ -668,6 +668,7 @@ class WidgetRenderer:
                                     tab=self.tab['id'],
                                     record=self.record['key'],
                                     field=name),
+                                hx_include='#' + field_id + '-input',
                                 hx_target=modal_target,
                                 hx_swap='innerHTML'):
                             icon('search')
@@ -694,7 +695,8 @@ class WidgetRenderer:
                                         'create', '1')).lower()
                                 not in {'0', 'false', 'no'})
                             else None),
-                        modal_target=modal_target))
+                        modal_target=modal_target,
+                        input_id=field_id + '-input'))
             return control
 
         if widget == 'reference':
@@ -1125,11 +1127,27 @@ class WidgetRenderer:
             state['view'] = view_type
         relation_view, rows = self.x2many_rows(
             definition, attributes, value, state, view_type)
+        relation_root = ElementTree.fromstring(
+            relation_view.get('arch') or '<tree/>')
+        inline_create = (
+            widget == 'one2many'
+            and view_type == 'tree'
+            and relation_root.attrib.get('editable') in {
+                '1', 'top', 'bottom'}
+            and str(relation_root.attrib.get(
+                    'creatable', '1')).lower()
+            not in {'0', 'false', 'no'})
         row_keys = [row['key'] for row in rows]
         current = state.get('current')
         if current not in row_keys:
             current = row_keys[0] if row_keys else None
             state['current'] = current
+        stored_selection = state.get('selected')
+        selected = (
+            [key for key in stored_selection if key in row_keys]
+            if stored_selection is not None else
+            [current] if current else [])
+        state['selected'] = selected
         position = row_keys.index(current) + 1 if current else 0
         current_row = next(
             (row for row in rows if row['key'] == current), None)
@@ -1312,13 +1330,26 @@ class WidgetRenderer:
                                 aria_label=translate('New'),
                                 disabled=not can_create or None,
                                 hx_post=(
+                                    X2ManyAction.url(
+                                        tab=self.tab['id'],
+                                        record=self.record['key'],
+                                        field=name,
+                                        action='new')
+                                    if inline_create and can_create else
                                     OpenRelationNew.url(
                                         tab=self.tab['id'],
                                         record=self.record['key'],
                                         field=name)
                                     if can_create else None),
-                                hx_target='#workspace',
-                                hx_swap='outerHTML'):
+                                hx_include=(
+                                    '#' + entry_id
+                                    if has_add_remove else None),
+                                hx_target=(
+                                    target if inline_create
+                                    else '#workspace'),
+                                hx_swap='outerHTML',
+                                data_x2many_inline_new=(
+                                    'true' if inline_create else None)):
                             icon('create')
                         with button(
                                 type='button',
@@ -1391,21 +1422,27 @@ class WidgetRenderer:
                     relation_tab = {
                         'id': self.tab['id'],
                         'model': definition['relation'],
+                        'exclude_field': (
+                            definition.get('relation_field')
+                            or getattr(
+                                self.Model._fields.get(name), 'field', None)),
                         'records': records,
                         'record_order': [row['key'] for row in rows],
                         'current_record': current,
-                        'selected': [current] if current else [],
+                        'selected': selected,
                         'expanded': state.setdefault('expanded', []),
                         'column_visibility': state.setdefault(
                             'column_visibility', {}),
                         'access': dict(relation_access),
                         'context': self.tab.get('context', {}),
                         'screen_width': self.tab.get('screen_width'),
+                        'focus_record': state.get('_focus_record'),
                         'relation_origin': {
                             'record': self.record['key'],
                             'field': name,
                             'target': target,
                             'editable': not readonly,
+                            'type': widget,
                             },
                         }
                     relation_tab['access']['write'] = (
@@ -1594,7 +1631,8 @@ class WidgetRenderer:
     @staticmethod
     def relation_suggestions(
             id_, choices, search_url=None, new_url=None, open_=False,
-            modal_target='#modal'):
+            modal_target='#modal', input_id=None):
+        include = '#' + input_id if input_id else None
         with div(
                 id=id_, cls='vs-relation-completion',
                 role='listbox',
@@ -1611,6 +1649,7 @@ class WidgetRenderer:
                     translate('Search…'), type='button',
                     cls='vs-relation-completion-action',
                     hx_get=search_url,
+                    hx_include=include,
                     hx_target=modal_target,
                     hx_swap='innerHTML')
                 if new_url:
@@ -1618,6 +1657,7 @@ class WidgetRenderer:
                         translate('Create…'), type='button',
                         cls='vs-relation-completion-action',
                         hx_post=new_url,
+                        hx_include=include,
                         hx_target='#workspace',
                         hx_swap='outerHTML')
         return suggestions

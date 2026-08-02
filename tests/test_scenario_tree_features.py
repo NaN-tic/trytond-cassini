@@ -1,3 +1,4 @@
+import re
 from decimal import Decimal
 
 from playwright.sync_api import Page, expect
@@ -42,7 +43,8 @@ class TestTreeFeatures(WebTestCase):
                         'amount': Decimal('2'),
                         'parent': parent.id,
                         }])
-            view, = View.create([{
+            view, flat_view = View.create([
+                    {
                         'model': 'cassini.test.tree.node',
                         'type': 'tree',
                         'field_childs': 'children',
@@ -58,6 +60,14 @@ class TestTreeFeatures(WebTestCase):
                             '</field>'
                             '<field name="sequence" optional="1"/>'
                             '</tree>'),
+                        }, {
+                        'model': 'cassini.test.tree.node',
+                        'type': 'tree',
+                        'data': (
+                            '<tree sequence="sequence">'
+                            '<field name="name"/>'
+                            '<field name="sequence"/>'
+                            '</tree>'),
                         }])
             action, = ActionWindow.create([{
                         'name': 'Cassini Tree Features',
@@ -72,9 +82,26 @@ class TestTreeFeatures(WebTestCase):
                         'view': view.id,
                         'act_window': action.id,
                         }])
-            Menu.create([{
+            flat_action, = ActionWindow.create([{
+                        'name': 'Cassini Sequence List',
+                        'res_model': 'cassini.test.tree.node',
+                        'domain': '[["parent", "=", null]]',
+                        'context': '{}',
+                        'search_value': '[]',
+                        'order': '[["sequence", "ASC"]]',
+                        }])
+            ActionWindowView.create([{
+                        'sequence': 1,
+                        'view': flat_view.id,
+                        'act_window': flat_action.id,
+                        }])
+            Menu.create([
+                    {
                         'name': 'Cassini Tree Features',
                         'action': str(action),
+                        }, {
+                        'name': 'Cassini Sequence List',
+                        'action': str(flat_action),
                         }])
             if not Site.search([('type', '=', 'cassini')]):
                 Site.create([{
@@ -138,6 +165,31 @@ class TestTreeFeatures(WebTestCase):
             parent_name.click()
         expect(parent.get_by_role(
                 'checkbox', name='Select record')).to_be_checked()
+        sibling = page.locator(
+            '.vs-row', has=page.locator(
+                'input[value="Tree Sibling"]'))
+        sibling_name = sibling.locator('input[value="Tree Sibling"]')
+        with page.expect_response(
+                lambda response: (
+                    '/select?' in response.url
+                    and 'row=true' in response.url)):
+            sibling_name.click(modifiers=['Control'])
+        expect(page.locator(
+            '.vs-select-column input[aria-label="Select record"]:checked'
+            )).to_have_count(2)
+        expect(page.locator('.vs-row-selected')).to_have_count(2)
+        expect(page.locator(
+            '.vs-record-navigation-position')).to_contain_text('#2')
+        with page.expect_response(
+                lambda response: (
+                    '/select?' in response.url
+                    and 'row=true' in response.url)):
+            sibling_name.click(modifiers=['Control'])
+        expect(page.locator(
+            '.vs-select-column input[aria-label="Select record"]:checked'
+            )).to_have_count(1)
+        expect(parent).to_have_class(
+            re.compile(r'\bvs-row-selected\b'))
         page.reload(wait_until='domcontentloaded')
         parent = page.locator(
             '.vs-row', has=page.locator(
@@ -170,14 +222,62 @@ class TestTreeFeatures(WebTestCase):
                 'input[value="Tree Child"]')).to_be_visible()
         expect(page.locator('.vs-tree-total')).to_have_text('10')
 
+        sibling_name = page.locator('input[value="Tree Sibling"]')
+        with page.expect_response(
+                lambda response: (
+                    '/select?' in response.url
+                    and 'row=true' in response.url)):
+            sibling_name.click(modifiers=['Shift'])
+        expect(page.locator(
+            '.vs-select-column input[aria-label="Select record"]:checked'
+            )).to_have_count(3)
+        expect(page.locator('.vs-row-selected')).to_have_count(3)
+        expect(page.locator(
+            '.vs-record-navigation-position')).to_contain_text('#3')
+
         parent = page.locator(
             '.vs-row', has=page.locator(
                 'input[value="Tree Parent"]'))
-        parent.get_by_role(
-            'button', name='Move down').click()
+        sibling = page.locator(
+            '.vs-row', has=page.locator(
+                'input[value="Tree Sibling"]'))
+        expect(page.get_by_role(
+            'button', name='Move down')).to_have_count(0)
+        expect(parent.locator(
+            '[data-tree-drag-handle]')).to_be_visible()
+        with page.expect_response(
+                lambda response: response.url.endswith('/tree/move')):
+            parent.locator('[data-tree-drag-handle]').drag_to(
+                sibling.locator('[data-tree-drag-handle]'))
         expect(rows.nth(0).locator(
                 'input[value="Tree Sibling"]')).to_be_visible()
         page.get_by_role('button', name='Save', exact=True).click()
         page.reload(wait_until='domcontentloaded')
         expect(rows.nth(0).locator(
                 'input[value="Tree Sibling"]')).to_be_visible()
+
+        global_search = page.get_by_label('Global search')
+        global_search.fill('Cassini Sequence List')
+        page.locator(
+            '[data-global-search-result]',
+            has_text='Cassini Sequence List').click()
+        flat_rows = page.locator(
+            '.vs-active-panel > .vs-screen .vs-row')
+        expect(flat_rows).to_have_count(2)
+        expect(flat_rows.nth(0).locator(
+            'text=Tree Sibling')).to_be_visible()
+        flat_sibling = flat_rows.filter(has_text='Tree Sibling')
+        flat_parent = flat_rows.filter(has_text='Tree Parent')
+        flat_parent_box = flat_parent.bounding_box()
+        with page.expect_response(
+                lambda response: response.url.endswith('/tree/move')):
+            flat_sibling.locator('[data-tree-drag-handle]').drag_to(
+                flat_parent,
+                target_position={
+                    'x': 20,
+                    'y': flat_parent_box['height'] - 1,
+                    })
+        expect(flat_rows.nth(0)).to_contain_text('Tree Parent')
+        page.get_by_role('button', name='Save', exact=True).click()
+        page.reload(wait_until='domcontentloaded')
+        expect(flat_rows.nth(0)).to_contain_text('Tree Parent')

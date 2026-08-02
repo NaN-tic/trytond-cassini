@@ -25,6 +25,7 @@ class TestViewsWidgets(WebTestCase):
             Group = pool.get('res.group')
             Lang = pool.get('ir.lang')
             Menu = pool.get('ir.ui.menu')
+            ModelData = pool.get('ir.model.data')
             Site = pool.get('www.site')
             View = pool.get('ir.ui.view')
             Widget = pool.get('cassini.test.widget')
@@ -95,6 +96,21 @@ class TestViewsWidgets(WebTestCase):
                         'time_value': time(10, 30),
                         },
                     ])
+
+            link_action, = ActionWindow.create([{
+                        'name': 'Cassini Widget Link',
+                        'res_model': 'cassini.test.widget',
+                        'domain': '[]',
+                        'context': '{}',
+                        'search_value': '[]',
+                        }])
+            ModelData.create([{
+                        'module': 'cassini',
+                        'fs_id': 'test_widget_link',
+                        'model': 'ir.action.act_window',
+                        'db_id': link_action.id,
+                        'noupdate': True,
+                        }])
 
             (
                 tree_view, form_view, list_form_view, calendar_view,
@@ -183,6 +199,8 @@ class TestViewsWidgets(WebTestCase):
                             '<button name="change_character" '
                             'string="Change Character" type="instance" '
                             'icon="tryton-ok"/>'
+                            '<link name="cassini.test_widget_link" '
+                            'icon="tryton-open"/>'
                             '</form>'),
                         },
                     {
@@ -405,8 +423,30 @@ class TestViewsWidgets(WebTestCase):
             2)
         window_menu = page.locator('details.vs-window-menu')
         window_menu.locator('.vs-window-title').click()
-        expect(window_menu.get_by_role(
-            'menuitem', name='Action', exact=True)).to_be_visible()
+        window_action = window_menu.get_by_role(
+            'menuitem', name='Action', exact=True)
+        expect(window_action).to_be_visible()
+        window_action_layout = window_action.evaluate(
+            '''element => {
+                const icon = element.querySelector('.vs-icon');
+                const text = element.querySelector('span');
+                const iconBox = icon.getBoundingClientRect();
+                const textBox = text.getBoundingClientRect();
+                return {
+                    display: getComputedStyle(element).display,
+                    iconCenter: iconBox.top + iconBox.height / 2,
+                    iconLeft: iconBox.left,
+                    textCenter: textBox.top + textBox.height / 2,
+                    textLeft: textBox.left,
+                };
+            }''')
+        self.assertEqual(window_action_layout['display'], 'flex')
+        self.assertLess(
+            window_action_layout['iconLeft'],
+            window_action_layout['textLeft'])
+        self.assertLessEqual(abs(
+            window_action_layout['iconCenter']
+            - window_action_layout['textCenter']), 1)
         expect(window_menu.get_by_role(
             'menuitem', name='Mark', exact=True)).to_have_count(0)
         expect(window_menu.get_by_role(
@@ -495,6 +535,29 @@ class TestViewsWidgets(WebTestCase):
         for widget_name in widget_names:
             expect(page.locator(
                     f'[data-widget="{widget_name}"]')).to_be_visible()
+        form_link = page.locator(
+            '.vs-link-button', has_text='Cassini Widget Link')
+        expect(form_link).to_be_visible()
+        link_content = form_link.evaluate(
+            '''element => {
+                element.style.height = '80px';
+                const icon = element.querySelector('.vs-icon');
+                const label = element.querySelector('.vs-link-label');
+                const box = element.getBoundingClientRect();
+                const iconBox = icon.getBoundingClientRect();
+                const labelBox = label.getBoundingClientRect();
+                return {
+                    buttonCenter: box.top + box.height / 2,
+                    contentCenter: (
+                        Math.min(iconBox.top, labelBox.top)
+                        + Math.max(iconBox.bottom, labelBox.bottom)) / 2,
+                    justifyContent: getComputedStyle(element).justifyContent,
+                };
+            }''')
+        self.assertEqual(link_content['justifyContent'], 'center')
+        self.assertLessEqual(abs(
+            link_content['buttonCenter']
+            - link_content['contentCenter']), 1)
         date_input = page.locator(
             '[data-field="date_value"] [data-temporal-input]')
         expect(date_input).to_have_attribute('type', 'text')
@@ -588,23 +651,28 @@ class TestViewsWidgets(WebTestCase):
                 const nav = element.querySelector('.vs-notebook-tabs');
                 const active = nav.querySelector(
                     '.vs-local-tab-active');
+                const list = nav.querySelector('.vs-tab-list');
                 const page = element.querySelector('.vs-page');
                 const navBox = nav.getBoundingClientRect();
                 const activeBox = active.getBoundingClientRect();
                 const pageBox = page.getBoundingClientRect();
                 const navStyle = getComputedStyle(nav);
+                const navLineStyle = getComputedStyle(nav, '::after');
                 const activeStyle = getComputedStyle(active);
-                const activeConnector = getComputedStyle(active, '::after');
+                const listStyle = getComputedStyle(list);
                 const pageStyle = getComputedStyle(page);
                 return {
                     activeBottom: activeBox.bottom,
+                    activeBackground: activeStyle.backgroundColor,
+                    activeBorderBottom: activeStyle.borderBottomWidth,
                     activeBorderLeft: activeStyle.borderLeftWidth,
-                    activeConnectorHeight: activeConnector.height,
-                    activeConnectorBackground:
-                        activeConnector.backgroundColor,
+                    listZIndex: listStyle.zIndex,
                     navBottom: navBox.bottom,
                     navBorderBottom: navStyle.borderBottomWidth,
+                    navLineBackground: navLineStyle.backgroundColor,
+                    navLineHeight: navLineStyle.height,
                     pageTop: pageBox.top,
+                    pageBackground: pageStyle.backgroundColor,
                     pageBorderLeft: pageStyle.borderLeftWidth,
                 };
             }''')
@@ -614,12 +682,17 @@ class TestViewsWidgets(WebTestCase):
         self.assertLessEqual(abs(
             notebook_geometry['pageTop']
             - notebook_geometry['navBottom']), 1)
+        self.assertEqual(notebook_geometry['activeBorderBottom'], '0px')
         self.assertEqual(notebook_geometry['activeBorderLeft'], '1px')
-        self.assertEqual(notebook_geometry['activeConnectorHeight'], '3px')
+        self.assertEqual(
+            notebook_geometry['activeBackground'],
+            notebook_geometry['pageBackground'])
+        self.assertEqual(notebook_geometry['listZIndex'], '1')
+        self.assertEqual(notebook_geometry['navBorderBottom'], '0px')
+        self.assertEqual(notebook_geometry['navLineHeight'], '1px')
         self.assertNotEqual(
-            notebook_geometry['activeConnectorBackground'],
+            notebook_geometry['navLineBackground'],
             'rgba(0, 0, 0, 0)')
-        self.assertEqual(notebook_geometry['navBorderBottom'], '1px')
         self.assertEqual(notebook_geometry['pageBorderLeft'], '1px')
         expect(page.locator(
             '.vs-page .vs-separator-label',
@@ -701,13 +774,21 @@ class TestViewsWidgets(WebTestCase):
         one2many_add_input = one2many.locator(
             '[data-x2many-add-input]')
         expect(one2many_add_input).to_be_editable()
+        one2many_add_input.fill('Typed Child Search')
         one2many_add_input.press('F2')
-        expect(page.get_by_role(
-            'dialog', name='Search One to Many')).to_be_visible()
+        relation_search = page.get_by_role(
+            'dialog', name='Search One to Many')
+        expect(relation_search).to_be_visible()
+        expect(relation_search.locator(
+            'input[name="query"]')).to_have_value('Typed Child Search')
         page.get_by_role('button', name='Cancel', exact=True).click()
+        one2many_add_input.fill('Typed Child Creation')
         one2many_add_input.press('F3')
         child_dialog = page.locator('.vs-relation-record-dialog')
         expect(child_dialog).to_be_visible()
+        expect(child_dialog.locator(
+            '[data-field="name"] input')).to_have_value(
+                'Typed Child Creation')
         child_dialog.get_by_role(
             'button', name='Cancel', exact=True).click()
         page.get_by_role(
@@ -824,14 +905,23 @@ class TestViewsWidgets(WebTestCase):
                 exact=True)).to_have_count(0)
         many2many_input = many2many.locator(
             '[data-many2many-input]')
+        many2many_input.fill('Typed Many to Many Search')
         many2many_input.press('F2')
-        expect(page.get_by_role(
-            'dialog', name='Search Many to Many')).to_be_visible()
+        relation_search = page.get_by_role(
+            'dialog', name='Search Many to Many')
+        expect(relation_search).to_be_visible()
+        expect(relation_search.locator(
+            'input[name="query"]')).to_have_value(
+                'Typed Many to Many Search')
         page.get_by_role('button', name='Cancel', exact=True).click()
+        many2many_input.fill('Typed Many to Many Creation')
         many2many_input.press('F3')
         relation_record_dialog = page.locator(
             '.vs-relation-record-dialog')
         expect(relation_record_dialog).to_be_visible()
+        expect(relation_record_dialog.locator(
+            '[data-field="name"] input')).to_have_value(
+                'Typed Many to Many Creation')
         relation_record_dialog.get_by_role(
             'button', name='Cancel', exact=True).click()
         page.get_by_role(
@@ -955,10 +1045,18 @@ class TestViewsWidgets(WebTestCase):
         relation_widget = page.locator(
             '[data-field="many2one_value"] [data-relation-widget]')
         relation = relation_widget.locator('[data-relation-input]')
-        relation.dispatch_event('keydown', {'key': 'F2'})
+        with page.expect_response(
+                lambda response: '/many2one_value/autocomplete'
+                in response.url):
+            relation.fill('Widget Group Tw')
+        completion = relation_widget.locator('.vs-relation-completion')
+        completion.get_by_role(
+            'button', name='Search…', exact=True).click()
         relation_dialog = page.get_by_role(
             'dialog', name='Search Many to One')
         expect(relation_dialog).to_be_visible()
+        expect(relation_dialog.locator(
+            'input[name="query"]')).to_have_value('Widget Group Tw')
         expect(relation_dialog.locator(
             '.vs-relation-search-table')).to_be_visible()
         expect(relation_dialog.locator(
@@ -1012,24 +1110,24 @@ class TestViewsWidgets(WebTestCase):
             '[data-field="many2one_value"] [data-relation-widget]')
         expect(relation_widget.locator(
             '[data-relation-input]')).to_have_value('')
-        relation_widget.get_by_role(
-            'button', name='Search a record').click()
-        relation_dialog = page.get_by_role(
-            'dialog', name='Search Many to One')
-        relation_dialog.get_by_role(
-            'button', name='Create', exact=True).click()
+        relation = relation_widget.locator('[data-relation-input]')
+        with page.expect_response(
+                lambda response: '/many2one_value/autocomplete'
+                in response.url):
+            relation.fill('Created from Relation')
+        completion = relation_widget.locator('.vs-relation-completion')
+        completion.get_by_role(
+            'button', name='Create…', exact=True).click()
         relation_record_dialog = page.locator(
             '.vs-relation-record-dialog')
         expect(relation_record_dialog).to_be_visible()
         expect(page.locator('#workspace-tabs .vs-tab')).to_have_count(1)
         related_name = relation_record_dialog.locator(
             '[data-field="name"] input')
+        expect(related_name).to_have_value('Created from Relation')
         expect(relation_record_dialog.locator(
             '.vs-form input:focus, .vs-form select:focus, '
             '.vs-form textarea:focus')).to_have_count(1)
-        with page.expect_response(
-                lambda response: '/field/name' in response.url):
-            related_name.fill('Created from Relation')
         with page.expect_response(
                 lambda response: '/records/save' in response.url):
             relation_record_dialog.get_by_role(

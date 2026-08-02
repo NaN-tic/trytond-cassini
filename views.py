@@ -273,7 +273,8 @@ class ViewRenderer:
         SwitchView = self.pool.get('cassini.switch.view')
         SwitchDomain = self.pool.get('cassini.switch.domain')
         ExportRecords = self.pool.get('cassini.export.records')
-        ImportRecords = self.pool.get('cassini.import.records')
+        ShowCSVExport = self.pool.get('cassini.csv.export.show')
+        ShowCSVImport = self.pool.get('cassini.csv.import.show')
         OpenRelated = self.pool.get('cassini.open.related')
         AttachmentData = self.pool.get('cassini.attachment.data')
         AttachmentPreview = self.pool.get('cassini.attachment.preview')
@@ -418,7 +419,6 @@ class ViewRenderer:
                 id='toolbar-' + tab['id'],
                 cls='vs-toolbar') as toolbar:
             window_heading = div(cls='vs-window-heading')
-            toolbar.add(window_heading)
             with window_heading:
                 with details(
                         cls='vs-popup vs-window-menu') as window_menu:
@@ -426,7 +426,8 @@ class ViewRenderer:
                             cls='vs-window-title',
                             title=translate('Window actions'),
                             aria_label='%s: %s' % (
-                                translate('Window actions'), tab['title'])):
+                                translate('Window actions'), tab['title'])
+                            ) as window_summary:
                         span('', cls='vs-window-title-caret')
                     with div(
                             cls='vs-popup-menu vs-window-menu-list',
@@ -444,7 +445,6 @@ class ViewRenderer:
                                 hx_swap='outerHTML'):
                             icon('switch')
                             span(translate('Switch view'))
-                    window_menu.add(window_menu_list)
                     for direction, image, title in (
                             ('previous', 'back', translate('Previous')),
                             ('next', 'forward', translate('Next'))):
@@ -550,10 +550,13 @@ class ViewRenderer:
                                 icon(image)
                                 span(title)
                     span(translate('Data'), cls='vs-popup-heading')
-                    with a(
-                            href=ExportRecords.url(tab=tab['id']),
+                    with button(
+                            type='button',
                             cls='vs-popup-item vs-popup-item-icon',
-                            role='menuitem'):
+                            role='menuitem',
+                            hx_get=ShowCSVExport.url(tab=tab['id']),
+                            hx_target='#modal',
+                            hx_swap='innerHTML'):
                         icon('export')
                         span(translate('Export selected fields'))
                     for export in toolbar_data.get('exports', []):
@@ -567,33 +570,18 @@ class ViewRenderer:
                                 role='menuitem'):
                             icon('export')
                             span(export['name'])
-                    with form(
-                            cls='vs-import-form vs-popup-import',
-                            hx_post=ImportRecords.url(tab=tab['id']),
-                            hx_encoding='multipart/form-data',
-                            hx_target='#screen-' + tab['id'],
-                            hx_swap='outerHTML'):
-                        with label(
-                                cls=(
-                                    'vs-popup-item '
-                                    'vs-popup-item-icon'),
-                                html_for='import-' + tab['id'],
-                                role='menuitem'):
-                            icon('import')
-                            span(translate('Import'))
-                        input_(
-                            id='import-' + tab['id'], type='file',
-                            name='file', accept='.csv,text/csv',
-                            cls='vs-file-input',
+                    with button(
+                            type='button',
+                            cls='vs-popup-item vs-popup-item-icon',
+                            role='menuitem',
                             disabled=(
                                 not access['create']
                                 or bool(revision) or None),
-                            hx_post=ImportRecords.url(tab=tab['id']),
-                            hx_trigger='change',
-                            hx_encoding='multipart/form-data',
-                            hx_target='#screen-' + tab['id'],
-                            hx_swap='outerHTML',
-                            hx_include='this')
+                            hx_get=ShowCSVImport.url(tab=tab['id']),
+                            hx_target='#modal',
+                            hx_swap='innerHTML'):
+                        icon('import')
+                        span(translate('Import'))
                     with button(
                             type='button',
                             cls='vs-popup-item vs-popup-item-icon',
@@ -604,10 +592,13 @@ class ViewRenderer:
                             hx_swap='outerHTML'):
                         icon('close')
                         span(translate('Close tab'))
-                    for menu_item in list(window_menu.children[2:]):
-                        window_menu_list.add(menu_item)
-                    del window_menu.children[2:]
-                    window_heading.add(window_menu)
+                menu_items = [
+                    item for item in window_menu.children
+                    if item is not window_summary
+                    and item is not window_menu_list]
+                window_menu_list.children.extend(menu_items)
+                window_menu.children[:] = [
+                    window_summary, window_menu_list]
                 with div(cls='vs-window-heading-label'):
                     span(tab['title'], cls='vs-window-title-text')
                     if tab.get('dirty'):
@@ -1365,6 +1356,9 @@ class ViewRenderer:
             node for node in root
             if node.tag in {'field', 'button'}
             and node not in multiple_buttons
+            and not (
+                node.tag == 'field'
+                and node.attrib.get('name') == tab.get('exclude_field'))
             and visible_in_tree(node)
             ]
         visibility = tab.get('column_visibility', {})
@@ -1393,17 +1387,45 @@ class ViewRenderer:
             OpenRelationRecord = self.pool.get(
                 'cassini.open.relation.record')
         sequence_field = root.attrib.get('sequence')
-        select_column_class = (
-            'vs-select-column vs-sequence-column'
-            if sequence_field and editable else 'vs-select-column')
+        reorderable = bool(
+            sequence_field
+            and not relation_search_origin
+            and tab.get('access', {}).get('write', True)
+            and not decode_value(tab.get('context', {})).get('_datetime')
+            and (
+                not relation_origin
+                or (
+                    relation_origin.get('editable', True)
+                    and relation_origin.get('type') == 'one2many')))
+        select_column_class = 'vs-select-column'
         rows = self.tree_rows(tab, view)
         first_field = next((
                 node.attrib['name']
                 for node in columns if node.tag == 'field'), None)
         with div(
                 cls='vs-table-wrap',
-                data_editable_tree='true' if editable else None) \
+                data_editable_tree='true' if editable else None,
+                data_tree_reorder='true' if reorderable else None,
+                data_tree_children=(
+                    'true' if reorderable and view.get('field_childs')
+                    else None)) \
                 as wrapper:
+            if reorderable:
+                button(
+                    '', type='button', hidden=True,
+                    data_tree_move_action='true',
+                    data_tree_move_kind=(
+                        'relation' if relation_origin else 'screen'),
+                    hx_post=(
+                        X2ManyAction.url(
+                            tab=tab['id'],
+                            record=relation_origin['record'],
+                            field=relation_origin['field'],
+                            action='move')
+                        if relation_origin else
+                        MoveTreeRecord.url(tab=tab['id'])),
+                    hx_target=tree_target,
+                    hx_swap='outerHTML')
             if editable and relation_origin:
                 button(
                     '', type='button', hidden=True,
@@ -1439,6 +1461,8 @@ class ViewRenderer:
                 data_column_model=tab['model'],
                 data_column_resize_url=ResizeTreeColumns.url()):
                 with colgroup():
+                    if reorderable:
+                        col(cls='vs-drag-column')
                     col(cls=select_column_class)
                     for node in columns:
                         if node.tag == 'field':
@@ -1460,6 +1484,11 @@ class ViewRenderer:
                             col()
                 with thead():
                     with tr():
+                        if reorderable:
+                            with th(
+                                    cls='vs-drag-column',
+                                    title=translate('Reorder')):
+                                icon('drag')
                         with th(cls=select_column_class):
                             with div(cls='vs-tree-header-controls'):
                                 with details(
@@ -1604,6 +1633,9 @@ class ViewRenderer:
                             endpoint=(
                                 'x2many'
                                 if relation_origin else 'record'))
+                        focus_new_field = bool(
+                            relation_origin
+                            and key == tab.get('focus_record'))
                         row_visual = renderer.evaluate(
                             root.attrib.get('visual'))
                         row_visual = (
@@ -1612,7 +1644,9 @@ class ViewRenderer:
                                 'muted', 'success', 'warning', 'danger'}
                             else None)
                         with tr(
-                                cls='vs-row%s%s%s%s%s%s%s' % (
+                                cls='vs-row%s%s%s%s%s%s%s%s' % (
+                                    ' vs-row-selected'
+                                    if key in tab.get('selected', []) else '',
                                     ' vs-row-current'
                                     if key == tab.get('current_record') else '',
                                     ' vs-row-dirty'
@@ -1635,7 +1669,19 @@ class ViewRenderer:
                                     key if relation_origin else None),
                                 data_relation_search_row=(
                                     'true'
-                                    if relation_search_origin else None)):
+                                    if relation_search_origin else None),
+                                data_tree_depth=(
+                                    depth if reorderable else None)):
+                            if reorderable:
+                                with td(cls='vs-drag-column'):
+                                    with span(
+                                            cls='vs-tree-drag-handle',
+                                            draggable='true',
+                                            tabindex='0',
+                                            title=translate('Reorder'),
+                                            aria_label=translate('Reorder'),
+                                            data_tree_drag_handle='true'):
+                                        icon('drag')
                             with td(cls=select_column_class):
                                 if relation_search_origin:
                                     input_(
@@ -1656,7 +1702,7 @@ class ViewRenderer:
                                         type='checkbox', name='selected',
                                         value='true',
                                         checked=(
-                                            key == tab.get('current_record'))
+                                            key in tab.get('selected', []))
                                         or None,
                                         aria_label=translate('Select record'),
                                         hx_post=X2ManyAction.url(
@@ -1664,10 +1710,13 @@ class ViewRenderer:
                                             record=relation_origin['record'],
                                             field=relation_origin['field'],
                                             action='select'),
-                                        hx_vals='{"item":"%s"}' % key,
+                                        hx_vals=(
+                                            '{"item":"%s",'
+                                            '"mode":"toggle"}' % key),
                                         hx_trigger='change',
                                         hx_target=tree_target,
-                                        hx_swap='outerHTML')
+                                        hx_swap='outerHTML',
+                                        hx_include='this')
                                 else:
                                     input_(
                                         type='checkbox', name='selected',
@@ -1688,6 +1737,9 @@ class ViewRenderer:
                                         tabindex='-1',
                                         aria_hidden='true',
                                         data_row_select_action='true',
+                                        data_row_selection_kind=(
+                                            'relation'
+                                            if relation_origin else 'screen'),
                                         hx_post=(
                                             X2ManyAction.url(
                                                 tab=tab['id'],
@@ -1737,44 +1789,6 @@ class ViewRenderer:
                                                 if relation_origin else
                                                 tree_target),
                                             hx_swap='outerHTML')
-                                if sequence_field and editable:
-                                    with div(cls='vs-sequence-controls'):
-                                        for direction, image in (
-                                                ('up', 'arrow-up'),
-                                                ('down', 'arrow-down')):
-                                            with button(
-                                                    type='button',
-                                                    cls='vs-tree-toggle',
-                                                    title=(
-                                                        'Move ' + direction),
-                                                    aria_label=(
-                                                        'Move ' + direction),
-                                                    hx_post=(
-                                                        X2ManyAction.url(
-                                                            tab=tab['id'],
-                                                            record=(
-                                                                relation_origin[
-                                                                    'record']),
-                                                            field=(
-                                                                relation_origin[
-                                                                    'field']),
-                                                            action=(
-                                                                'move-'
-                                                                + direction))
-                                                        if relation_origin
-                                                        else MoveTreeRecord.url(
-                                                            tab=tab['id'],
-                                                            record=key,
-                                                            direction=(
-                                                                direction))),
-                                                    hx_vals=(
-                                                        '{"item":"%s"}' % key
-                                                        if relation_origin
-                                                        else None),
-                                                    hx_target=(
-                                                        tree_target),
-                                                    hx_swap='outerHTML'):
-                                                icon(image)
                             for node in columns:
                                 cell_visual = renderer.evaluate(
                                     node.attrib.get('visual'))
@@ -1882,8 +1896,22 @@ class ViewRenderer:
                                                 if widget == 'url':
                                                     pass
                                                 elif editable:
+                                                    field_attributes = dict(
+                                                        node.attrib)
+                                                    if focus_new_field:
+                                                        readonly, _, invisible = (
+                                                            renderer.states(
+                                                                definition,
+                                                                field_attributes))
+                                                        if (
+                                                                not readonly
+                                                                and not invisible):
+                                                            field_attributes[
+                                                                'autofocus'] = '1'
+                                                            focus_new_field = False
                                                     renderer.render(
-                                                        name, node.attrib,
+                                                        name,
+                                                        field_attributes,
                                                         compact=True)
                                                 else:
                                                     renderer.display(
@@ -1926,6 +1954,8 @@ class ViewRenderer:
                         for node in columns):
                     with tfoot():
                         with tr():
+                            if reorderable:
+                                td(cls='vs-drag-column')
                             td(translate('Total'), cls='vs-select-column')
                             for node in columns:
                                 if node.tag != 'field':
