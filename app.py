@@ -1354,6 +1354,8 @@ class Shell(SaoEndpoint):
                 'panel': 'none',
                 'theme': 'light',
                 'user_menu': False,
+                'menu_width': 272,
+                'help_width': 272,
                 })
         user_preferences = Pool().get('res.user').get_preferences(False)
         self.engine.start_user_actions(
@@ -1372,6 +1374,16 @@ class Shell(SaoEndpoint):
                 and shell_state.get('panel') == 'help'):
             shell_state['panel'] = 'none'
             migrated_shell_state = True
+        for name in ('menu_width', 'help_width'):
+            width = shell_state.get(name)
+            if (
+                    isinstance(width, bool)
+                    or not isinstance(width, (int, float))
+                    or not 192 <= width <= 4000):
+                shell_state[name] = 272
+                migrated_shell_state = True
+            else:
+                shell_state[name] = round(width)
         panel_state = shell_state['panel']
         if new_shell_state or migrated_shell_state:
             self.engine.save()
@@ -1390,7 +1402,11 @@ class Shell(SaoEndpoint):
                     'dark:bg-slate-950 dark:text-slate-100 '
                     'vs-panel-%s') % panel_state,
                 data_theme=shell_state.get('theme', 'light'),
-                data_panel=panel_state) as app:
+                data_panel=panel_state,
+                data_menu_width=shell_state['menu_width'],
+                data_help_width=shell_state['help_width'],
+                data_panel_width_url=ShellControl.url(
+                    action='width')) as app:
             with header(cls='vs-header'):
                 with div(cls='vs-header-primary') as header_primary:
                     with nav(
@@ -1414,6 +1430,7 @@ class Shell(SaoEndpoint):
                                     aria_pressed=str(
                                         panel_state == state).lower(),
                                     data_panel_option=state,
+                                    hx_include='[data-shell-panel-width]',
                                     hx_post=ShellControl.url(action=(
                                         state
                                         if assistant_available
@@ -1426,6 +1443,14 @@ class Shell(SaoEndpoint):
                                     icon('menu')
                                 else:
                                     icon('question')
+                        input_(
+                            type='hidden', name='menu_width',
+                            value=shell_state['menu_width'],
+                            data_shell_panel_width='menu')
+                        input_(
+                            type='hidden', name='help_width',
+                            value=shell_state['help_width'],
+                            data_shell_panel_width='help')
                     img(
                         src='/cassini-private-images/logo.png',
                         alt='NaN-tic', cls='vs-header-logo',
@@ -1580,12 +1605,17 @@ class Shell(SaoEndpoint):
                     if panel_state == 'menu':
                         aside(
                             Menu().tag(), id='main-menu',
-                            cls='vs-sidebar')
+                            cls='vs-sidebar', data_panel_kind='menu',
+                            style='width: %dpx' % (
+                                shell_state['menu_width']))
                     elif panel_state == 'help':
                         aside(
                             HelpPanel().tag(),
                             id='help-sidebar',
-                            cls='vs-sidebar vs-help-sidebar')
+                            cls='vs-sidebar vs-help-sidebar',
+                            data_panel_kind='help',
+                            style='width: %dpx' % (
+                                shell_state['help_width']))
                     main(
                         WorkspaceRenderer(
                             self.engine.interface).render(
@@ -1654,6 +1684,8 @@ class ShellControl(SaoEndpoint):
     _url = '/shell/<string:action>'
 
     action = fields.Char('Action')
+    menu_width = fields.Integer('Menu Width')
+    help_width = fields.Integer('Help Width')
 
     @handle_endpoint_errors
     def render(self):
@@ -1661,7 +1693,13 @@ class ShellControl(SaoEndpoint):
                 'panel': 'none',
                 'theme': 'light',
                 'user_menu': False,
+                'menu_width': 272,
+                'help_width': 272,
                 })
+        for name in ('menu_width', 'help_width'):
+            width = getattr(self, name)
+            if width is not None:
+                state[name] = max(192, min(int(width), 4000))
         panel = state.get('panel', 'none')
         if self.action == 'panel':
             states = (
@@ -1688,10 +1726,12 @@ class ShellControl(SaoEndpoint):
             state['user_menu'] = False
         elif self.action == 'fullscreen':
             state['panel'] = 'none'
+        elif self.action == 'width':
+            pass
         else:
             raise ValueError(translate('Unknown shell action'))
         self.engine.save()
-        if self.action == 'user-close':
+        if self.action in {'user-close', 'width'}:
             return Response('', status=204)
         Shell = Pool().get('cassini.shell')
         return Shell(render=False).render_app()

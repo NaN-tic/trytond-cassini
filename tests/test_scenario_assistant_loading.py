@@ -171,8 +171,44 @@ class TestAssistantLoading(WebTestCase):
             '.vs-chat-message.vs-chat-user',
             has_text=global_message)).to_be_visible()
         expect(page.get_by_label('Global search')).to_have_value('')
+
+        help_sidebar = page.locator('#help-sidebar')
+        help_sidebar.evaluate(
+            'element => element.style.width = "421px"')
+        help_width = help_sidebar.bounding_box()['width']
         panel_controls.get_by_role(
-            'button', name='No side panel').click()
+            'button', name='Menu', exact=True).click()
+        menu_sidebar = page.locator('#main-menu')
+        expect(menu_sidebar).to_be_visible()
+        menu_sidebar.evaluate(
+            'element => element.style.width = "365px"')
+        menu_width = menu_sidebar.bounding_box()['width']
+        no_panel = panel_controls.get_by_role(
+            'button', name='No side panel')
+        no_panel.click()
+        expect(no_panel).to_have_attribute('aria-pressed', 'true')
+        expect(page.locator('#main-menu')).to_have_count(0)
+        panel_controls.get_by_role(
+            'button', name='Help', exact=True).click()
+        expect(help_sidebar).to_be_visible()
+        self.assertLessEqual(
+            abs(help_sidebar.bounding_box()['width'] - help_width), 1)
+        panel_controls.get_by_role(
+            'button', name='Menu', exact=True).click()
+        expect(menu_sidebar).to_be_visible()
+        self.assertLessEqual(
+            abs(menu_sidebar.bounding_box()['width'] - menu_width), 1)
+        page.reload(wait_until='domcontentloaded')
+        expect(menu_sidebar).to_be_visible()
+        self.assertLessEqual(
+            abs(menu_sidebar.bounding_box()['width'] - menu_width), 1)
+        panel_controls.get_by_role(
+            'button', name='Help', exact=True).click()
+        expect(help_sidebar).to_be_visible()
+        self.assertLessEqual(
+            abs(help_sidebar.bounding_box()['width'] - help_width), 1)
+        no_panel.click()
+        expect(no_panel).to_have_attribute('aria-pressed', 'true')
 
         expect(page.locator('.vs-hint-menu')).to_be_visible()
         expect(page.locator('.vs-hint-help')).to_be_visible()

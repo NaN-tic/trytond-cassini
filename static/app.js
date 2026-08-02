@@ -157,6 +157,15 @@
     const workspaceResizeObserver = (
         typeof ResizeObserver === "function" ?
             new ResizeObserver(syncWorkspaceStickyOffsets) : null);
+    let observedSidebar = null;
+    let sidebarWidthTimer = null;
+    const sidebarResizeObserver = (
+        typeof ResizeObserver === "function" ?
+            new ResizeObserver(function (entries) {
+                if (entries.some(entry => entry.target === observedSidebar)) {
+                    captureSidebarWidth(true);
+                }
+            }) : null);
     let surflyPromise = null;
 
     function rememberFocus() {
@@ -506,6 +515,63 @@
         const theme = app.dataset.theme === "dark" ? "dark" : "light";
         document.documentElement.dataset.theme = theme;
         document.documentElement.classList.toggle("dark", theme === "dark");
+        const sidebar = app.querySelector(".vs-sidebar[data-panel-kind]");
+        if (sidebarResizeObserver && sidebar !== observedSidebar) {
+            if (observedSidebar) {
+                sidebarResizeObserver.unobserve(observedSidebar);
+            }
+            observedSidebar = sidebar;
+            if (sidebar) {
+                sidebarResizeObserver.observe(
+                    sidebar, {box: "border-box"});
+            }
+        }
+    }
+
+    function captureSidebarWidth(persist) {
+        const app = document.getElementById("cassini");
+        const sidebar = app?.querySelector(
+            ".vs-sidebar[data-panel-kind]");
+        if (!sidebar || getComputedStyle(sidebar).resize !== "horizontal") {
+            return;
+        }
+        const kind = sidebar.dataset.panelKind;
+        if (kind !== "menu" && kind !== "help") {
+            return;
+        }
+        const width = Math.round(sidebar.getBoundingClientRect().width);
+        if (!Number.isFinite(width) || width < 192) {
+            return;
+        }
+        const property = kind + "Width";
+        const changed = Number(app.dataset[property]) !== width;
+        app.dataset[property] = String(width);
+        const input = app.querySelector(
+            "[data-shell-panel-width='" + kind + "']");
+        if (input) {
+            input.value = String(width);
+        }
+        if (!persist || !changed || !app.dataset.panelWidthUrl) {
+            return;
+        }
+        window.clearTimeout(sidebarWidthTimer);
+        const url = app.dataset.panelWidthUrl;
+        const menuWidth = app.dataset.menuWidth;
+        const helpWidth = app.dataset.helpWidth;
+        sidebarWidthTimer = window.setTimeout(function () {
+            sidebarWidthTimer = null;
+            const data = new FormData();
+            data.set("menu_width", menuWidth);
+            data.set("help_width", helpWidth);
+            fetch(url, {
+                method: "POST",
+                body: data,
+                credentials: "same-origin",
+                headers: {"HX-Request": "true"},
+            }).catch(function () {
+                // The next panel action sends both widths again.
+            });
+        }, 250);
     }
 
     function syncWorkspaceStickyOffsets() {
@@ -3063,6 +3129,14 @@
                 files);
         }
     });
+    document.addEventListener("click", function (event) {
+        if (!event.target.closest?.("[data-panel-option]")) {
+            return;
+        }
+        captureSidebarWidth(false);
+        window.clearTimeout(sidebarWidthTimer);
+        sidebarWidthTimer = null;
+    }, true);
     document.addEventListener("htmx:beforeRequest", function () {
         rememberFocus();
     });

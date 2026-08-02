@@ -198,18 +198,31 @@ class TestShellDemo(WebTestCase):
                 'element => getComputedStyle(element).resize'),
             'horizontal')
         menu_width = menu_sidebar.bounding_box()['width']
-        menu_sidebar.evaluate(
-            'element => element.style.width = "24rem"')
+        with page.expect_response(
+                lambda response: response.url.endswith('/shell/width')):
+            menu_sidebar.evaluate(
+                'element => element.style.width = "24rem"')
+        resized_menu_width = menu_sidebar.bounding_box()['width']
         self.assertGreater(
-            menu_sidebar.bounding_box()['width'], menu_width)
+            resized_menu_width, menu_width)
         menu_bottom = menu_sidebar.evaluate(
             'element => element.getBoundingClientRect().bottom')
         viewport_bottom = page.evaluate('window.innerHeight')
         self.assertLessEqual(abs(menu_bottom - viewport_bottom), 1)
         expect(menu_panel).to_have_attribute('aria-pressed', 'true')
+        page.reload(wait_until='domcontentloaded')
+        expect(menu_sidebar).to_be_visible()
+        self.assertLessEqual(
+            abs(menu_sidebar.bounding_box()['width'] - resized_menu_width), 1)
         menu_panel.click()
         expect(page.locator('#main-menu')).to_have_count(0)
         expect(menu_panel).to_have_attribute('aria-pressed', 'false')
+        menu_panel.click()
+        expect(menu_sidebar).to_be_visible()
+        self.assertLessEqual(
+            abs(menu_sidebar.bounding_box()['width'] - resized_menu_width), 1)
+        menu_panel.click()
+        expect(page.locator('#main-menu')).to_have_count(0)
         page.reload(wait_until='domcontentloaded')
         expect(page.locator('#main-menu')).to_have_count(0)
         expect(page.locator('#help-sidebar')).to_have_count(0)
