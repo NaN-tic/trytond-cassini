@@ -142,10 +142,6 @@ msgctxt "model:ir.message,text:msg_bookmarks_ca3cddd2"
 msgid "Bookmarks"
 msgstr "Cerques preferides"
 
-msgctxt "model:ir.message,text:msg_calendar_adab5090"
-msgid "Calendar"
-msgstr "Calendari"
-
 msgctxt "model:ir.message,text:msg_calendar_mode_b81c6e7a"
 msgid "Calendar mode"
 msgstr "Mode del calendari"
@@ -386,10 +382,6 @@ msgctxt "model:ir.message,text:msg_find_df251b06"
 msgid "Find"
 msgstr "Cerca"
 
-msgctxt "model:ir.message,text:msg_form_80446347"
-msgid "Form"
-msgstr "Formulari"
-
 msgctxt "model:ir.message,text:msg_from_3f66052a"
 msgid "From"
 msgstr "Desde"
@@ -453,10 +445,6 @@ msgstr "El valor decimal no és vàlid"
 msgctxt "model:ir.message,text:msg_keyboard_shortcuts_26669547"
 msgid "Keyboard shortcuts"
 msgstr "Dreceres de teclat"
-
-msgctxt "model:ir.message,text:msg_list_form_17b2b303"
-msgid "List Form"
-msgstr "Llista-formulari"
 
 msgctxt "model:ir.message,text:msg_logout_e43d612e"
 msgid "Logout"
@@ -814,10 +802,6 @@ msgctxt "model:ir.message,text:msg_search_for_records_before_adding_a_bookmark_6
 msgid "Search for records before adding a bookmark"
 msgstr "Cerqueu registres abans d'afegir una adreça d'interès"
 
-msgctxt "model:ir.message,text:msg_search_navigation_4aba141f"
-msgid "Search navigation"
-msgstr "Navegació de la cerca"
-
 msgctxt "model:ir.message,text:msg_search_records_2495e622"
 msgid "Search records"
 msgstr "Cerca registres"
@@ -1078,10 +1062,6 @@ msgctxt "model:ir.message,text:msg_track_tickets_created_from_the_assistant_and_
 msgid "Track tickets created from the assistant and add comments without losing your current workspace."
 msgstr "Seguiu els tiquets creats des de l'assistent i afegiu comentaris sense perdre l'espai de treball actual."
 
-msgctxt "model:ir.message,text:msg_tree_99f5ff63"
-msgid "Tree"
-msgstr "Arbre"
-
 msgctxt "model:ir.message,text:msg_true_88b33e4e"
 msgid "True"
 msgstr "Cert"
@@ -1313,10 +1293,6 @@ msgstr "La vista %s no forma part d'aquesta acció"
 msgctxt "model:ir.message,text:msg_view_logs_4c3958dd"
 msgid "View logs"
 msgstr "Mostra els registres"
-
-msgctxt "model:ir.message,text:msg_views_24be6128"
-msgid "Views"
-msgstr "Vistes"
 
 msgctxt "model:ir.message,text:msg_cassini_state_infrastructure_ae6a45d3"
 msgid "Cassini state infrastructure"
@@ -2444,3 +2420,115 @@ msgstr "Selecciona %(record)s"
 msgctxt "model:ir.message,text:msg_unknown_relation_column_9e4f93b3"
 msgid "Unknown relation column"
 msgstr "Columna de relació desconeguda"
+
+msgctxt "model:ir.message,text:msg_window_actions_fe0e3a5d"
+msgid "Window actions"
+msgstr "Accions de la finestra"
+
+msgctxt "model:ir.message,text:msg_record_navigation_d4fab182"
+msgid "Record navigation"
+msgstr "Navegació de registres"
+
+msgctxt "model:ir.message,text:msg_previous_page_81f54719"
+msgid "Previous page"
+msgstr "Pàgina anterior"
+
+msgctxt "model:ir.message,text:msg_next_page_4bfc194b"
+msgid "Next page"
+msgstr "Pàgina següent"
+
+msgctxt "model:ir.message,text:msg_accept_bb54db51"
+msgid "Accept"
+msgstr "Accepta"
+
+msgctxt "model:ir.message,text:msg_dashboard_d87f47b4"
+msgid "Dashboard"
+msgstr "Tauler"
+
+msgctxt "model:ir.message,text:msg_dashboard_chart_d182dcee"
+msgid "Dashboard chart"
+msgstr "Gràfic del tauler"
+
+msgctxt "model:ir.message,text:msg_direct_printing_failed_error_s_0c46e137"
+msgid "Direct printing failed: %(error)s"
+msgstr "La impressió directa ha fallat: %(error)s"
+
+msgctxt "model:ir.message,text:msg_don_t_show_again_d9afd5ec"
+msgid "Don't show again"
+msgstr "No ho tornis a mostrar"
+
+msgctxt "model:ir.message,text:msg_plotly_could_not_be_initialized_71855ebb"
+msgid "Plotly could not be initialized."
+msgstr "No s'ha pogut inicialitzar Plotly."
+
+msgctxt "model:ir.message,text:msg_qz_tray_could_not_be_initialized_ff4bcfe4"
+msgid "QZ Tray could not be initialized."
+msgstr "No s'ha pogut inicialitzar QZ Tray."
+
+msgctxt "model:ir.message,text:msg_the_dashboard_view_requires_the_babi_module_a8b9ad85"
+msgid "The Dashboard view requires the babi module."
+msgstr "La vista de tauler requereix el mòdul babi."
+
+msgctxt "model:ir.message,text:msg_the_chart_data_is_not_valid_d50dc29d"
+msgid "The chart data is not valid."
+msgstr "Les dades del gràfic no són vàlides."
+
+msgctxt "model:ir.message,text:msg_the_requested_javascript_library_could_not_be_lo_1745ceaa"
+msgid "The requested JavaScript library could not be loaded."
+msgstr "No s'ha pogut carregar la biblioteca JavaScript sol·licitada."
+
+msgctxt "model:ir.message,text:msg_this_tab_can_not_be_reloaded_aeb04527"
+msgid "This tab can not be reloaded"
+msgstr "Aquesta pestanya no es pot recarregar"
+
+msgctxt "model:ir.message,text:msg_unknown_dashboard_64c495b2"
+msgid "Unknown dashboard"
+msgstr "Tauler desconegut"
+
+msgctxt "model:ir.message,text:msg_unknown_version_change_2ff41c57"
+msgid "Unknown version change"
+msgstr "Canvi de versió desconegut"
+
+msgctxt "model:ir.message,text:msg_unknown_version_change_action_792cf612"
+msgid "Unknown version change action"
+msgstr "Acció de canvi de versió desconeguda"
+
+msgctxt "model:ir.message,text:msg_version_changes_fd73f751"
+msgid "Version changes"
+msgstr "Canvis de versió"
+
+msgctxt "model:ir.message,text:msg_version_changes_require_nantic_connection_0ef1ce89"
+msgid "Version changes require nantic_connection."
+msgstr "Els canvis de versió requereixen nantic_connection."
+
+msgctxt "model:ir.message,text:msg_add_2cceefe2"
+msgid "Add..."
+msgstr "Afegeix..."
+
+msgctxt "model:ir.message,text:msg_manage_82d54088"
+msgid "Manage..."
+msgstr "Gestiona..."
+
+msgctxt "model:ir.message,text:msg_attachment_preview_cc8da619"
+msgid "Attachment preview"
+msgstr "Previsualització de l'adjunt"
+
+msgctxt "model:ir.message,text:msg_no_attachments_f941b4d9"
+msgid "No attachments"
+msgstr "No hi ha adjunts"
+
+msgctxt "model:ir.message,text:msg_open_attachment_b36bd6b7"
+msgid "Open attachment"
+msgstr "Obre l'adjunt"
+
+msgctxt "model:ir.message,text:msg_this_record_is_read_only_a31e4eba"
+msgid "This record is read-only"
+msgstr "Aquest registre és de només lectura"
+
+msgctxt "model:ir.message,text:msg_resource_actions_e4834c66"
+msgid "Resource actions"
+msgstr "Accions del recurs"
+
+msgctxt "model:ir.message,text:msg_preview_f1fbb2b4"
+msgid "Preview"
+msgstr "Previsualitza"

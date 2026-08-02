@@ -1,3 +1,4 @@
+import base64
 import calendar as month_calendar
 import re
 from datetime import date, datetime
@@ -71,13 +72,15 @@ class ViewRenderer:
         self.pool = Pool()
 
     def screen(self, tab):
+        if tab.get('kind') == 'dashboard':
+            return self.dashboard(tab)
         tab = dict(tab)
         tab['screen_width'] = self.interface.data.get('screen_width')
         view = decode_value(tab.get('view', {}))
         screen = section(
             id='screen-' + tab['id'],
             cls='vs-screen',
-            hx_sync='closest .vs-screen:queue all',
+            hx_sync='body:queue all',
             data_tab=tab['id'],
             data_initial_focus='true',
             data_view=tab.get('view_type'))
@@ -101,8 +104,58 @@ class ViewRenderer:
             screen.add(self.relation_dialog_actions(tab))
         return screen
 
+    def dashboard(self, tab):
+        ReloadTab = self.pool.get('cassini.reload.tab')
+        with section(
+                id='screen-' + tab['id'],
+                cls='vs-screen vs-dashboard-screen',
+                data_tab=tab['id'],
+                data_view='dashboard') as screen:
+            with header(cls='vs-toolbar vs-dashboard-toolbar'):
+                h2(tab['title'], cls='vs-dashboard-title')
+                with button(
+                        type='button',
+                        cls='vs-icon-button',
+                        title=translate('Reload/Undo'),
+                        aria_label=translate('Reload/Undo'),
+                        hx_post=ReloadTab.url(tab=tab['id']),
+                        hx_target='#screen-' + tab['id'],
+                        hx_swap='outerHTML'):
+                    icon('refresh')
+            self.dashboard_items(
+                decode_value(tab.get('dashboard_items', [])))
+        return screen
+
+    def dashboard_items(self, items):
+        with div(cls='vs-dashboard-grid') as grid:
+            for item in items:
+                colspan = max(1, min(4, int(item.get('colspan') or 1)))
+                height = max(120, int(item.get('height') or 450))
+                chart = str(item.get('chart') or '')
+                payload = base64.b64encode(
+                    chart.encode('utf-8')).decode('ascii')
+                with article(
+                        cls='vs-dashboard-item',
+                        style=(
+                            'grid-column:span %d;min-height:%dpx'
+                            % (colspan, height))):
+                    div(
+                        cls='vs-chart',
+                        data_cassini_chart='true',
+                        data_chart_payload=payload,
+                        style='min-height:%dpx' % height,
+                        role='img',
+                        aria_label=translate('Dashboard chart'))
+                    children = item.get('children') or []
+                    if children:
+                        self.dashboard_items(children)
+        return grid
+
     def relation_dialog_header(self, tab):
+        DeleteRecords = self.pool.get('cassini.delete.records')
+        NewRecord = self.pool.get('cassini.new.record')
         SelectNeighbor = self.pool.get('cassini.select.neighbor')
+        SwitchView = self.pool.get('cassini.switch.view')
         current = tab.get('current_record')
         record_order = tab.get('record_order', [])
         position = (
@@ -111,6 +164,51 @@ class ViewRenderer:
             and current in record_order else 0)
         with header(cls='vs-relation-dialog-header') as header_:
             h2(tab['title'], cls='vs-relation-dialog-title')
+            if tab.get('resource_modal'):
+                access = tab.get('access', {})
+                view_types = tab.get('view_types', [])
+                current_view = tab.get('view_type')
+                next_view = (
+                    view_types[
+                        (view_types.index(current_view) + 1)
+                        % len(view_types)]
+                    if current_view in view_types and view_types else '')
+                with div(
+                        cls='vs-relation-dialog-resource-actions',
+                        role='group',
+                        aria_label=translate('Resource actions')):
+                    with button(
+                            type='button', cls='vs-icon-button',
+                            title=translate('New'),
+                            aria_label=translate('New'),
+                            disabled=not access.get('create', True) or None,
+                            hx_post=NewRecord.url(tab=tab['id']),
+                            hx_target='#screen-' + tab['id'],
+                            hx_swap='outerHTML'):
+                        icon('create')
+                    with button(
+                            type='button', cls='vs-icon-button',
+                            title=translate('Delete'),
+                            aria_label=translate('Delete'),
+                            disabled=(
+                                not current
+                                or not access.get('delete', True) or None),
+                            hx_confirm=translate(
+                                'Delete the selected records?'),
+                            hx_post=DeleteRecords.url(tab=tab['id']),
+                            hx_target='#screen-' + tab['id'],
+                            hx_swap='outerHTML'):
+                        icon('delete')
+                    with button(
+                            type='button', cls='vs-icon-button',
+                            title=translate('Switch view'),
+                            aria_label=translate('Switch view'),
+                            disabled=len(view_types) < 2 or None,
+                            hx_post=SwitchView.url(
+                                tab=tab['id'], view=next_view),
+                            hx_target='#screen-' + tab['id'],
+                            hx_swap='outerHTML'):
+                        icon('switch')
             if tab.get('relation_navigation'):
                 with div(
                         cls='vs-relation-navigation',
@@ -177,6 +275,9 @@ class ViewRenderer:
         ExportRecords = self.pool.get('cassini.export.records')
         ImportRecords = self.pool.get('cassini.import.records')
         OpenRelated = self.pool.get('cassini.open.related')
+        AttachmentData = self.pool.get('cassini.attachment.data')
+        AttachmentPreview = self.pool.get('cassini.attachment.preview')
+        AttachmentUpload = self.pool.get('cassini.attachment.upload')
         RunToolbarAction = self.pool.get('cassini.toolbar.action')
 
         current = tab.get('current_record')
@@ -186,6 +287,23 @@ class ViewRenderer:
             record_order.index(current) + 1
             if tab.get('relation_navigation')
             and current in record_order else 0)
+        record_position = (
+            record_order.index(current) + 1
+            if current in record_order else 0)
+        selected_count = len([
+                key for key in tab.get('selected', [])
+                if key in record_order])
+        loaded_count = int(tab.get('offset') or 0) + len(record_order)
+        total_count = int(tab.get('count') or len(record_order))
+        record_status = str(
+            int(tab.get('offset') or 0) + record_position
+            if record_position else '_')
+        if selected_count > 1:
+            record_status += '#%s' % selected_count
+        if loaded_count < total_count:
+            record_status += '@%s/%s' % (loaded_count, total_count)
+        else:
+            record_status += '/%s' % loaded_count
         access = tab.get('access', {
                 'read': True, 'write': True,
                 'create': True, 'delete': True})
@@ -213,6 +331,20 @@ class ViewRenderer:
             WidgetRenderer(tab, record, view, editable=False)
             if record else None)
         view_buttons = list(root.iter('button'))
+        resource_counts = {
+            'attachment_count': 0,
+            'note_count': 0,
+            'note_unread': 0,
+            }
+        attachments = []
+        if record and record.get('id'):
+            Model = self.pool.get(tab['model'])
+            resource = Model(record['id'])
+            resource_counts.update(resource.resources())
+            Attachment = self.pool.get('ir.attachment')
+            attachments = Attachment.search([
+                    ('resource', '=', str(resource)),
+                    ], limit=20)
 
         def action_definitions(category):
             items = []
@@ -251,9 +383,8 @@ class ViewRenderer:
             for action in toolbar_data.get(category, []):
                 items.append({
                         'title': action['name'],
-                        'href': (
-                            category == 'print'
-                            and action.get('type') == 'ir.action.report'),
+                        'icon': action.get('icon'),
+                        'href': False,
                         'url': RunToolbarAction.url(
                             tab=tab['id'], action=action['id']),
                         })
@@ -286,37 +417,34 @@ class ViewRenderer:
         with div(
                 id='toolbar-' + tab['id'],
                 cls='vs-toolbar') as toolbar:
-            with details(cls='vs-popup vs-window-menu'):
-                with summary(cls='vs-window-title'):
-                    span(tab['title'], cls='vs-window-title-text')
-                    if tab.get('dirty'):
-                        span('•', cls='vs-window-dirty', title=translate('Unsaved'))
-                        span(
-                            translate('Unsaved changes'),
-                            cls='vs-window-dirty-status')
-                    span('▾', cls='vs-window-title-caret')
-                with div(
-                        cls='vs-popup-menu vs-window-menu-list',
-                        role='menu'):
-                    span(translate('Views'), cls='vs-popup-heading')
-                    view_titles = {
-                        'tree': translate('Tree'),
-                        'form': translate('Form'),
-                        'list-form': translate('List Form'),
-                        'calendar': translate('Calendar'),
-                        }
-                    for view_type in tab.get('view_types', []):
-                        button(
-                            view_titles.get(view_type, view_type),
-                            type='button',
-                            cls='vs-popup-item%s' % (
-                                ' vs-button-active'
-                                if tab.get('view_type') == view_type else ''),
-                            hx_post=SwitchView.url(
-                                tab=tab['id'], view=view_type),
-                            hx_target='#screen-' + tab['id'],
-                            hx_swap='outerHTML',
-                            data_view_type=view_type)
+            window_heading = div(cls='vs-window-heading')
+            toolbar.add(window_heading)
+            with window_heading:
+                with details(
+                        cls='vs-popup vs-window-menu') as window_menu:
+                    with summary(
+                            cls='vs-window-title',
+                            title=translate('Window actions'),
+                            aria_label='%s: %s' % (
+                                translate('Window actions'), tab['title'])):
+                        span('', cls='vs-window-title-caret')
+                    with div(
+                            cls='vs-popup-menu vs-window-menu-list',
+                            role='menu') as window_menu_list:
+                        with button(
+                                type='button',
+                                cls='vs-popup-item vs-popup-item-icon',
+                                role='menuitem',
+                                disabled=len(view_types) < 2 or None,
+                                data_shortcut_action='switch',
+                                data_next_view=next_view,
+                                hx_post=SwitchView.url(
+                                    tab=tab['id'], view=next_view),
+                                hx_target='#screen-' + tab['id'],
+                                hx_swap='outerHTML'):
+                            icon('switch')
+                            span(translate('Switch view'))
+                    window_menu.add(window_menu_list)
                     for direction, image, title in (
                             ('previous', 'back', translate('Previous')),
                             ('next', 'forward', translate('Next'))):
@@ -422,17 +550,23 @@ class ViewRenderer:
                                 icon(image)
                                 span(title)
                     span(translate('Data'), cls='vs-popup-heading')
-                    a(
-                        translate('Export selected fields'),
-                        href=ExportRecords.url(tab=tab['id']),
-                        cls='vs-popup-item', role='menuitem')
+                    with a(
+                            href=ExportRecords.url(tab=tab['id']),
+                            cls='vs-popup-item vs-popup-item-icon',
+                            role='menuitem'):
+                        icon('export')
+                        span(translate('Export selected fields'))
                     for export in toolbar_data.get('exports', []):
-                        a(
-                            export['name'],
-                            href=ExportRecords.url(
-                                tab=tab['id'],
-                                export_id=export['id']),
-                            cls='vs-popup-item', role='menuitem')
+                        with a(
+                                href=ExportRecords.url(
+                                    tab=tab['id'],
+                                    export_id=export['id']),
+                                cls=(
+                                    'vs-popup-item '
+                                    'vs-popup-item-icon'),
+                                role='menuitem'):
+                            icon('export')
+                            span(export['name'])
                     with form(
                             cls='vs-import-form vs-popup-import',
                             hx_post=ImportRecords.url(tab=tab['id']),
@@ -470,6 +604,19 @@ class ViewRenderer:
                             hx_swap='outerHTML'):
                         icon('close')
                         span(translate('Close tab'))
+                    for menu_item in list(window_menu.children[2:]):
+                        window_menu_list.add(menu_item)
+                    del window_menu.children[2:]
+                    window_heading.add(window_menu)
+                with div(cls='vs-window-heading-label'):
+                    span(tab['title'], cls='vs-window-title-text')
+                    if tab.get('dirty'):
+                        span(
+                            '•', cls='vs-window-dirty',
+                            title=translate('Unsaved'))
+                        span(
+                            translate('Unsaved changes'),
+                            cls='vs-window-dirty-status')
 
             with div(cls='vs-toolbar-actions'):
                 if tab.get('relation_navigation'):
@@ -525,6 +672,44 @@ class ViewRenderer:
                         hx_target='#screen-' + tab['id'],
                         hx_swap='outerHTML'):
                     icon('switch')
+                if not tab.get('relation_navigation'):
+                    with div(
+                            cls=(
+                                'vs-toolbar-group '
+                                'vs-record-navigation'),
+                            role='group',
+                            aria_label=translate('Record navigation')):
+                        with button(
+                                type='button', cls='vs-icon-button',
+                                title=translate('Previous record'),
+                                aria_label=translate('Previous record'),
+                                disabled=(
+                                    not record_position
+                                    or record_position <= 1) or None,
+                                data_shortcut_action='previous',
+                                hx_post=SelectNeighbor.url(
+                                    tab=tab['id'], direction='previous'),
+                                hx_target='#screen-' + tab['id'],
+                                hx_swap='outerHTML'):
+                            icon('back')
+                        span(
+                            record_status,
+                            cls='vs-relation-navigation-position '
+                                'vs-record-navigation-position')
+                        with button(
+                                type='button', cls='vs-icon-button',
+                                title=translate('Next record'),
+                                aria_label=translate('Next record'),
+                                disabled=(
+                                    not record_position
+                                    or record_position
+                                    >= len(record_order)) or None,
+                                data_shortcut_action='next',
+                                hx_post=SelectNeighbor.url(
+                                    tab=tab['id'], direction='next'),
+                                hx_target='#screen-' + tab['id'],
+                                hx_swap='outerHTML'):
+                            icon('forward')
                 with div(cls='vs-toolbar-group', role='group'):
                     for (
                             image, title, url,
@@ -546,82 +731,229 @@ class ViewRenderer:
                                 hx_target='#screen-' + tab['id'],
                                 hx_swap='outerHTML'):
                             icon(image)
-                with div(cls='vs-toolbar-group', role='group'):
-                    for resource, image, title in (
-                            ('attachments', 'attach',
-                                translate('Attachments')),
-                            ('notes', 'note', translate('Notes'))):
+                with div(
+                        cls='vs-toolbar-group vs-toolbar-secondary',
+                        role='group'):
+                    if record and record.get('id'):
+                        attachment_count = resource_counts[
+                            'attachment_count']
+                        with details(
+                                cls=(
+                                    'vs-popup vs-resource-popup '
+                                    'vs-attachment-popup'),
+                                data_attachment_drop='true'):
+                            with summary(
+                                    cls='vs-icon-button',
+                                    title=(
+                                        '%s (%s)' % (
+                                            translate('Attachments'),
+                                            attachment_count)
+                                        if attachment_count else
+                                        translate('Attachments')),
+                                    aria_label=(
+                                        '%s (%s)' % (
+                                            translate('Attachments'),
+                                            attachment_count)
+                                        if attachment_count else
+                                        translate('Attachments')),
+                                    data_shortcut_action='attach'):
+                                icon('attach')
+                                if attachment_count:
+                                    span(
+                                        '99+' if attachment_count > 99
+                                        else str(attachment_count),
+                                        cls='vs-resource-badge',
+                                        aria_hidden='true')
+                                span(
+                                    '▾', cls='vs-popup-caret',
+                                    aria_hidden='true')
+                            with div(
+                                    cls='vs-popup-menu', role='menu'):
+                                for attachment in attachments:
+                                    with a(
+                                            href=(
+                                                attachment.link
+                                                if attachment.type == 'link'
+                                                else AttachmentData.url(
+                                                    tab=tab['id'],
+                                                    attachment=attachment.id)),
+                                            target='_blank',
+                                            rel='noreferrer noopener',
+                                            cls=(
+                                                'vs-popup-item '
+                                                'vs-popup-item-icon'),
+                                            role='menuitem'):
+                                        icon(
+                                            'link'
+                                            if attachment.type == 'link'
+                                            else 'attach')
+                                        span(attachment.name)
+                                if attachments:
+                                    hr(cls='vs-popup-separator')
+                                with form(
+                                        cls='vs-attachment-upload-form',
+                                        hx_post=AttachmentUpload.url(
+                                            tab=tab['id']),
+                                        hx_encoding='multipart/form-data',
+                                        hx_target='#screen-' + tab['id'],
+                                        hx_swap='outerHTML'):
+                                    with label(
+                                            cls=(
+                                                'vs-popup-item '
+                                                'vs-popup-item-icon%s' % (
+                                                    ' vs-popup-item-disabled'
+                                                    if (not access['write']
+                                                        or revision)
+                                                    else '')),
+                                            role='menuitem'):
+                                        icon('create')
+                                        span(translate('Add...'))
+                                        input_(
+                                            type='file', name='attachments',
+                                            multiple=True,
+                                            cls='vs-file-input',
+                                            disabled=(
+                                                not access['write']
+                                                or bool(revision) or None),
+                                            data_attachment_input='true',
+                                            hx_post=AttachmentUpload.url(
+                                                tab=tab['id']),
+                                            hx_trigger='change',
+                                            hx_encoding=(
+                                                'multipart/form-data'),
+                                            hx_target=(
+                                                '#screen-' + tab['id']),
+                                            hx_swap='outerHTML',
+                                            hx_include='this')
+                                with button(
+                                        type='button',
+                                        cls=(
+                                            'vs-popup-item '
+                                            'vs-popup-item-icon'),
+                                        role='menuitem',
+                                        disabled=not attachments or None,
+                                        hx_get=AttachmentPreview.url(
+                                            tab=tab['id']),
+                                        hx_target='#modal',
+                                        hx_swap='innerHTML'):
+                                    icon('open')
+                                    span(translate('Preview'))
+                                with button(
+                                        type='button',
+                                        cls=(
+                                            'vs-popup-item '
+                                            'vs-popup-item-icon'),
+                                        role='menuitem',
+                                        hx_post=OpenRelated.url(
+                                            tab=tab['id'],
+                                            resource='attachments'),
+                                        hx_target='#workspace',
+                                        hx_swap='outerHTML'):
+                                    icon('menu')
+                                    span(translate('Manage...'))
+                    else:
                         with button(
                                 type='button', cls='vs-icon-button',
-                                title=title, aria_label=title,
-                                disabled=(
-                                    not record or record.get('new') or None),
-                                data_shortcut_action=(
-                                    'attach'
-                                    if resource == 'attachments'
-                                    else 'note'),
-                                hx_post=OpenRelated.url(
-                                    tab=tab['id'], resource=resource),
-                                hx_target='#workspace',
-                                hx_swap='outerHTML',
-                                hx_push_url='true'):
-                            icon(image)
-                for category, image, title in (
-                        ('action', 'launch', translate('Action')),
-                        ('relate', 'link', translate('Relate')),
-                        ('print', 'print', translate('Print'))):
-                    items = action_definitions(category)
-                    with details(
-                            cls='vs-popup vs-action-popup',
-                            data_action_category=category):
-                        with summary(
-                                cls='vs-icon-button',
-                                title=title, aria_label=title,
-                                data_shortcut_action=category):
-                            icon(image)
-                            span(
-                                '▾', cls='vs-popup-caret',
-                                aria_hidden='true')
-                        with div(cls='vs-popup-menu', role='menu'):
-                            if items:
-                                for item in items:
-                                    if item.get('href'):
-                                        a(
-                                            item['title'],
-                                            href=item['url'],
-                                            cls='vs-popup-item',
-                                            role='menuitem')
-                                    else:
-                                        with button(
-                                                type='button',
-                                                cls=(
-                                                    'vs-popup-item '
-                                                    'vs-popup-item-icon'),
-                                                role='menuitem',
-                                                disabled=(
-                                                    item.get('disabled')
-                                                    or None),
-                                                hx_confirm=item.get(
-                                                    'confirm'),
-                                                hx_post=item['url'],
-                                                hx_target='#workspace',
-                                                hx_swap='outerHTML'):
-                                            if item.get('icon'):
-                                                icon(item['icon'].removeprefix(
-                                                        'tryton-'))
-                                            span(item['title'])
-                            else:
-                                span(translate('No actions'), cls='vs-popup-empty')
-                if tab.get('relation_modal'):
+                                title=translate('Attachments'),
+                                aria_label=translate('Attachments'),
+                                disabled=True,
+                                data_shortcut_action='attach'):
+                            icon('attach')
+                    note_count = resource_counts['note_count']
+                    note_unread = resource_counts['note_unread']
+                    note_title = (
+                        '%s (%s/%s)' % (
+                            translate('Notes'), note_unread, note_count)
+                        if note_unread else
+                        '%s (%s)' % (translate('Notes'), note_count)
+                        if note_count else translate('Notes'))
                     with button(
                             type='button',
-                            cls='vs-icon-button',
-                            title=translate('Close'),
-                            aria_label=translate('Close'),
-                            hx_post=CloseTab.url(tab=tab['id']),
+                            cls='vs-icon-button vs-resource-button',
+                            title=note_title,
+                            aria_label=note_title,
+                            disabled=(
+                                not record or record.get('new') or None),
+                            data_shortcut_action='note',
+                            hx_post=OpenRelated.url(
+                                tab=tab['id'], resource='notes'),
                             hx_target='#workspace',
                             hx_swap='outerHTML'):
-                        icon('close')
+                        icon('note')
+                        if note_count:
+                            note_label = (
+                                '%s/%s' % (
+                                    '99+' if note_unread > 99
+                                    else note_unread,
+                                    '99+' if note_count > 99
+                                    else note_count)
+                                if note_unread else
+                                ('99+' if note_count > 99
+                                    else str(note_count)))
+                            span(
+                                note_label,
+                                cls='vs-resource-badge%s' % (
+                                    ' vs-resource-badge-unread'
+                                    if note_unread else ''),
+                                aria_hidden='true')
+                    for category, image, title in (
+                            ('action', 'launch', translate('Action')),
+                            ('relate', 'link', translate('Relate')),
+                            ('print', 'print', translate('Print'))):
+                        items = action_definitions(category)
+                        with details(
+                                cls='vs-popup vs-action-popup',
+                                data_action_category=category):
+                            with summary(
+                                    cls='vs-icon-button',
+                                    title=title, aria_label=title,
+                                    data_shortcut_action=category):
+                                icon(image)
+                                span(
+                                    '▾', cls='vs-popup-caret',
+                                    aria_hidden='true')
+                            with div(cls='vs-popup-menu', role='menu'):
+                                if items:
+                                    for item in items:
+                                        if item.get('href'):
+                                            a(
+                                                item['title'],
+                                                href=item['url'],
+                                                cls='vs-popup-item',
+                                                role='menuitem')
+                                        else:
+                                            with button(
+                                                    type='button',
+                                                    cls=(
+                                                        'vs-popup-item '
+                                                        'vs-popup-item-icon'),
+                                                    role='menuitem',
+                                                    disabled=(
+                                                        item.get('disabled')
+                                                        or None),
+                                                    hx_confirm=item.get(
+                                                        'confirm'),
+                                                    hx_post=item['url'],
+                                                    hx_target='#workspace',
+                                                    hx_swap='outerHTML'):
+                                                if item.get('icon'):
+                                                    icon(item['icon'].removeprefix(
+                                                            'tryton-'))
+                                                span(item['title'])
+                                else:
+                                    span(
+                                        translate('No actions'),
+                                        cls='vs-popup-empty')
+                    if tab.get('relation_modal'):
+                        with button(
+                                type='button',
+                                cls='vs-icon-button',
+                                title=translate('Close'),
+                                aria_label=translate('Close'),
+                                hx_post=CloseTab.url(tab=tab['id']),
+                                hx_target='#workspace',
+                                hx_swap='outerHTML'):
+                            icon('close')
             if revision:
                 span(
                     'Revision %s' % stringify(revision),
@@ -673,11 +1005,6 @@ class ViewRenderer:
         Search = self.pool.get('cassini.search')
         SearchDraft = self.pool.get('cassini.search.draft')
         ToggleActive = self.pool.get('cassini.toggle.active')
-        SelectNeighbor = self.pool.get('cassini.select.neighbor')
-        SearchBookmarkDialog = self.pool.get(
-            'cassini.search.bookmark.dialog')
-        DeleteSearchBookmark = self.pool.get(
-            'cassini.delete.search.bookmark')
         ApplySearchBookmark = self.pool.get(
             'cassini.apply.search.bookmark')
         ViewSearch = self.pool.get('ir.ui.view_search')
@@ -687,8 +1014,15 @@ class ViewRenderer:
         search_filters = decode_value(tab.get('search_filters', {}))
         search_domain = decode_value(tab.get('search_domain', []))
         bookmarks = ViewSearch.get().get(tab['model'], [])
+        bookmark_id = int(tab.get('search_bookmark') or 0)
         current_bookmark = next((
                 bookmark for bookmark in bookmarks
+                if int(bookmark[0]) == bookmark_id), None)
+        if current_bookmark is None:
+            current_bookmark = next((
+                bookmark for bookmark in bookmarks
+                if tab.get('search_draft', tab.get('search', ''))
+                == tab.get('search', '')
                 if (PYSONEncoder().encode(bookmark[2])
                     == PYSONEncoder().encode(search_domain))), None)
 
@@ -726,11 +1060,15 @@ class ViewRenderer:
                             button(
                                 translate('Find'), type='submit',
                                 cls='vs-button vs-button-primary')
-            with form(
-                    cls='vs-search-form',
-                    hx_post=Search.url(tab=tab['id']),
-                    hx_target='#screen-' + tab['id'],
-                    hx_swap='outerHTML'):
+            query_group = div(cls='vs-search-query-group')
+            search_toolbar.add(query_group)
+            search_form = form(
+                cls='vs-search-form',
+                hx_post=Search.url(tab=tab['id']),
+                hx_target='#screen-' + tab['id'],
+                hx_swap='outerHTML')
+            query_group.add(search_form)
+            with search_form:
                 input_(
                     type='search', name='query',
                     id='search-input-' + tab['id'],
@@ -754,31 +1092,12 @@ class ViewRenderer:
                         type='submit', cls='vs-icon-button',
                         title=translate('Search'), aria_label=translate('Search')):
                     icon('search')
-            if current_bookmark and current_bookmark[3]:
-                with button(
-                        type='button', cls='vs-icon-button',
-                        title=translate('Remove this bookmark'),
-                        aria_label=translate('Remove this bookmark'),
-                        hx_post=DeleteSearchBookmark.url(
-                            tab=tab['id'],
-                            bookmark=current_bookmark[0]),
-                        hx_target='#screen-' + tab['id'],
-                        hx_swap='outerHTML'):
-                    icon('star')
-            else:
-                with button(
-                        type='button', cls='vs-icon-button',
-                        title=translate('Bookmark this filter'),
-                        aria_label=translate('Bookmark this filter'),
-                        disabled=not search_domain or None,
-                        hx_get=SearchBookmarkDialog.url(
-                            tab=tab['id']),
-                        hx_target='#modal',
-                        hx_swap='innerHTML'):
-                    icon(
-                        'star'
-                        if current_bookmark else 'star-border')
-            with details(cls='vs-popup vs-bookmark-popup'):
+            bookmark_control = self.search_bookmark_control(
+                tab, current_bookmark)
+            query_group.add(bookmark_control)
+            bookmark_popup = details(cls='vs-popup vs-bookmark-popup')
+            query_group.add(bookmark_popup)
+            with bookmark_popup:
                 with summary(
                         cls='vs-icon-button',
                         title=translate('Bookmarks'), aria_label=translate('Bookmarks')):
@@ -817,23 +1136,78 @@ class ViewRenderer:
                     'archive'
                     if tab.get('active_only', True)
                     else 'unarchive')
-            with div(
-                    cls='vs-search-navigation',
-                    role='group', aria_label=translate('Search navigation')):
-                for direction, image, title in (
-                        ('previous', 'back', translate('Previous record')),
-                        ('next', 'forward', translate('Next record'))):
-                    with button(
-                            type='button', cls='vs-icon-button',
-                            title=title, aria_label=title,
-                            disabled=not tab.get('record_order') or None,
-                            data_shortcut_action=direction,
-                            hx_post=SelectNeighbor.url(
-                                tab=tab['id'], direction=direction),
-                            hx_target='#screen-' + tab['id'],
-                            hx_swap='outerHTML'):
-                        icon(image)
+            pagination = self.search_pagination(tab)
+            search_toolbar.add(pagination)
         return search_toolbar
+
+    def search_bookmark_control(self, tab, current_bookmark=None):
+        SearchBookmarkDialog = self.pool.get(
+            'cassini.search.bookmark.dialog')
+        DeleteSearchBookmark = self.pool.get(
+            'cassini.delete.search.bookmark')
+        search_domain = decode_value(tab.get('search_domain', []))
+        current_draft = tab.get('search_draft', tab.get('search', ''))
+        if current_draft != tab.get('search', ''):
+            current_bookmark = None
+        if current_bookmark and current_bookmark[3]:
+            with button(
+                    type='button', cls='vs-icon-button',
+                    id='search-bookmark-control-' + tab['id'],
+                    title=translate('Remove this bookmark'),
+                    aria_label=translate('Remove this bookmark'),
+                    hx_post=DeleteSearchBookmark.url(
+                        tab=tab['id'], bookmark=current_bookmark[0]),
+                    hx_target='#screen-' + tab['id'],
+                    hx_swap='outerHTML') as control:
+                icon('star')
+            return control
+        with button(
+                type='button', cls='vs-icon-button',
+                id='search-bookmark-control-' + tab['id'],
+                title=translate('Bookmark this filter'),
+                aria_label=translate('Bookmark this filter'),
+                disabled=(
+                    not search_domain
+                    or current_draft != tab.get('search', '')) or None,
+                hx_get=SearchBookmarkDialog.url(tab=tab['id']),
+                hx_target='#modal', hx_swap='innerHTML') as control:
+            icon('star' if current_bookmark else 'star-border')
+        return control
+
+    def search_pagination(self, tab):
+        PageRecords = self.pool.get('cassini.page.records')
+        offset = int(tab.get('offset') or 0)
+        limit = int(tab.get('limit') or 1000)
+        count = int(tab.get('count') or len(tab.get('record_order', [])))
+        with nav(
+                cls='vs-page-navigation',
+                aria_label=translate('Record pages')) as pagination:
+            with button(
+                    type='button', cls='vs-icon-button',
+                    title=translate('Previous page'),
+                    aria_label=translate('Previous page'),
+                    disabled=offset <= 0 or None,
+                    hx_post=PageRecords.url(
+                        tab=tab['id'], direction='previous'),
+                    hx_target='#screen-' + tab['id'],
+                    hx_swap='outerHTML'):
+                icon('back')
+            span(
+                '%d–%d / %d' % (
+                    offset + 1 if count else 0,
+                    min(offset + limit, count), count),
+                cls='vs-page-navigation-position')
+            with button(
+                    type='button', cls='vs-icon-button',
+                    title=translate('Next page'),
+                    aria_label=translate('Next page'),
+                    disabled=offset + limit >= count or None,
+                    hx_post=PageRecords.url(
+                        tab=tab['id'], direction='next'),
+                    hx_target='#screen-' + tab['id'],
+                    hx_swap='outerHTML'):
+                icon('forward')
+        return pagination
 
     def search_completion(self, tab):
         with div(
@@ -949,6 +1323,12 @@ class ViewRenderer:
     def tree(self, tab, view):
         root = parse_architecture(view)
         relation_origin = tab.get('relation_origin')
+        # Relation record dialogs keep their parent origin too, but only an
+        # embedded x2many tree has an HTMX target in that origin.  Treating a
+        # dialog as an embedded tree used to crash while rendering its search
+        # result because ``target`` is intentionally absent there.
+        if relation_origin and not relation_origin.get('target'):
+            relation_origin = None
         relation_search_origin = tab.get('relation_search_origin')
         embedded = relation_origin or relation_search_origin
         tree_target = (
@@ -1297,12 +1677,17 @@ class ViewRenderer:
                                             if relation_origin else
                                             SelectRecord.url(
                                                 tab=tab['id'], record=key,
-                                                row='true', silent='true')),
+                                                row='true')),
                                         hx_vals=(
                                             '{"item":"%s"}' % key
                                             if relation_origin else None),
-                                        hx_target=tree_target,
-                                        hx_swap='none')
+                                        hx_target=(
+                                            tree_target
+                                            if relation_origin else
+                                            '#toolbar-' + tab['id']),
+                                        hx_swap=(
+                                            'none' if relation_origin
+                                            else 'outerHTML'))
                                     if not relation_origin or record.get('id'):
                                         button(
                                             '', type='button',
@@ -1493,7 +1878,8 @@ class ViewRenderer:
                                             attributes['_state_readonly'] = (
                                                 readonly)
                                             self.record_button(
-                                                tab, record, attributes)
+                                                tab, record, attributes,
+                                                renderer)
                 if any(
                         node.tag == 'field'
                         and str(node.attrib.get('sum', '0')).lower()
@@ -1551,9 +1937,7 @@ class ViewRenderer:
                             'vs-tree-multiple-button')
                         self.record_button(
                             tab, tab['records'][selected[0]],
-                            attributes)
-            if not embedded:
-                self.pagination(wrapper, tab)
+                            attributes, selected_renderer)
         return wrapper
 
     def tree_rows(self, tab, view):
@@ -1595,35 +1979,6 @@ class ViewRenderer:
         for key in roots:
             add(key, 0)
         return rows
-
-    def pagination(self, parent, tab):
-        PageRecords = self.pool.get('cassini.page.records')
-        offset = int(tab.get('offset') or 0)
-        limit = int(tab.get('limit') or 100)
-        count = int(tab.get('count') or len(tab.get('record_order', [])))
-        if count > limit or offset:
-            with nav(
-                    cls='vs-pagination',
-                    aria_label=translate('Record pages')) as pagination:
-                button(
-                    translate('Previous'), type='button', cls='vs-button',
-                    disabled=offset <= 0 or None,
-                    hx_post=PageRecords.url(
-                        tab=tab['id'], direction='previous'),
-                    hx_target='#screen-' + tab['id'],
-                    hx_swap='outerHTML')
-                span(
-                    '%d–%d of %d' % (
-                        offset + 1 if count else 0,
-                        min(offset + limit, count), count))
-                button(
-                    translate('Next'), type='button', cls='vs-button',
-                    disabled=offset + limit >= count or None,
-                    hx_post=PageRecords.url(
-                        tab=tab['id'], direction='next'),
-                    hx_target='#screen-' + tab['id'],
-                    hx_swap='outerHTML')
-            parent.add(pagination)
 
     @staticmethod
     def form_columns(node, columns):
@@ -1914,7 +2269,8 @@ class ViewRenderer:
             elif child.tag == 'button':
                 attributes['_state_readonly'] = state_readonly
                 attributes['_layout_style'] = layout_style
-                parent.add(self.record_button(tab, record, attributes))
+                parent.add(self.record_button(
+                        tab, record, attributes, renderer))
             elif child.tag == 'link':
                 if record.get('id'):
                     control = self.form_link(
@@ -2272,11 +2628,20 @@ class ViewRenderer:
                     cls='vs-link-count')
         return control
 
-    def record_button(self, tab, record, attributes):
+    def record_button(self, tab, record, attributes, renderer=None):
         RunButton = self.pool.get('cassini.run.button')
+        icon_name = attributes.get('icon')
+        if renderer:
+            state_values = renderer.evaluate(
+                attributes.get('states'), {}) or {}
+            if isinstance(state_values, dict):
+                icon_name = state_values.get('icon', icon_name)
+        classes = attributes.get('_class', 'vs-button')
+        if 'vs-record-button' not in classes.split():
+            classes += ' vs-record-button'
         with button(
                 type='button',
-                cls=attributes.get('_class', 'vs-button'),
+                cls=classes,
                 title=attributes.get('help'),
                 style=attributes.get('_layout_style'),
                 disabled=(
@@ -2290,8 +2655,8 @@ class ViewRenderer:
                     record=record['key']),
                 hx_target='#workspace',
                 hx_swap='outerHTML') as control:
-            if attributes.get('icon'):
-                icon(attributes['icon'].removeprefix('tryton-'))
+            if icon_name:
+                icon(icon_name.removeprefix('tryton-'))
             span(
                 attributes.get('string')
                 or attributes.get('name', translate('Action')))
@@ -2560,7 +2925,7 @@ class ViewRenderer:
             cls='vs-form vs-wizard%s' % (
                 ' vs-wizard-help-open'
                 if tab.get('wizard_help_open') else ''),
-            hx_sync='closest .vs-wizard:queue all')
+            hx_sync='body:queue all')
         with header(cls='vs-wizard-header') as wizard_header:
             h2(tab['title'], id='wizard-title-' + tab['id'])
             try:
@@ -2737,7 +3102,8 @@ class WorkspaceRenderer:
         view = decode_value(tab.get('view', {}))
         root = ElementTree.fromstring(view.get('arch') or '<form/>')
         expanded_widgets = {
-            'dict', 'document', 'html', 'many2many', 'multiselection',
+            'chart', 'code', 'dict', 'document', 'html',
+            'many2many', 'multiselection',
             'one2many', 'richtext', 'text',
             }
         expanded = root.tag != 'form' or tab.get('wizard_help_open')
@@ -2780,6 +3146,8 @@ class WorkspaceRenderer:
                     view_renderer.screen(tab)
                 elif tab.get('kind') == 'wizard':
                     view_renderer.wizard(tab)
+                elif tab.get('kind') == 'dashboard':
+                    view_renderer.screen(tab)
                 elif tab.get('kind') == 'url':
                     view_renderer.url(tab)
                 else:

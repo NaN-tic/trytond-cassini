@@ -211,9 +211,11 @@ class SaoEngine:
         except KeyError:
             raise ValueError(translate('Unknown related resource'))
         reference = '%s,%s' % (tab['model'], record['id'])
+        Model = self.pool.get(tab['model'])
+        rec_name = str(Model(record['id']).rec_name)
         action = {
             'id': None,
-            'name': '%s — %s' % (title, tab['title']),
+            'name': '%s (%s)' % (title, rec_name),
             'type': 'ir.action.act_window',
             'res_model': model_name,
             'views': [],
@@ -226,11 +228,33 @@ class SaoEngine:
             'pyson_search_value': '[]',
             'limit': 100,
             }
-        return self.open_action(action, {
+        data = {
                 'model': tab['model'],
                 'id': record['id'],
                 'ids': [record['id']],
-                })
+                }
+        if resource == 'logs':
+            return self.open_action(action, data)
+        related = self._open_window(
+            action, data, None, reuse=False)
+        related['relation_modal'] = True
+        related['return_tab'] = tab['id']
+        related['resource_modal'] = resource
+        if not tab.get('access', {}).get('write', True):
+            related['access']['create'] = False
+            related['access']['write'] = False
+            related['access']['delete'] = False
+        if resource == 'notes':
+            Note = self.pool.get('ir.note')
+            notes = Note.search([
+                    ('resource', '=', reference),
+                    ('unread', '=', True),
+                    ])
+            if notes:
+                Note.write(notes, {'unread': False})
+                self.load_tab(related)
+        self.save()
+        return related
 
     def open_action(self, action, data=None, extra_context=None):
         data = data or {}
@@ -242,6 +266,9 @@ class SaoEngine:
             tab = self._open_wizard(action, data, extra_context)
         elif action_type == 'ir.action.report':
             return self.execute_report(action, data, extra_context)
+        elif action_type == 'babi.action.dashboard':
+            tab = self._open_dashboard(
+                action, data, extra_context)
         elif action_type == 'ir.action.url':
             tab = self.interface.add_tab({
                     'kind': 'url',
@@ -286,6 +313,98 @@ class SaoEngine:
         else:
             raise ValueError(translate('Unsupported action type %s') % action_type)
         self.save()
+        return tab
+
+    def _open_dashboard(self, action, data, extra_context):
+        try:
+            self.pool.get('babi.dashboard')
+            self.pool.get('babi.widget')
+        except KeyError:
+            raise ValueError(translate(
+                'The Dashboard view requires the babi module.'))
+        dashboard_id = action.get('dashboard')
+        if not dashboard_id:
+            raise ValueError(translate('Unknown dashboard'))
+        context = dict(extra_context or {})
+        for tab in self.interface.tabs:
+            if (
+                    tab.get('kind') == 'dashboard'
+                    and int(tab.get('dashboard') or 0) == int(dashboard_id)
+                    and decode_value(tab.get('context', {})) == context):
+                self.interface.activate(tab['id'])
+                return tab
+        tab = self.interface.add_tab({
+                'kind': 'dashboard',
+                'title': action.get('name') or translate('Dashboard'),
+                'dashboard': int(dashboard_id),
+                'action': encode_value(action),
+                'context': encode_value(context),
+                'data': encode_value(data or {}),
+                'dashboard_items': [],
+                })
+        self._load_dashboard(tab)
+        return tab
+
+    def _load_dashboard(self, tab):
+        Dashboard = self.pool.get('babi.dashboard')
+        Widget = self.pool.get('babi.widget')
+        context = self.context(
+            decode_value(tab.get('context', {})),
+            decode_value(tab.get('data', {})))
+        with Transaction().set_context(context):
+            records = Dashboard.read(
+                [int(tab['dashboard'])], ['name', 'view'])
+            if not records:
+                raise ValueError(translate('Unknown dashboard'))
+            dashboard = records[0]
+            try:
+                items = json.loads(dashboard.get('view') or '[]')
+            except (TypeError, ValueError):
+                items = []
+
+            widget_ids = set()
+
+            def collect(nodes):
+                for node in nodes if isinstance(nodes, list) else []:
+                    if not isinstance(node, dict):
+                        continue
+                    if node.get('widget'):
+                        widget_ids.add(int(node['widget']))
+                    collect(node.get('children', []))
+
+            collect(items)
+            charts = {
+                record['id']: record.get('chart') or ''
+                for record in Widget.read(
+                    sorted(widget_ids), ['chart'])
+                } if widget_ids else {}
+
+        def prepare(nodes):
+            result = []
+            for node in nodes if isinstance(nodes, list) else []:
+                if not isinstance(node, dict) or not node.get('widget'):
+                    continue
+                widget_id = int(node['widget'])
+                try:
+                    colspan = max(1, min(4, int(node.get('colspan') or 1)))
+                except (TypeError, ValueError):
+                    colspan = 1
+                try:
+                    height = max(120, min(
+                            2000, int(node.get('height') or 450)))
+                except (TypeError, ValueError):
+                    height = 450
+                result.append({
+                        'widget': widget_id,
+                        'colspan': colspan,
+                        'height': height,
+                        'chart': charts.get(widget_id, ''),
+                        'children': prepare(node.get('children', [])),
+                        })
+            return result
+
+        tab['title'] = dashboard.get('name') or tab['title']
+        tab['dashboard_items'] = encode_value(prepare(items))
         return tab
 
     def action_value(self, action):
@@ -384,7 +503,7 @@ class SaoEngine:
                 'view_types': view_types,
                 'view_type': view_types[0],
                 'view_id': view_ids[0],
-                'limit': action.get('limit') or 100,
+                'limit': action.get('limit') or 1000,
                 'offset': 0,
                 'search': '',
                 'search_draft': '',
@@ -614,10 +733,15 @@ class SaoEngine:
 
     def close_tab(self, tab_id):
         tab = self.interface.get_tab(tab_id)
+        return_tab = (
+            tab.get('return_tab')
+            if tab and tab.get('relation_modal') else None)
         if tab and tab.get('kind') == 'wizard' and not tab.get('ended'):
             Wizard = self.pool.get(tab['wizard_name'], type='wizard')
             Wizard.delete(tab['wizard_session'])
         self.interface.close(tab_id)
+        if return_tab and self.interface.get_tab(return_tab):
+            self.interface.activate(return_tab)
         self.save()
         return self.interface.active_tab
 
@@ -784,7 +908,7 @@ class SaoEngine:
                 ids = Model.search(
                     domain,
                     offset=tab.get('offset', 0),
-                    limit=tab.get('limit', 100),
+                    limit=tab.get('limit', 1000),
                     order=decode_value(tab.get('order')))
             else:
                 ids = [int(id_) for id_ in ids if id_]
@@ -818,9 +942,9 @@ class SaoEngine:
                         for child_id in row.get(child_field, [])
                         if child_id not in known
                         }
-                    while pending and len(known) < tab.get('limit', 100):
+                    while pending and len(known) < tab.get('limit', 1000):
                         child_ids = list(pending)[
-                            :tab.get('limit', 100) - len(known)]
+                            :tab.get('limit', 1000) - len(known)]
                         child_values = Model.read(child_ids, read_fields)
                         values.extend(child_values)
                         known.update(child_ids)
@@ -909,13 +1033,19 @@ class SaoEngine:
         return tab
 
     def reload_tab(self, tab_id):
-        tab = self._tab(tab_id, kind='window')
-        self.load_tab(tab)
+        tab = self._tab(tab_id)
+        if tab.get('kind') == 'dashboard':
+            self._load_dashboard(tab)
+        elif tab.get('kind') == 'window':
+            self.load_tab(tab)
+        else:
+            raise ValueError(translate('This tab can not be reloaded'))
         self.save()
         return tab
 
     def search(self, tab_id, text):
         tab = self._tab(tab_id, kind='window')
+        tab['search_bookmark'] = None
         tab['search'] = text or ''
         tab['search_draft'] = tab['search']
         tab['search_filters'] = {}
@@ -935,6 +1065,7 @@ class SaoEngine:
 
     def advanced_search(self, tab_id, filters):
         tab = self._tab(tab_id, kind='window')
+        tab['search_bookmark'] = None
         view = decode_value(tab.get('view', {}))
         definitions = search_field_definitions(view)
         domain = []
@@ -997,8 +1128,10 @@ class SaoEngine:
         if not name or not domain:
             raise ValueError(translate('A bookmark name and search are required'))
         ViewSearch = self.pool.get('ir.ui.view_search')
-        ViewSearch.set(
+        bookmark_id = ViewSearch.set(
             name.strip(), tab['model'], PYSONEncoder().encode(domain))
+        tab['search_bookmark'] = bookmark_id
+        self.save()
         return tab
 
     def remove_search_bookmark(self, tab_id, bookmark_id):
@@ -1011,6 +1144,9 @@ class SaoEngine:
             raise ValueError(translate('This search bookmark can not be removed'))
         ViewSearch = self.pool.get('ir.ui.view_search')
         ViewSearch.unset(int(bookmark_id))
+        if int(tab.get('search_bookmark') or 0) == int(bookmark_id):
+            tab['search_bookmark'] = None
+        self.save()
         return tab
 
     def apply_search_bookmark(self, tab_id, bookmark_id):
@@ -1026,6 +1162,7 @@ class SaoEngine:
         tab['search_draft'] = tab['search']
         tab['search_domain'] = encode_value(domain)
         tab['search_filters'] = {}
+        tab['search_bookmark'] = int(bookmark_id)
         tab['offset'] = 0
         self.load_tab(tab)
         self.save()
@@ -1068,7 +1205,7 @@ class SaoEngine:
 
     def page(self, tab_id, direction):
         tab = self._tab(tab_id, kind='window')
-        limit = int(tab.get('limit') or 100)
+        limit = int(tab.get('limit') or 1000)
         offset = int(tab.get('offset') or 0)
         if direction == 'next':
             offset = min(
@@ -2043,10 +2180,12 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         toolbar = decode_value(tab.get('toolbar', {}))
         action = None
+        action_category = None
         for category in ('print', 'action', 'relate'):
             for candidate in toolbar.get(category, []):
                 if int(candidate['id']) == int(action_id):
-                    action = candidate
+                    action = dict(candidate)
+                    action_category = category
                     break
         if not action:
             raise KeyError(translate('Toolbar action %s not found') % action_id)
@@ -2058,11 +2197,26 @@ class SaoEngine:
                 ids.append(stored['id'])
             elif key in tab['records'] and tab['records'][key].get('id'):
                 ids.append(tab['records'][key]['id'])
-        return self.open_action(action, {
+        data = {
                 'model': tab['model'],
                 'ids': ids,
                 'id': ids[0] if ids else None,
-                })
+                }
+        if action_category == 'relate':
+            names = []
+            Model = self.pool.get(tab['model'])
+            for id_ in ids[:5]:
+                names.append(str(Model(id_).rec_name))
+            if len(ids) > 5:
+                names.append('...')
+            if names:
+                action['name'] = '%s (%s)' % (
+                    action.get('name') or '', ', '.join(names))
+        if action.get('type') == 'ir.action.report':
+            key = self.queue_report(action, data)
+            self.save()
+            return {'report_key': key}
+        return self.open_action(action, data)
 
     def execute_report(self, action, data, extra_context=None):
         Report = self.pool.get(action['report_name'], type='report')
@@ -2085,6 +2239,12 @@ class SaoEngine:
             '%s; filename="%s.%s"' % (
                 'inline' if direct_print else 'attachment',
                 filename, extension))
+        response.headers['X-Cassini-Direct-Print'] = (
+            'true' if direct_print else 'false')
+        response.headers['X-Cassini-Report-Type'] = extension
+        response.headers['X-Cassini-Printer'] = (
+            base64.urlsafe_b64encode(
+                str(filename or '').encode('utf-8')).decode('ascii'))
         return response
 
     def export(self, tab_id, export_id=None):

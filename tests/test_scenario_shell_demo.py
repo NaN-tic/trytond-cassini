@@ -67,9 +67,11 @@ class TestShellDemo(WebTestCase):
                     ])
             section, = Menu.create([{
                         'name': 'Shell Tests',
+                        'icon': 'tryton-menu',
                         }])
             Menu.create([{
                         'name': 'Shell Groups',
+                        'icon': 'tryton-open',
                         'action': str(action),
                         'parent': section.id,
                         }])
@@ -147,8 +149,20 @@ class TestShellDemo(WebTestCase):
             'placeholder', 'Search 🔍︎')
         logo = page.get_by_role('img', name='NaN-tic')
         expect(logo).to_be_visible()
+        expect(logo).to_have_attribute('data-seasonal-logo', 'true')
         self.assertGreater(
             logo.evaluate('element => element.naturalWidth'), 0)
+        header_box = page.locator('.vs-header').bounding_box()
+        self.assertEqual(header_box['height'], 50)
+        menu_button_box = menu_panel.bounding_box()
+        self.assertEqual(menu_button_box['width'], 42)
+        self.assertEqual(menu_button_box['height'], 42)
+        logo_margins = logo.evaluate(
+            '''element => ({
+                left: getComputedStyle(element).marginLeft,
+                right: getComputedStyle(element).marginRight,
+            })''')
+        self.assertEqual(logo_margins, {'left': '10px', 'right': '10px'})
         self.assertGreater(
             global_search.bounding_box()['x'],
             logo.bounding_box()['x'] + logo.bounding_box()['width'])
@@ -256,6 +270,28 @@ class TestShellDemo(WebTestCase):
             'button', name='Shell Tests', exact=True).click()
         expect(page.get_by_role(
                 'button', name='Shell Groups', exact=True)).to_be_visible()
+        expect(page.get_by_role(
+            'button', name='Shell Groups', exact=True).locator(
+                '.vs-menu-item-icon')).to_be_visible()
+        menu_geometry = page.get_by_role(
+            'button', name='Shell Groups', exact=True).evaluate(
+                '''button => {
+                    const icon = button.querySelector(
+                        '.vs-menu-item-icon').getBoundingClientRect();
+                    const text = button.querySelector(
+                        '.vs-menu-item-label > span').getBoundingClientRect();
+                    return {
+                        iconCenter: icon.y + icon.height / 2,
+                        textCenter: text.y + text.height / 2,
+                        iconRight: icon.right,
+                        textLeft: text.left,
+                    };
+                }''')
+        self.assertLessEqual(abs(
+            menu_geometry['iconCenter']
+            - menu_geometry['textCenter']), 1)
+        self.assertLess(
+            menu_geometry['iconRight'], menu_geometry['textLeft'])
         page.get_by_role(
             'button', name='Add Shell Groups to favorites').click()
         expect(page.get_by_role(
@@ -514,8 +550,17 @@ class TestShellDemo(WebTestCase):
         self.assertEqual(positions, sorted(positions))
         self.assertNotIn('Duplicate', titles)
         self.assertNotIn('Delete', titles)
-        expect(toolbar.locator('.vs-window-title')).to_contain_text(
+        expect(toolbar.locator('.vs-window-title')).to_have_attribute(
+            'aria-label', 'Window actions: Shell Tests / Shell Groups')
+        expect(toolbar.locator('.vs-window-heading-label')).to_have_text(
             'Shell Tests / Shell Groups')
+        toolbar.locator('.vs-window-title').click()
+        expect(toolbar.locator('.vs-window-menu-list').get_by_role(
+            'menuitem').first).to_have_text('Switch view')
+        toolbar.locator('.vs-window-title').click()
+        expect(toolbar.locator(
+            '.vs-window-title-caret')).to_have_css(
+                'border-left-style', 'solid')
         toolbar_actions_box = toolbar.locator(
             '.vs-toolbar-actions').bounding_box()
         self.assertLessEqual(
@@ -537,6 +582,12 @@ class TestShellDemo(WebTestCase):
         self.assertEqual(tab_overflow['overflowY'], 'hidden')
         expect(toolbar.locator(
                 'img[src$="tryton-create.svg"]').last).to_be_visible()
+        record_navigation = toolbar.get_by_role(
+            'group', name='Record navigation')
+        expect(record_navigation).to_be_visible()
+        expect(record_navigation).to_contain_text(
+            '/%s' % self.active_group_count)
+        expect(toolbar.locator('.vs-toolbar-secondary')).to_have_count(1)
         search_toolbar = toolbar.locator('.vs-search-toolbar')
         self.assertGreater(
             search_toolbar.bounding_box()['y'],
@@ -544,6 +595,24 @@ class TestShellDemo(WebTestCase):
         self.assertGreater(
             search_toolbar.bounding_box()['width'],
             toolbar.bounding_box()['width'] * .8)
+        search_controls = [
+            search_toolbar.locator('.vs-filter-popup > summary'),
+            search_toolbar.get_by_placeholder('Search', exact=True),
+            search_toolbar.get_by_role('button', name='Search', exact=True),
+            search_toolbar.get_by_role(
+                'button', name='Bookmark this filter', exact=True),
+            search_toolbar.locator('.vs-bookmark-popup > summary'),
+            search_toolbar.get_by_role(
+                'button', name='Show inactive records'),
+            search_toolbar.get_by_role('button', name='Previous page'),
+            search_toolbar.get_by_role('button', name='Next page'),
+            ]
+        search_y = search_controls[0].bounding_box()['y']
+        for control in search_controls[1:]:
+            self.assertLessEqual(
+                abs(control.bounding_box()['y'] - search_y), 2)
+        expect(search_toolbar.locator(
+            '.vs-page-navigation')).to_be_visible()
         header_controls = page.locator('.vs-tree-header-controls')
         self.assertGreater(
             header_controls.get_by_role(
@@ -713,6 +782,13 @@ class TestShellDemo(WebTestCase):
                 'button', name='Remove this bookmark')).to_be_visible()
 
         search = toolbar.get_by_placeholder('Search', exact=True)
+        with page.expect_response(
+                lambda response: response.url.endswith('/search/draft')):
+            search.fill('N')
+        expect(page.get_by_role(
+            'button', name='Remove this bookmark')).to_have_count(0)
+        expect(page.get_by_role(
+            'button', name='Bookmark this filter')).to_be_disabled()
         search.fill('')
         search.press('Enter')
         expect(page.get_by_text(

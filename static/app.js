@@ -18,6 +18,74 @@
     const replaceRequests = new WeakMap();
     const fallbackTimers = new WeakMap();
     const observedWorkspaceTabs = new WeakSet();
+    let seasonalLogoTimer = null;
+    let monacoPromise = null;
+    let plotlyPromise = null;
+    let qzPromise = null;
+    let qzConfigured = false;
+    let qzPrintQueue = Promise.resolve();
+
+    function easterSundayDate(year) {
+        const a = year % 19;
+        const b = (year / 100) | 0;
+        const c = year % 100;
+        const d = (b / 4) | 0;
+        const e = b % 4;
+        const f = ((b + 8) / 25) | 0;
+        const g = ((b - f + 1) / 3) | 0;
+        const h = (19 * a + b - d - g + 15) % 30;
+        const i = (c / 4) | 0;
+        const k = c % 4;
+        const l = (32 + 2 * e + 2 * i - h - k) % 7;
+        const m = ((a + 11 * h + 22 * l) / 451) | 0;
+        const month = ((h + l - 7 * m + 114) / 31) | 0;
+        const day = ((h + l - 7 * m + 114) % 31) + 1;
+        return new Date(year, month - 1, day);
+    }
+
+    function seasonalLogoSource(date) {
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        if (month === 1 && day >= 11 && day <= 15) {
+            return "/cassini-private-images/logo-birthday.png";
+        }
+        if (month === 12 || (month === 1 && day < 7)) {
+            return "/cassini-private-images/logo-christmas.png";
+        }
+        if ((month === 10 && day >= 30) ||
+                (month === 11 && day <= 2)) {
+            return "/cassini-private-images/logo-halloween.png";
+        }
+        const today = new Date(
+            date.getFullYear(), date.getMonth(), date.getDate());
+        const easter = easterSundayDate(today.getFullYear());
+        const palmSunday = new Date(easter);
+        const easterMonday = new Date(easter);
+        palmSunday.setDate(easter.getDate() - 7);
+        easterMonday.setDate(easter.getDate() + 1);
+        if (today >= palmSunday && today <= easterMonday) {
+            return "/cassini-private-images/logo-easter.png";
+        }
+        if (month === 3 && day === 8) {
+            return "/cassini-private-images/logo-women.png";
+        }
+        return "/cassini-private-images/logo.png";
+    }
+
+    function applySeasonalLogo() {
+        const logo = document.querySelector("[data-seasonal-logo]");
+        if (logo) {
+            logo.src = seasonalLogoSource(new Date());
+        }
+    }
+
+    function initializeSeasonalLogo() {
+        applySeasonalLogo();
+        if (seasonalLogoTimer === null) {
+            seasonalLogoTimer = window.setInterval(
+                applySeasonalLogo, 8 * 60 * 60 * 1000);
+        }
+    }
 
     function tr(source, variables) {
         const element = document.querySelector(
@@ -698,13 +766,13 @@
                 search.focus({preventScroll: true});
                 return true;
             }
-            const searchableView = screen.querySelector(
-                "[data-view-type='tree'], " +
-                "[data-view-type='calendar'], " +
-                "[data-view-type='list-form']");
-            if (searchableView) {
+            const switchView = screen.querySelector(
+                ".vs-toolbar-actions " +
+                "[data-shortcut-action='switch']");
+            if (switchView && ["tree", "calendar", "list-form"].includes(
+                    switchView.dataset.nextView)) {
                 focusSearchAfterSwap = true;
-                searchableView.click();
+                switchView.click();
                 return true;
             }
             return false;
@@ -803,16 +871,372 @@
         });
     }
 
+    function loadExternalScript(source) {
+        const existing = document.querySelector(
+            "script[src=\"" + CSS.escape(source) + "\"]");
+        if (existing?.dataset.loaded === "true") {
+            return Promise.resolve();
+        }
+        return new Promise(function (resolve, reject) {
+            const script = existing || document.createElement("script");
+            script.addEventListener("load", function () {
+                script.dataset.loaded = "true";
+                resolve();
+            }, {once: true});
+            script.addEventListener("error", function () {
+                reject(new Error(tr("The requested JavaScript library could not be loaded.")));
+            }, {once: true});
+            if (!existing) {
+                script.src = source;
+                document.head.append(script);
+            }
+        });
+    }
+
+    function decodeBase64Text(value) {
+        let encoded = String(value || "")
+            .replaceAll("-", "+").replaceAll("_", "/");
+        encoded += "=".repeat((4 - encoded.length % 4) % 4);
+        const binary = window.atob(encoded);
+        const bytes = Uint8Array.from(binary, character =>
+            character.charCodeAt(0));
+        return new TextDecoder("utf-8").decode(bytes);
+    }
+
+    function loadPlotly() {
+        if (window.Plotly?.newPlot) {
+            return Promise.resolve(window.Plotly);
+        }
+        if (!plotlyPromise) {
+            plotlyPromise = loadExternalScript(
+                "https://cdn.plot.ly/plotly-3.6.0.min.js")
+                .then(function () {
+                    if (!window.Plotly?.newPlot) {
+                        throw new Error(tr("Plotly could not be initialized."));
+                    }
+                    return window.Plotly;
+                });
+        }
+        return plotlyPromise;
+    }
+
+    function initializeCharts(root=document) {
+        for (const node of root.querySelectorAll(
+                "[data-cassini-chart]:not([data-chart-initialized])")) {
+            node.dataset.chartInitialized = "true";
+            let chart;
+            try {
+                chart = JSON.parse(decodeBase64Text(
+                    node.dataset.chartPayload));
+            } catch (error) {
+                node.textContent = tr("The chart data is not valid.");
+                node.classList.add("vs-chart-error");
+                continue;
+            }
+            if (!chart?.data?.length) {
+                continue;
+            }
+            const information = chart.data[0] || {};
+            if (information.type === "value") {
+                const value = document.createElement("strong");
+                value.className = "vs-chart-value";
+                value.textContent = information.value ?? "";
+                node.replaceChildren(value);
+                continue;
+            }
+            if (information.type === "error") {
+                const error = document.createElement("p");
+                error.className = "vs-chart-error";
+                error.textContent = information.message || "";
+                node.replaceChildren(error);
+                continue;
+            }
+            loadPlotly().then(function (Plotly) {
+                if (!node.isConnected) {
+                    return;
+                }
+                const layout = Object.assign({}, chart.layout || {}, {
+                    autosize: true,
+                    separators: ",.",
+                    margin: Object.assign({
+                        t: 40, l: 40, r: 40, b: 40,
+                    }, chart.layout?.margin || {}),
+                });
+                const config = Object.assign({}, chart.config || {}, {
+                    responsive: true,
+                });
+                return Plotly.newPlot(node, chart.data, layout, config);
+            }).catch(function (error) {
+                node.textContent = error.message;
+                node.classList.add("vs-chart-error");
+            });
+        }
+    }
+
+    function loadMonaco() {
+        if (window.CassiniMonaco?.editor) {
+            return Promise.resolve(window.CassiniMonaco);
+        }
+        if (!document.querySelector("link[data-monaco-icons]")) {
+            const stylesheet = document.createElement("link");
+            stylesheet.rel = "stylesheet";
+            stylesheet.href = "https://cdn.jsdelivr.net/npm/" +
+                "vscode-codicons@0.0.17/dist/codicon.min.css";
+            stylesheet.dataset.monacoIcons = "true";
+            document.head.append(stylesheet);
+        }
+        if (!monacoPromise) {
+            monacoPromise = import(
+                "https://cdn.jsdelivr.net/npm/monaco-editor-core@0.55.1/+esm");
+        }
+        return monacoPromise;
+    }
+
+    function initializeCodeEditors(root=document) {
+        for (const widget of root.querySelectorAll(
+                "[data-code-widget]:not([data-code-initialized])")) {
+            widget.dataset.codeInitialized = "true";
+            const source = widget.querySelector("[data-code-source]");
+            const host = widget.querySelector("[data-code-editor]");
+            if (!source || !host) {
+                continue;
+            }
+            loadMonaco().then(function (monaco) {
+                if (!widget.isConnected) {
+                    return;
+                }
+                let synchronizing = false;
+                const editor = monaco.editor.create(host, {
+                    value: source.value || "",
+                    language: widget.dataset.codeLanguage || "plaintext",
+                    theme: "vs-dark",
+                    readOnly: widget.dataset.codeReadonly === "true",
+                    automaticLayout: true,
+                });
+                widget._cassiniEditor = editor;
+                source.classList.add("vs-code-source-ready");
+                editor.getModel().onDidChangeContent(function () {
+                    if (synchronizing) {
+                        return;
+                    }
+                    source.value = editor.getValue();
+                    source.dispatchEvent(new Event("input", {bubbles: true}));
+                });
+                editor.onDidBlurEditorText(function () {
+                    if (source.value !== (
+                            source.dataset.serverValue ?? source.defaultValue)) {
+                        source.dispatchEvent(new Event(
+                            "change", {bubbles: true}));
+                    }
+                });
+                if (monaco.KeyMod && monaco.KeyCode) {
+                    editor.addCommand(
+                        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+                        function () {
+                            source.dispatchEvent(new Event(
+                                "change", {bubbles: true}));
+                            window.setTimeout(function () {
+                                document.querySelector(
+                                    "[data-shortcut-action='save']" +
+                                    ":not([disabled])")?.click();
+                            }, 0);
+                        });
+                }
+                synchronizing = true;
+                editor.setValue(source.value || "");
+                synchronizing = false;
+            }).catch(function (error) {
+                widget.dataset.codeInitialized = "error";
+                host.textContent = error.message;
+                host.classList.add("vs-code-error");
+            });
+        }
+    }
+
+    function initializeDynamicWidgets(root=document) {
+        initializeCharts(root);
+        initializeCodeEditors(root);
+    }
+
+    function cassiniDatabasePrefix() {
+        const database = window.location.pathname.split("/")
+            .filter(Boolean)[0] || "";
+        return "/" + database;
+    }
+
+    function configureQZ(qz) {
+        if (!qzConfigured) {
+            qz.security.setCertificatePromise(
+                function (resolve, reject) {
+                    fetch("/cassini-qz/certificate.txt", {
+                        cache: "no-store",
+                    }).then(function (response) {
+                        if (!response.ok) {
+                            throw new Error(response.statusText);
+                        }
+                        return response.text();
+                    }).then(resolve, reject);
+                });
+            qz.security.setSignatureAlgorithm("SHA512");
+            qz.security.setSignaturePromise(function (toSign) {
+                return function (resolve, reject) {
+                    fetch(cassiniDatabasePrefix() +
+                            "/printer/sign_message", {
+                        method: "POST",
+                        cache: "no-cache",
+                        credentials: "same-origin",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({request: toSign}),
+                    }).then(function (response) {
+                        if (!response.ok) {
+                            throw new Error(response.statusText);
+                        }
+                        return response.text();
+                    }).then(resolve, reject);
+                };
+            });
+            qzConfigured = true;
+        }
+        return qz;
+    }
+
+    function loadQZ() {
+        if (window.qz?.print) {
+            return Promise.resolve(configureQZ(window.qz));
+        }
+        if (!qzPromise) {
+            qzPromise = loadExternalScript("/cassini-qz/qz-tray.js")
+                .then(function () {
+                    const qz = window.qz;
+                    if (!qz?.print) {
+                        throw new Error(tr("QZ Tray could not be initialized."));
+                    }
+                    return configureQZ(qz);
+                });
+        }
+        return qzPromise;
+    }
+
+    function blobToBase64(blob) {
+        return new Promise(function (resolve, reject) {
+            const reader = new FileReader();
+            reader.addEventListener("load", function () {
+                resolve(String(reader.result).split(",").pop());
+            }, {once: true});
+            reader.addEventListener("error", reject, {once: true});
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    async function printWithQZ(blob, reportType, printerName) {
+        const qz = await loadQZ();
+        const connected = qz.websocket.isActive();
+        if (!connected) {
+            await qz.websocket.connect();
+        }
+        try {
+            const printer = await qz.printers.find(printerName);
+            const configuration = qz.configs.create(printer);
+            let data;
+            if (reportType === "pdf") {
+                data = [{
+                    type: "pixel", format: "pdf", flavor: "base64",
+                    data: await blobToBase64(blob),
+                }];
+            } else if (["png", "jpg", "jpeg", "gif", "svg", "webp"]
+                    .includes(reportType.toLowerCase())) {
+                data = [{
+                    type: "pixel", format: "image", flavor: "base64",
+                    data: await blobToBase64(blob),
+                }];
+            } else {
+                const buffer = new Uint8Array(await blob.arrayBuffer());
+                let text = "";
+                for (let offset = 0; offset < buffer.length; offset += 8192) {
+                    text += String.fromCharCode(...buffer.slice(
+                        offset, offset + 8192));
+                }
+                if (["zpl", "epl", "tec", "TECSV4_B", "TECFV4_B",
+                        "ZEBRA_B"].includes(reportType)) {
+                    data = [{
+                        type: "raw", format: "command", flavor: "plain",
+                        data: text,
+                    }];
+                } else {
+                    data = [{
+                        type: "pixel", format: "html", flavor: "plain",
+                        data: new TextDecoder("utf-8").decode(buffer),
+                    }];
+                }
+            }
+            await qz.print(configuration, data);
+        } finally {
+            if (!connected && qz.websocket.isActive()) {
+                await qz.websocket.disconnect();
+            }
+        }
+    }
+
+    function responseFilename(response, fallback) {
+        const disposition = response.headers.get("Content-Disposition") || "";
+        const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+        if (encoded) {
+            return decodeURIComponent(encoded[1]);
+        }
+        const plain = disposition.match(/filename="([^"]+)"/i);
+        return plain ? plain[1] : fallback;
+    }
+
+    function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.hidden = true;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function downloadOrPrint(url) {
+        const response = await fetch(url, {credentials: "same-origin"});
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        const reportType = response.headers.get(
+            "X-Cassini-Report-Type") || "bin";
+        const filename = responseFilename(
+            response, "report." + reportType);
+        const blob = await response.blob();
+        if (response.headers.get("X-Cassini-Direct-Print") !== "true") {
+            downloadBlob(blob, filename);
+            return;
+        }
+        let printerName = "";
+        try {
+            printerName = decodeBase64Text(
+                response.headers.get("X-Cassini-Printer") || "");
+        } catch (error) {
+            printerName = filename.replace(/\.[^.]+$/, "");
+        }
+        try {
+            await printWithQZ(blob, reportType, printerName);
+        } catch (error) {
+            showClientNotice(tr("Direct printing failed: %(error)s", {
+                error: error.message,
+            }), true);
+            downloadBlob(blob, filename);
+        }
+    }
+
     function startDownloads(detail) {
         const urls = detail && detail.urls ? detail.urls : [];
         for (const url of urls) {
-            const frame = document.createElement("iframe");
-            frame.hidden = true;
-            frame.src = url;
-            frame.addEventListener("load", function () {
-                window.setTimeout(() => frame.remove(), 1000);
-            });
-            document.body.append(frame);
+            qzPrintQueue = qzPrintQueue
+                .catch(() => undefined)
+                .then(() => downloadOrPrint(url))
+                .catch(error => showClientNotice(error.message, true));
         }
     }
 
@@ -1276,17 +1700,64 @@
             const selected = candidate === row;
             candidate.classList.toggle("vs-row-current", selected);
             const checkbox = candidate.querySelector(
-                ".vs-select-column input[aria-label='Select record']");
+                "td.vs-select-column input[name='selected']");
             if (checkbox) {
                 checkbox.checked = selected;
             }
         }
         const selectAll = tree.querySelector(
-            "thead input[aria-label='Select all records']");
+            "thead .vs-select-column input[name='selected']");
         if (selectAll) {
             selectAll.checked = false;
         }
     }
+
+    function attachmentDropTarget(event) {
+        return event.target.closest?.("[data-attachment-drop]");
+    }
+
+    document.addEventListener('dragenter', function (event) {
+        const target = attachmentDropTarget(event);
+        if (!target || !Array.from(
+                event.dataTransfer?.types || []).includes("Files")) {
+            return;
+        }
+        event.preventDefault();
+        target.classList.add("vs-attachment-drop-active");
+    });
+
+    document.addEventListener('dragover', function (event) {
+        const target = attachmentDropTarget(event);
+        if (!target || !Array.from(
+                event.dataTransfer?.types || []).includes("Files")) {
+            return;
+        }
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+        target.classList.add("vs-attachment-drop-active");
+    });
+
+    document.addEventListener('dragleave', function (event) {
+        const target = attachmentDropTarget(event);
+        if (target && !target.contains(event.relatedTarget)) {
+            target.classList.remove("vs-attachment-drop-active");
+        }
+    });
+
+    document.addEventListener('drop', function (event) {
+        const target = attachmentDropTarget(event);
+        if (!target || !event.dataTransfer?.files?.length) {
+            return;
+        }
+        event.preventDefault();
+        target.classList.remove("vs-attachment-drop-active");
+        const input = target.querySelector("[data-attachment-input]");
+        if (!input) {
+            return;
+        }
+        input.files = event.dataTransfer.files;
+        input.dispatchEvent(new Event("change", {bubbles: true}));
+    });
 
     function setTableColumnPixels(table) {
         const columns = Array.from(table.querySelectorAll(
@@ -1680,7 +2151,7 @@
             }
             return;
         }
-        const row = treeRowFromEvent(event, false);
+        const row = treeRowFromEvent(event, true);
         if (!row) {
             return;
         }
@@ -2202,7 +2673,25 @@
         window.requestAnimationFrame(syncWorkspaceStickyOffsets);
         scheduleChatPolling();
         initializeHelp();
+        initializeSeasonalLogo();
+        initializeDynamicWidgets();
         scheduleNoticeDismissal();
+    });
+    document.addEventListener("htmx:beforeCleanupElement", function (event) {
+        const root = event.detail?.elt;
+        if (!root) {
+            return;
+        }
+        const codeWidgets = root.matches?.("[data-code-widget]")
+            ? [root] : Array.from(root.querySelectorAll?.(
+                "[data-code-widget]") || []);
+        codeWidgets.forEach(widget => widget._cassiniEditor?.dispose());
+        const charts = root.matches?.("[data-cassini-chart]")
+            ? [root] : Array.from(root.querySelectorAll?.(
+                "[data-cassini-chart]") || []);
+        if (window.Plotly?.purge) {
+            charts.forEach(chart => window.Plotly.purge(chart));
+        }
     });
     document.addEventListener(
         "htmx:afterRequest", scheduleInitialFormFocus);
@@ -2387,6 +2876,7 @@
             window.requestAnimationFrame(syncWorkspaceStickyOffsets);
             scheduleChatPolling();
             initializeHelp();
+            initializeDynamicWidgets();
             const pushedURL = response.headers.get("HX-Push-Url");
             if (pushedURL ||
                     element.getAttribute("hx-push-url") === "true") {
@@ -2664,7 +3154,9 @@
         window.requestAnimationFrame(syncWorkspaceStickyOffsets);
         scheduleChatPolling();
         initializeHelp();
+        initializeSeasonalLogo();
         initializeSearchCompletions();
+        initializeDynamicWidgets();
         scheduleInitialFormFocus();
     });
     window.addEventListener("load", syncWorkspaceStickyOffsets);

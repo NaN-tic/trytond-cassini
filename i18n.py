@@ -17,6 +17,7 @@ JAVASCRIPT_SOURCES = (
     'Continue',
     'Could not save the column widths.',
     'Delete',
+    'Direct printing failed: %(error)s',
     'Duplicate',
     'Global search',
     'Global shortcuts',
@@ -29,6 +30,8 @@ JAVASCRIPT_SOURCES = (
     'Previous',
     'Previous tab',
     'Print',
+    'Plotly could not be initialized.',
+    'QZ Tray could not be initialized.',
     'Relate',
     'Reload/Undo',
     'Remote assistance could not be initialized.',
@@ -47,10 +50,12 @@ JAVASCRIPT_SOURCES = (
     'Tab shortcuts',
     'The assistant voice is not available.',
     'The audio could not be transcribed.',
+    'The chart data is not valid.',
     'The microphone could not be started.',
     'The recording could not be started.',
     'The screenshot could not be captured.',
     'The server could not complete this action.',
+    'The requested JavaScript library could not be loaded.',
     )
 
 

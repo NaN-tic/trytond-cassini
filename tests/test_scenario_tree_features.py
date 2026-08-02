@@ -106,6 +106,15 @@ class TestTreeFeatures(WebTestCase):
         self.assertIn(
             'vs-visual-success',
             rows.first.get_attribute('class'))
+        success_background = rows.first.evaluate(
+            'element => getComputedStyle(element).backgroundColor')
+        self.assertNotIn(success_background, {
+                'rgba(0, 0, 0, 0)', 'transparent'})
+        rows.first.hover()
+        self.assertNotEqual(
+            rows.first.evaluate(
+                'element => getComputedStyle(element).backgroundColor'),
+            success_background)
         expect(page.locator(
                 'input[value="Tree Child"]')).not_to_be_visible()
         parent = page.locator(
@@ -125,8 +134,7 @@ class TestTreeFeatures(WebTestCase):
         with page.expect_response(
                 lambda response: (
                     '/select?' in response.url
-                    and 'row=true' in response.url
-                    and 'silent=true' in response.url)):
+                    and 'row=true' in response.url)):
             parent_name.click()
         expect(parent.get_by_role(
                 'checkbox', name='Select record')).to_be_checked()

@@ -1,8 +1,9 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 
 from playwright.sync_api import Page, expect
+from trytond import __version__ as tryton_version
 from trytond.pool import Pool
 from trytond.transaction import Transaction
 
@@ -65,7 +66,7 @@ class TestAssistantLoading(WebTestCase):
                         'wiz_name': 'www.uri.builder',
                         }])
             update = Update(
-                datetime=datetime(2026, 8, 2, 8, 0),
+                datetime=datetime.now() + timedelta(minutes=2),
                 subject_en='Wizard contextual update',
                 subject_ca='Actualització contextual del wizard',
                 subject_es='Actualización contextual del wizard',
@@ -78,6 +79,21 @@ class TestAssistantLoading(WebTestCase):
                         'notification': update.id,
                         'name': 'www.uri.builder',
                         }])
+            version = '.'.join(tryton_version.split('.')[:2])
+            version_update = Update(
+                datetime=datetime.now() + timedelta(minutes=1),
+                subject_en='Cassini version changes',
+                subject_ca='Canvis de versió de Cassini',
+                subject_es='Cambios de versión de Cassini',
+                description_en=(
+                    '## Version changes\n\n- First improvement\n- Second improvement'),
+                description_ca=(
+                    '## Canvis de versió\n\n- Primera millora\n- Segona millora'),
+                description_es=(
+                    '## Cambios de versión\n\n- Primera mejora\n- Segunda mejora'),
+                version=version,
+                severity='version_change')
+            version_update.save()
             Menu.create([{
                         'name': 'Cassini Help Wizard',
                         'action': str(wizard),
@@ -92,6 +108,18 @@ class TestAssistantLoading(WebTestCase):
         page.locator('#username').fill(self.user)
         page.locator('#password').fill(self.password)
         page.get_by_role('button', name='Sign in').click()
+
+        version_dialog = page.locator('.vs-version-changes-dialog')
+        expect(version_dialog).to_be_visible()
+        self.assertGreaterEqual(version_dialog.bounding_box()['width'], 700)
+        expect(version_dialog.locator('li')).to_have_count(2)
+        expect(version_dialog.get_by_role(
+            'button', name="Don't show again")).to_be_visible()
+        version_dialog.get_by_role(
+            'button', name="Don't show again").click()
+        expect(version_dialog).not_to_be_visible()
+        page.reload(wait_until='domcontentloaded')
+        expect(page.locator('.vs-version-changes-dialog')).to_have_count(0)
 
         panel_controls = page.get_by_role(
             'navigation', name='Side panel')

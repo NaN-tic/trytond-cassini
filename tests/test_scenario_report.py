@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from playwright.sync_api import Page, expect
 from trytond.pool import Pool
 from trytond.transaction import Transaction
@@ -15,6 +17,7 @@ class TestReport(WebTestCase):
         super().setUpClass()
         with Transaction().start(cls.database, 1) as transaction:
             Site = Pool().get('www.site')
+            cls.ModelGraph = Pool().get('ir.model.graph', type='report')
             if not Site.search([('type', '=', 'cassini')]):
                 Site.create([{
                             'name': 'Cassini',
@@ -25,18 +28,53 @@ class TestReport(WebTestCase):
 
     @browser()
     def test(self, page: Page):
+        page.add_init_script('''
+            (() => {
+                let active = false;
+                window.qz = {
+                    security: {
+                        setCertificatePromise() {},
+                        setSignatureAlgorithm() {},
+                        setSignaturePromise() {},
+                    },
+                    websocket: {
+                        isActive() { return active; },
+                        connect() { active = true; return Promise.resolve(); },
+                        disconnect() { active = false; return Promise.resolve(); },
+                    },
+                    printers: {
+                        find(name) { return Promise.resolve(name); },
+                    },
+                    configs: {
+                        create(printer) { return {printer}; },
+                    },
+                    print(configuration, data) {
+                        window.cassiniQZPrint = {configuration, data};
+                        return Promise.resolve();
+                    },
+                };
+            })();
+        ''')
         page.goto(
             f'{self.base_url}/{self.database}/cassini/',
             wait_until='domcontentloaded')
         page.locator('#username').fill(self.user)
         page.locator('#password').fill(self.password)
         page.get_by_role('button', name='Sign in').click()
+        qz_script = page.request.get(
+            f'{self.base_url}/cassini-qz/qz-tray.js')
+        self.assertTrue(qz_script.ok)
+        self.assertIn('qz', qz_script.text().lower())
+        qz_certificate = page.request.get(
+            f'{self.base_url}/cassini-qz/certificate.txt')
+        self.assertTrue(qz_certificate.ok)
+        self.assertIn('certificate', qz_certificate.text().lower())
         page.locator('[data-panel-option="menu"]').click()
         page.get_by_role(
             'button', name='Expand Administration').click()
         page.get_by_role('button', name='Expand Models').click()
         page.locator(
-            'button.vs-menu-action:text-is("Models")').click()
+            'button.vs-menu-action[title="Models"]').click()
 
         expect(page.locator('.vs-screen')).to_be_visible()
         print_menu = page.locator(
@@ -69,3 +107,21 @@ class TestReport(WebTestCase):
         print_menu.locator('summary').click()
         expect(print_menu.get_by_role(
                 'menuitem', name='Graph', exact=True)).to_be_visible()
+
+        execute = self.ModelGraph.execute
+
+        def direct_execute(ids, data):
+            extension, content, _direct_print, filename = execute(ids, data)
+            return extension, content, True, filename
+
+        with patch.object(
+                self.ModelGraph, 'execute', side_effect=direct_execute):
+            print_menu.get_by_role(
+                'menuitem', name='Graph', exact=True).click()
+            expect(page.get_by_role(
+                'dialog', name='Graph')).to_be_visible()
+            page.get_by_role('button', name='Print', exact=True).click()
+            page.wait_for_function('window.cassiniQZPrint !== undefined')
+        qz_print = page.evaluate('window.cassiniQZPrint')
+        self.assertEqual(qz_print['configuration']['printer'], 'Graph')
+        self.assertEqual(qz_print['data'][0]['type'], 'pixel')

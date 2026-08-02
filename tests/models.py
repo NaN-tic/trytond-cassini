@@ -1,4 +1,5 @@
 from trytond.model import ModelSQL, ModelView, fields
+from trytond.pool import Pool
 
 
 class Widget(ModelSQL, ModelView):
@@ -62,8 +63,9 @@ class Widget(ModelSQL, ModelView):
     def __setup__(cls):
         super().__setup__()
         cls._buttons.update({
-                'mark': {},
+                'mark': {'icon': 'tryton-ok'},
                 'change_character': {},
+                'open_dashboard': {},
                 })
 
     @staticmethod
@@ -81,6 +83,23 @@ class Widget(ModelSQL, ModelView):
 
     def on_scan_code(self, code):
         self.char_value = code
+
+    @classmethod
+    @ModelView.button
+    def open_dashboard(cls, records):
+        pool = Pool()
+        Dashboard = pool.get('babi.dashboard')
+        dashboards = Dashboard.search([
+                ('name', '=', 'Cassini Dashboard'),
+                ], limit=1)
+        if not dashboards:
+            return
+        dashboard, = dashboards
+        return {
+            'name': dashboard.name,
+            'type': 'babi.action.dashboard',
+            'dashboard': dashboard.id,
+            }
 
 
 class WidgetGroup(ModelSQL):

@@ -1,5 +1,6 @@
 from playwright.sync_api import Page, expect
 from trytond.pool import Pool
+from trytond.pyson import Eval, PYSONEncoder
 from trytond.transaction import Transaction
 
 from trytond.modules.cassini.tests.tools import WebTestCase
@@ -16,8 +17,11 @@ class TestRecordActions(WebTestCase):
         with Transaction().start(cls.database, 1) as transaction:
             pool = Pool()
             ActionWindow = pool.get('ir.action.act_window')
+            ActionKeyword = pool.get('ir.action.keyword')
+            Attachment = pool.get('ir.attachment')
             Group = pool.get('res.group')
             Menu = pool.get('ir.ui.menu')
+            Note = pool.get('ir.note')
             Site = pool.get('www.site')
 
             action, = ActionWindow.create([{
@@ -27,11 +31,36 @@ class TestRecordActions(WebTestCase):
                         'context': '{}',
                         'search_value': '[]',
                         }])
+            related_action, = ActionWindow.create([{
+                        'name': 'Cassini Related Groups',
+                        'res_model': 'res.group',
+                        'domain': PYSONEncoder().encode([
+                                ('id', '=', Eval('active_id', -1)),
+                                ]),
+                        'context': '{}',
+                        'search_value': '[]',
+                        }])
+            ActionKeyword.create([{
+                        'keyword': 'form_relate',
+                        'model': 'res.group,-1',
+                        'action': related_action.id,
+                        }])
             Menu.create([{
                         'name': 'Cassini Record Actions',
                         'action': str(action),
                         }])
-            Group.create([{'name': 'Cassini Action Group'}])
+            group, = Group.create([{'name': 'Cassini Action Group'}])
+            Attachment.create([{
+                        'name': 'cassini-action.txt',
+                        'type': 'data',
+                        'data': b'Cassini attachment',
+                        'resource': str(group),
+                        }])
+            note, = Note.create([{
+                        'message': 'Cassini note',
+                        'resource': str(group),
+                        }])
+            Note.write([note], {'unread': True})
             if not Site.search([('type', '=', 'cassini')]):
                 Site.create([{
                             'name': 'Cassini',
@@ -59,15 +88,106 @@ class TestRecordActions(WebTestCase):
         rows = page.locator('.vs-row')
         initial_rows = rows.count()
         window_menu = page.locator('details.vs-window-menu')
-        expect(window_menu.locator('.vs-window-title')).to_contain_text(
+        expect(window_menu.locator('.vs-window-title')).to_have_attribute(
+            'aria-label', 'Window actions: Cassini Record Actions')
+        expect(page.locator('.vs-window-heading-label')).to_have_text(
             'Cassini Record Actions')
         window_menu.locator('.vs-window-title').click()
         expect(page.locator('.vs-toolbar')).to_have_css('z-index', '150')
         expect(window_menu.locator(
             '.vs-window-menu-list')).to_have_css('z-index', '155')
         window_menu.locator('.vs-window-title').click()
-        group_name.locator('xpath=ancestor::tr').get_by_role(
-            'checkbox', name='Select record').check()
+        group_row = group_name.locator('xpath=ancestor::tr')
+        group_position = group_row.evaluate(
+            'row => Array.from(row.parentElement.children).indexOf(row) + 1')
+        with page.expect_response(
+                lambda response: '/select?row=true' in response.url):
+            group_name.click()
+        expect(group_row.get_by_role(
+            'checkbox', name='Select record')).to_be_checked()
+        expect(page.get_by_role(
+            'group', name='Record navigation')).to_contain_text(
+                '%s/%s' % (group_position, initial_rows))
+
+        attachment_popup = page.locator('details.vs-attachment-popup')
+        expect(attachment_popup.locator(
+            '.vs-resource-badge')).to_have_text('1')
+        attachment_popup.locator('summary').click()
+        expect(attachment_popup.get_by_role(
+            'menuitem', name='cassini-action.txt')).to_be_visible()
+        with page.expect_response(
+                lambda response: response.url.endswith(
+                    '/attachments/upload')):
+            attachment_popup.locator(
+                '[data-attachment-input]').set_input_files({
+                    'name': 'second.txt',
+                    'mimeType': 'text/plain',
+                    'buffer': b'Second attachment',
+                    })
+        attachment_popup = page.locator('details.vs-attachment-popup')
+        expect(attachment_popup.locator(
+            '.vs-resource-badge')).to_have_text('2')
+        with page.expect_response(
+                lambda response: response.url.endswith(
+                    '/attachments/upload')):
+            attachment_popup.locator('summary').evaluate(
+                '''summary => {
+                    const transfer = new DataTransfer();
+                    transfer.items.add(new File(
+                        ["Dropped attachment"], "dropped.txt",
+                        {type: "text/plain"}));
+                    summary.dispatchEvent(new DragEvent("drop", {
+                        bubbles: true,
+                        cancelable: true,
+                        dataTransfer: transfer,
+                    }));
+                }''')
+        attachment_popup = page.locator('details.vs-attachment-popup')
+        expect(attachment_popup.locator(
+            '.vs-resource-badge')).to_have_text('3')
+        attachment_popup.locator('summary').click()
+        attachment_popup.get_by_role(
+            'menuitem', name='Preview', exact=True).click()
+        preview = page.get_by_role(
+            'dialog', name='Attachment preview')
+        expect(preview).to_contain_text('cassini-action.txt')
+        preview.get_by_role('button', name='Close').click()
+        attachment_popup.locator('summary').click()
+        attachment_popup.get_by_role(
+            'menuitem', name='Manage...', exact=True).click()
+        attachment_dialog = page.locator('.vs-relation-record-dialog')
+        expect(attachment_dialog).to_be_visible()
+        expect(attachment_dialog).to_contain_text(
+            'Attachments (Cassini Action Group)')
+        expect(attachment_dialog.get_by_role(
+            'group', name='Resource actions')).to_be_visible()
+        expect(attachment_dialog.get_by_role(
+            'button', name='New', exact=True)).to_be_enabled()
+        attachment_dialog.get_by_role(
+            'button', name='Cancel', exact=True).click()
+
+        notes = page.locator('[data-shortcut-action="note"]')
+        expect(notes.locator('.vs-resource-badge')).to_have_text('1/1')
+        notes.click()
+        note_dialog = page.locator('.vs-relation-record-dialog')
+        expect(note_dialog).to_be_visible()
+        expect(note_dialog).to_contain_text(
+            'Notes (Cassini Action Group)')
+        expect(note_dialog.get_by_role(
+            'button', name='New', exact=True)).to_be_enabled()
+        note_dialog.get_by_role(
+            'button', name='Cancel', exact=True).click()
+
+        relate = page.locator(
+            'details.vs-action-popup[data-action-category="relate"]')
+        relate.locator('summary').click()
+        relate.get_by_role(
+            'menuitem', name='Cassini Related Groups').click()
+        expect(page.locator(
+            '.vs-tab-active .vs-tab-title')).to_have_text(
+                'Cassini Related Groups (Cassini Action Group)')
+        page.locator('.vs-tab-active .vs-tab-close').click()
+
         window_menu.locator('.vs-window-title').click()
         window_menu.get_by_role(
             'menuitem', name='Duplicate', exact=True).click()

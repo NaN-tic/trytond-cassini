@@ -181,7 +181,8 @@ class TestViewsWidgets(WebTestCase):
                             '</page>'
                             '</notebook>'
                             '<button name="change_character" '
-                            'string="Change Character" type="instance"/>'
+                            'string="Change Character" type="instance" '
+                            'icon="tryton-ok"/>'
                             '</form>'),
                         },
                     {
@@ -353,6 +354,11 @@ class TestViewsWidgets(WebTestCase):
         page.get_by_role(
             'button', name='Cassini Widget Matrix',
             exact=True).click()
+        page.get_by_role(
+            'button', name='Cassini Calendar', exact=True).click()
+        expect(page.locator('#workspace-tabs .vs-tab')).to_have_count(2)
+        page.get_by_role(
+            'tab', name='Cassini Widget Matrix', exact=True).click()
         expect(page.locator('.vs-row-current')).to_have_count(0)
         expect(page.locator(
             '.vs-select-column input[aria-label="Select record"]:checked'
@@ -390,7 +396,7 @@ class TestViewsWidgets(WebTestCase):
         self.assertEqual(local_search_border['left'], '0px')
         self.assertEqual(local_search_border['radius'], '0px')
         header_tabs = page.locator('#workspace-tabs')
-        tab_box = header_tabs.locator('.vs-tab').bounding_box()
+        tab_box = header_tabs.locator('.vs-tab').last.bounding_box()
         tabs_box = header_tabs.bounding_box()
         self.assertLessEqual(
             abs(
@@ -418,6 +424,9 @@ class TestViewsWidgets(WebTestCase):
             'menuitem', name='Mark selected', exact=True)).to_be_visible()
         beta_row = page.locator(
             '.vs-row', has=page.get_by_text('Widget Beta', exact=True))
+        expect(beta_row.get_by_role(
+            'button', name='Mark', exact=True).locator(
+                'img[src$="tryton-ok.svg"]')).to_be_visible()
         beta_row.get_by_role('button', name='Mark', exact=True).click()
         expect(beta_row.get_by_text('Marked', exact=True)).to_be_visible()
         alpha_row = page.locator(
@@ -585,10 +594,14 @@ class TestViewsWidgets(WebTestCase):
                 const pageBox = page.getBoundingClientRect();
                 const navStyle = getComputedStyle(nav);
                 const activeStyle = getComputedStyle(active);
+                const activeConnector = getComputedStyle(active, '::after');
                 const pageStyle = getComputedStyle(page);
                 return {
                     activeBottom: activeBox.bottom,
                     activeBorderLeft: activeStyle.borderLeftWidth,
+                    activeConnectorHeight: activeConnector.height,
+                    activeConnectorBackground:
+                        activeConnector.backgroundColor,
                     navBottom: navBox.bottom,
                     navBorderBottom: navStyle.borderBottomWidth,
                     pageTop: pageBox.top,
@@ -602,6 +615,10 @@ class TestViewsWidgets(WebTestCase):
             notebook_geometry['pageTop']
             - notebook_geometry['navBottom']), 1)
         self.assertEqual(notebook_geometry['activeBorderLeft'], '1px')
+        self.assertEqual(notebook_geometry['activeConnectorHeight'], '3px')
+        self.assertNotEqual(
+            notebook_geometry['activeConnectorBackground'],
+            'rgba(0, 0, 0, 0)')
         self.assertEqual(notebook_geometry['navBorderBottom'], '1px')
         self.assertEqual(notebook_geometry['pageBorderLeft'], '1px')
         expect(page.locator(
@@ -646,6 +663,13 @@ class TestViewsWidgets(WebTestCase):
             'input[type="checkbox"]').bounding_box()
         self.assertLessEqual(boolean_box['width'], 20)
         self.assertLessEqual(boolean_box['height'], 20)
+        form_button = page.get_by_role(
+            'button', name='Change Character', exact=True)
+        expect(form_button.locator(
+            'img[src$="tryton-ok.svg"]')).to_be_visible()
+        self.assertGreater(
+            form_button.bounding_box()['width'],
+            form_button.locator('span').bounding_box()['width'] + 40)
         text_input = page.locator('[data-field="text_value"] textarea')
         text_input_handle = text_input.element_handle()
         with page.expect_response(
@@ -698,14 +722,14 @@ class TestViewsWidgets(WebTestCase):
         relation_actions.get_by_role(
             'button', name='Switch', exact=True).click()
 
-        relation_actions.get_by_role(
-            'button', name='Open', exact=True).click()
+        one2many = page.locator('[data-field="one2many_value"]')
+        one2many.locator('.vs-row').first.dblclick()
         child_dialog = page.locator('.vs-relation-record-dialog')
         expect(child_dialog).to_be_visible()
         expect(child_dialog.locator('.vs-toolbar')).to_have_count(0)
         expect(child_dialog.get_by_role(
             'button', name='Save', exact=True)).to_have_count(0)
-        expect(page.locator('#workspace-tabs .vs-tab')).to_have_count(1)
+        expect(page.locator('#workspace-tabs .vs-tab')).to_have_count(2)
         expect(child_dialog.locator(
             '[data-field="name"] input')).to_have_value('Beta Child One')
         navigation = child_dialog.get_by_role(
@@ -735,6 +759,12 @@ class TestViewsWidgets(WebTestCase):
         child_dialog.get_by_role(
             'button', name='Cancel', exact=True).click()
         expect(child_dialog).not_to_be_visible()
+        expect(page.locator(
+            '#workspace-tabs .vs-tab-active .vs-tab-title')).to_contain_text(
+                'Cassini Widget Matrix')
+        page.get_by_role(
+            'button', name='Close Cassini Calendar', exact=True).click()
+        expect(page.locator('#workspace-tabs .vs-tab')).to_have_count(1)
 
         one2many = page.locator('[data-field="one2many_value"]')
         relation_actions = one2many.get_by_role(

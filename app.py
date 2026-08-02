@@ -1,16 +1,18 @@
 import base64
 import json
 import mimetypes
+import re
 import uuid
 from datetime import date, datetime, time
 from functools import wraps
+from urllib.parse import quote
 from xml.etree import ElementTree
 
 import dominate
 from dominate.tags import (
     a, article, aside, button, details, div, form, h1, h2, h4,
-    header, img, input_, label, li, link, main, meta, nav, option, p, script,
-    section, select, span, strong, summary, textarea, ul)
+    header, iframe, img, input_, label, li, link, main, meta, nav, option, p,
+    script, section, select, span, strong, summary, textarea, ul)
 from dominate.util import raw
 from trytond.exceptions import (
     LoginException, RateLimitException, TrytonException, UserWarning)
@@ -585,6 +587,11 @@ class PageLayout(SaoComponent):
                 defer=True)
             script(src=STATIC + '/app.js', defer=True)
         document.body['class'] = 'vs-body'
+        # Every Cassini mutation updates the same persistent workspace
+        # document.  Keep browser requests in order as well as taking the
+        # database row lock so a delayed field change can never overwrite a
+        # tab opened immediately afterwards.
+        document.body['hx-sync'] = 'this:queue all'
         document.body.add(content)
         return document
 
@@ -783,6 +790,64 @@ class Shell(SaoEndpoint):
     __name__ = 'cassini.shell'
     _url = '/app'
 
+    def version_changes_dialog(self):
+        Notification = optional_model('nantic_connection.notification')
+        state = self.engine.interface.component(
+            'version_changes', {'dismissed': []})
+        dismissed = {
+            int(notification_id)
+            for notification_id in state.get('dismissed', [])
+            }
+        updates = (
+            Notification.get_notifications([], [], 'version')
+            if Notification else [])
+        update = next((
+                item for item in updates
+                if int(item['id']) not in dismissed), None)
+        with div(
+                id='version-changes-host',
+                cls='vs-version-changes-host') as host:
+            if not update:
+                return host
+            content = update.get('notification_html')
+            if isinstance(content, (bytes, bytearray)):
+                content = bytes(content).decode('utf-8')
+            elif isinstance(content, list):
+                content = bytes(content).decode('utf-8')
+            VersionChanges = Pool().get('cassini.version.changes')
+            with div(
+                    id='modal-version-changes',
+                    cls='vs-modal-backdrop'):
+                with section(
+                        role='dialog',
+                        aria_modal='true',
+                        aria_labelledby='version-changes-title',
+                        cls='vs-modal vs-version-changes-dialog'):
+                    h2(
+                        update.get('subject') or translate('Version changes'),
+                        id='version-changes-title')
+                    div(
+                        raw(content or ''),
+                        cls='vs-version-changes-content')
+                    with div(cls='vs-dialog-actions'):
+                        button(
+                            translate('Accept'),
+                            type='button',
+                            cls='vs-button vs-button-primary',
+                            hx_post=VersionChanges.url(
+                                update=update['id'], action='accept'),
+                            hx_target='#version-changes-host',
+                            hx_swap='outerHTML')
+                        button(
+                            translate("Don't show again"),
+                            type='button',
+                            cls='vs-button',
+                            hx_post=VersionChanges.url(
+                                update=update['id'], action='never'),
+                            hx_target='#version-changes-host',
+                            hx_swap='outerHTML')
+        return host
+
     def render_app(self):
         Menu = Pool().get('cassini.menu')
         GlobalSearch = Pool().get('cassini.global.search')
@@ -873,7 +938,8 @@ class Shell(SaoEndpoint):
                                     icon('question')
                     img(
                         src='/cassini-private-images/logo.png',
-                        alt='NaN-tic', cls='vs-header-logo')
+                        alt='NaN-tic', cls='vs-header-logo',
+                        data_seasonal_logo='true')
                     header_primary.add(GlobalSearch().tag())
                 WorkspaceRenderer(self.engine.interface).tabs()
                 with nav(cls='vs-user-nav', aria_label=translate('User')):
@@ -1040,6 +1106,7 @@ class Shell(SaoEndpoint):
                     modal.add(preferences_content)
             div(id='notifications', cls='vs-notifications',
                 aria_live='polite')
+            self.version_changes_dialog()
         return app
 
     def render(self):
@@ -1052,6 +1119,43 @@ class Shell(SaoEndpoint):
         layout = PageLayout(render=False)
         return layout.render_page(
             app, theme=shell_state.get('theme', 'light'))
+
+
+class VersionChanges(SaoEndpoint):
+    'Dismiss Cassini Version Changes'
+    __name__ = 'cassini.version.changes'
+    _url = '/version-changes/<int:update>/<string:action>'
+
+    update = fields.Integer('Update')
+    action = fields.Char('Action')
+
+    @handle_endpoint_errors
+    def render(self):
+        Notification = optional_model('nantic_connection.notification')
+        if not Notification:
+            raise ValueError(translate(
+                'Version changes require nantic_connection.'))
+        if self.action not in {'accept', 'never'}:
+            raise ValueError(translate('Unknown version change action'))
+        updates = Notification.get_notifications([], [], 'version')
+        update_ids = {int(update['id']) for update in updates}
+        if int(self.update) not in update_ids:
+            raise ValueError(translate('Unknown version change'))
+        if self.action == 'never':
+            Notification.set_has_read(
+                Notification.browse([int(self.update)]), None, True)
+        state = self.engine.interface.component(
+            'version_changes', {'dismissed': []})
+        dismissed = {
+            int(notification_id)
+            for notification_id in state.get('dismissed', [])
+            }
+        dismissed.add(int(self.update))
+        state['dismissed'] = sorted(dismissed)
+        self.engine.save()
+        return html_response(div(
+                id='version-changes-host',
+                cls='vs-version-changes-host'))
 
 
 class ShellControl(SaoEndpoint):
@@ -2193,14 +2297,20 @@ class Menu(SaoEndpoint):
             with div(cls='vs-tree-content') as content:
                 if menu.action_keywords:
                     with div(cls='vs-menu-entry'):
-                        button(
-                            menu.name, type='button',
-                            cls='vs-menu-action vs-value',
-                            title=menu.name,
-                            hx_post=OpenMenu.url(menu=menu.id),
-                            hx_target='#workspace',
-                            hx_swap='outerHTML',
-                            hx_push_url='true')
+                        with button(
+                                type='button',
+                                cls='vs-menu-action vs-value',
+                                title=menu.name,
+                                hx_post=OpenMenu.url(menu=menu.id),
+                                hx_target='#workspace',
+                                hx_swap='outerHTML',
+                                hx_push_url='true'):
+                            with span(cls='vs-menu-item-label'):
+                                if menu.icon:
+                                    icon(
+                                        menu.icon.removeprefix('tryton-'),
+                                        cls='vs-icon vs-menu-item-icon')
+                                span(menu.name)
                         favorite = menu.id in favorite_ids
                         with button(
                                 type='button',
@@ -2225,18 +2335,30 @@ class Menu(SaoEndpoint):
                             icon(
                                 'star' if favorite else 'star-border')
                 elif children:
-                    button(
-                        menu.name, type='button',
-                        cls='vs-menu-group vs-value',
-                        title=menu.name,
-                        aria_expanded=str(expanded).lower(),
-                        hx_post=ToggleMenuItem.url(menu=menu.id),
-                        hx_target='#menu-tree',
-                        hx_swap='outerHTML')
+                    with button(
+                            type='button',
+                            cls='vs-menu-group vs-value',
+                            title=menu.name,
+                            aria_expanded=str(expanded).lower(),
+                            hx_post=ToggleMenuItem.url(menu=menu.id),
+                            hx_target='#menu-tree',
+                            hx_swap='outerHTML'):
+                        with span(cls='vs-menu-item-label'):
+                            if menu.icon:
+                                icon(
+                                    menu.icon.removeprefix('tryton-'),
+                                    cls='vs-icon vs-menu-item-icon')
+                            span(menu.name)
                 else:
-                    span(
-                        menu.name, cls='vs-menu-group vs-value',
-                        title=menu.name)
+                    with span(
+                            cls='vs-menu-group vs-value',
+                            title=menu.name):
+                        with span(cls='vs-menu-item-label'):
+                            if menu.icon:
+                                icon(
+                                    menu.icon.removeprefix('tryton-'),
+                                    cls='vs-icon vs-menu-item-icon')
+                            span(menu.name)
             item.add(HierarchyWidget.row(
                     content, toggle, depth, expanded,
                     extra_class='vs-menu-row'))
@@ -2764,10 +2886,163 @@ class OpenRelated(SaoEndpoint):
         engine = self.engine
         related_tab = engine.open_related(
             self.tab, self.resource)
+        if related_tab.get('relation_modal'):
+            return workspace_response(engine)
         ActivateTab = Pool().get('cassini.activate.tab')
         return workspace_response(engine, {
                 'HX-Push-Url': ActivateTab.url(
                     tab=related_tab['id'])})
+
+
+class AttachmentUpload(SaoEndpoint):
+    'Upload Cassini Attachments'
+    __name__ = 'cassini.attachment.upload'
+    _url = '/tab/<string:tab>/attachments/upload'
+
+    tab = fields.Char('Tab')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = self.engine.interface.get_tab(self.tab)
+        if not tab or tab.get('kind') != 'window':
+            raise ValueError(translate('Unknown tab'))
+        key = tab.get('current_record')
+        record = tab.get('records', {}).get(key)
+        if not record or not record.get('id'):
+            raise ValueError(translate('Select a saved record first'))
+        if (not tab.get('access', {}).get('write', True)
+                or decode_value(tab.get('context', {})).get('_datetime')):
+            raise ValueError(translate('This record is read-only'))
+        request = current_request()
+        uploads = (
+            request.files.getlist('attachments') if request else [])
+        values = []
+        reference = '%s,%s' % (tab['model'], record['id'])
+        for upload in uploads:
+            if not upload or not upload.filename:
+                continue
+            values.append({
+                    'name': upload.filename,
+                    'type': 'data',
+                    'data': upload.read(),
+                    'resource': reference,
+                    })
+        if values:
+            Attachment = Pool().get('ir.attachment')
+            Attachment.create(values)
+        return screen_response(self.engine, tab)
+
+
+class AttachmentData(SaoEndpoint):
+    'Read a Cassini Attachment'
+    __name__ = 'cassini.attachment.data'
+    _url = '/tab/<string:tab>/attachment/<int:attachment>/data'
+
+    tab = fields.Char('Tab')
+    attachment = fields.Integer('Attachment')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = self.engine.interface.get_tab(self.tab)
+        if not tab or tab.get('kind') != 'window':
+            return Response('', status=404)
+        key = tab.get('current_record')
+        record = tab.get('records', {}).get(key)
+        if not record or not record.get('id'):
+            return Response('', status=404)
+        Attachment = Pool().get('ir.attachment')
+        attachments = Attachment.search([
+                ('id', '=', self.attachment),
+                ('resource', '=', '%s,%s' % (
+                    tab['model'], record['id'])),
+                ], limit=1)
+        if not attachments or attachments[0].type != 'data':
+            return Response('', status=404)
+        attachment, = attachments
+        content = attachment.data or b''
+        content_type = (
+            mimetypes.guess_type(attachment.name or '')[0]
+            or 'application/octet-stream')
+        filename = re.sub(r'[\r\n"]', '_', attachment.name or 'attachment')
+        fallback_filename = (
+            filename.encode('ascii', 'ignore').decode('ascii')
+            or 'attachment')
+        response = Response(content, content_type=content_type)
+        response.headers['Content-Disposition'] = (
+            "inline; filename=\"%s\"; filename*=UTF-8''%s" % (
+                fallback_filename, quote(filename, safe='')))
+        response.headers['Cache-Control'] = 'private, no-store'
+        return response
+
+
+class AttachmentPreview(SaoEndpoint):
+    'Preview Cassini Attachments'
+    __name__ = 'cassini.attachment.preview'
+    _url = '/tab/<string:tab>/attachments/preview'
+
+    tab = fields.Char('Tab')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = self.engine.interface.get_tab(self.tab)
+        if not tab or tab.get('kind') != 'window':
+            raise ValueError(translate('Unknown tab'))
+        key = tab.get('current_record')
+        record = tab.get('records', {}).get(key)
+        if not record or not record.get('id'):
+            raise ValueError(translate('Select a saved record first'))
+        Attachment = Pool().get('ir.attachment')
+        attachments = Attachment.search([
+                ('resource', '=', '%s,%s' % (
+                    tab['model'], record['id'])),
+                ])
+        title_id = 'attachment-preview-title-' + tab['id']
+        with div(cls='vs-modal-backdrop') as backdrop:
+            with section(
+                    role='dialog', aria_modal='true',
+                    aria_labelledby=title_id,
+                    cls='vs-modal vs-attachment-preview-dialog'):
+                h2(translate('Attachment preview'), id=title_id)
+                with div(cls='vs-attachment-preview-list'):
+                    if not attachments:
+                        p(
+                            translate('No attachments'),
+                            cls='vs-popup-empty')
+                    for attachment in attachments:
+                        with article(cls='vs-attachment-preview-item'):
+                            h4(attachment.name)
+                            if attachment.type == 'link':
+                                a(
+                                    attachment.link,
+                                    href=attachment.link,
+                                    target='_blank',
+                                    rel='noreferrer noopener')
+                            else:
+                                url = AttachmentData.url(
+                                    tab=tab['id'],
+                                    attachment=attachment.id)
+                                content_type = (
+                                    mimetypes.guess_type(
+                                        attachment.name or '')[0] or '')
+                                if content_type.startswith('image/'):
+                                    img(
+                                        src=url, alt=attachment.name,
+                                        cls='vs-attachment-preview-image')
+                                elif content_type == 'application/pdf':
+                                    iframe(
+                                        src=url,
+                                        title=attachment.name,
+                                        cls='vs-attachment-preview-frame')
+                                else:
+                                    a(
+                                        translate('Open attachment'),
+                                        href=url, target='_blank',
+                                        rel='noreferrer noopener')
+                with div(cls='vs-dialog-actions'):
+                    button(
+                        translate('Close'), type='button',
+                        cls='vs-button', data_close_modal='true')
+        return html_response(backdrop)
 
 
 class ActivateTab(SaoEndpoint):
@@ -2957,8 +3232,15 @@ class SearchDraft(SaoEndpoint):
     def render(self):
         tab = self.engine.update_search_draft(
             self.tab, self.query or '')
-        return html_response(
-            ViewRenderer(self.engine.interface).search_completion(tab))
+        renderer = ViewRenderer(self.engine.interface)
+        return FragmentResponse.response([
+                Fragment(
+                    'search-completion-' + tab['id'],
+                    renderer.search_completion(tab)),
+                Fragment(
+                    'search-bookmark-control-' + tab['id'],
+                    renderer.search_bookmark_control(tab)),
+                ], stream=True)
 
 
 class SearchBookmarkDialog(SaoEndpoint):
@@ -3322,6 +3604,13 @@ class SelectRecord(SaoEndpoint):
             if 'form' in tab.get('view_types', []):
                 self.engine.switch_view(self.tab, 'form')
         tab = self.engine.interface.get_tab(self.tab)
+        if self.row and not self.open:
+            # The row and its checkbox are updated immediately in the
+            # browser.  Only replace the toolbar so editable tree inputs keep
+            # their focus while the record position is refreshed from the
+            # authoritative server state.
+            return html_response(
+                ViewRenderer(self.engine.interface).toolbar(tab))
         return screen_response(self.engine, tab)
 
 
@@ -3890,7 +4179,14 @@ class OpenRelationNew(SaoEndpoint):
                 context.setdefault(
                     'default_' + rec_name, self.query.strip())
         if relation_field and parent_id:
-            context['default_' + relation_field] = parent_id
+            relation_parent_field = Pool().get(relation)._fields.get(
+                relation_field)
+            if (relation_parent_field
+                    and relation_parent_field._type == 'reference'):
+                context['default_' + relation_field] = '%s,%s' % (
+                    parent['model'], parent_id)
+            else:
+                context['default_' + relation_field] = parent_id
         related['context'] = encode_value(context)
         related['exclude_field'] = relation_field
         related['relation_origin'] = {
@@ -4418,6 +4714,16 @@ class RunToolbarAction(SaoEndpoint):
     def render(self):
         engine = self.engine
         response = engine.toolbar_action(self.tab, self.action)
+        if isinstance(response, dict) and response.get('report_key'):
+            ReportDownload = Pool().get('cassini.report.download')
+            return workspace_response(engine, {
+                    'HX-Trigger': json.dumps({
+                            'voyager-download': {
+                                'urls': [ReportDownload.url(
+                                        key=response['report_key'])],
+                                },
+                            }),
+                    })
         if isinstance(response, Response):
             return response
         return workspace_response(engine, {

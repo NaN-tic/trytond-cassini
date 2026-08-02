@@ -1,3 +1,4 @@
+import base64
 import json
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
@@ -87,7 +88,7 @@ class WidgetRenderer:
         'char', 'password', 'color', 'url', 'email', 'callto', 'sip',
         'pyson',
         }
-    textarea_widgets = {'text', 'richtext', 'html'}
+    textarea_widgets = {'code', 'text', 'richtext', 'html'}
     numeric_widgets = {'integer', 'float', 'numeric', 'timedelta'}
     date_widgets = {'date', 'datetime', 'timestamp', 'time'}
     relation_widgets = {'many2one', 'one2one'}
@@ -270,7 +271,7 @@ class WidgetRenderer:
             UpdateField = self.pool.get(
                 'cassini.update.preference.field')
             trigger = 'change'
-            synchronization = '#preferences-form:queue last'
+            synchronization = 'body:queue all'
             if widget in (
                     self.text_widgets | self.textarea_widgets
                     | self.numeric_widgets):
@@ -289,7 +290,7 @@ class WidgetRenderer:
         if self.endpoint == 'wizard':
             UpdateField = self.pool.get('cassini.update.wizard.field')
             trigger = 'change'
-            synchronization = 'closest .vs-wizard:queue last'
+            synchronization = 'body:queue all'
             if widget in (
                     self.text_widgets | self.textarea_widgets
                     | self.numeric_widgets):
@@ -310,7 +311,7 @@ class WidgetRenderer:
             return {}
         UpdateField = self.pool.get('cassini.update.field')
         trigger = 'change'
-        synchronization = 'closest .vs-screen:queue last'
+        synchronization = 'body:queue all'
         if widget in (
                 self.text_widgets | self.textarea_widgets
                 | self.numeric_widgets):
@@ -429,9 +430,58 @@ class WidgetRenderer:
                 type=input_type, value=stringify(value),
                 autocomplete='off', **common)
 
+        if widget == 'code' and 'widgets' in self.pool._modules:
+            try:
+                height = max(200, int(attributes.get('height') or 400))
+            except (TypeError, ValueError):
+                height = 400
+            language = (
+                attributes.get('language')
+                or attributes.get('mode')
+                or 'plaintext')
+            if '/' in language:
+                language = language.rsplit('/', 1)[-1]
+            language = language.removeprefix('x-')
+            if language.endswith('+json'):
+                language = 'json'
+            elif language.endswith('+xml'):
+                language = 'xml'
+            common['cls'] += ' vs-code-source'
+            common['data_code_source'] = 'true'
+            with div(
+                    cls='vs-code-widget',
+                    data_code_widget='true',
+                    data_code_language=language,
+                    data_code_readonly=str(bool(readonly)).lower(),
+                    style='min-height:%dpx' % height) as control:
+                textarea(stringify(value), rows=12, **common)
+                div(
+                    cls='vs-code-editor',
+                    data_code_editor='true',
+                    style='height:%dpx' % height)
+            return control
+
         if widget in self.textarea_widgets:
             return textarea(
                 stringify(value), rows=attributes.get('height', 5), **common)
+
+        if widget == 'chart':
+            try:
+                height = max(120, int(attributes.get('height') or 450))
+            except (TypeError, ValueError):
+                height = 450
+            payload = base64.b64encode(
+                stringify(value).encode('utf-8')).decode('ascii')
+            return div(
+                cls='vs-chart',
+                data_cassini_chart='true',
+                data_chart_payload=payload,
+                style='min-height:%dpx' % height,
+                role='img',
+                aria_label=(
+                    attributes.get('string')
+                    or definition.get('string')
+                    or name))
 
         if widget in self.numeric_widgets:
             step = '1' if widget == 'integer' else 'any'

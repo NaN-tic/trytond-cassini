@@ -112,9 +112,6 @@
         <record model="ir.message" id="msg_bookmarks_ca3cddd2">
             <field name="text">Bookmarks</field>
         </record>
-        <record model="ir.message" id="msg_calendar_adab5090">
-            <field name="text">Calendar</field>
-        </record>
         <record model="ir.message" id="msg_calendar_mode_b81c6e7a">
             <field name="text">Calendar mode</field>
         </record>
@@ -295,9 +292,6 @@
         <record model="ir.message" id="msg_find_df251b06">
             <field name="text">Find</field>
         </record>
-        <record model="ir.message" id="msg_form_80446347">
-            <field name="text">Form</field>
-        </record>
         <record model="ir.message" id="msg_from_3f66052a">
             <field name="text">From</field>
         </record>
@@ -345,9 +339,6 @@
         </record>
         <record model="ir.message" id="msg_keyboard_shortcuts_26669547">
             <field name="text">Keyboard shortcuts</field>
-        </record>
-        <record model="ir.message" id="msg_list_form_17b2b303">
-            <field name="text">List Form</field>
         </record>
         <record model="ir.message" id="msg_logout_e43d612e">
             <field name="text">Logout</field>
@@ -610,9 +601,6 @@
         <record model="ir.message" id="msg_search_model_s_18bdb9f0">
             <field name="text">Search %(model)s</field>
         </record>
-        <record model="ir.message" id="msg_search_navigation_4aba141f">
-            <field name="text">Search navigation</field>
-        </record>
         <record model="ir.message" id="msg_search_records_2495e622">
             <field name="text">Search records</field>
         </record>
@@ -811,9 +799,6 @@
         <record model="ir.message" id="msg_track_tickets_created_from_the_assistant_and_add_e5b6f65d">
             <field name="text">Track tickets created from the assistant and add comments without losing your current workspace.</field>
         </record>
-        <record model="ir.message" id="msg_tree_99f5ff63">
-            <field name="text">Tree</field>
-        </record>
         <record model="ir.message" id="msg_true_88b33e4e">
             <field name="text">True</field>
         </record>
@@ -991,9 +976,6 @@
         <record model="ir.message" id="msg_view_logs_4c3958dd">
             <field name="text">View logs</field>
         </record>
-        <record model="ir.message" id="msg_views_24be6128">
-            <field name="text">Views</field>
-        </record>
         <record model="ir.message" id="msg_cassini_state_infrastructure_ae6a45d3">
             <field name="text">Cassini state infrastructure</field>
         </record>
@@ -1023,6 +1005,90 @@
         </record>
         <record model="ir.message" id="msg_switch_view_023c59a0">
             <field name="text">switch view</field>
+        </record>
+        <record model="ir.message" id="msg_window_actions_fe0e3a5d">
+            <field name="text">Window actions</field>
+        </record>
+        <record model="ir.message" id="msg_record_navigation_d4fab182">
+            <field name="text">Record navigation</field>
+        </record>
+        <record model="ir.message" id="msg_previous_page_81f54719">
+            <field name="text">Previous page</field>
+        </record>
+        <record model="ir.message" id="msg_next_page_4bfc194b">
+            <field name="text">Next page</field>
+        </record>
+        <record model="ir.message" id="msg_accept_bb54db51">
+            <field name="text">Accept</field>
+        </record>
+        <record model="ir.message" id="msg_dashboard_d87f47b4">
+            <field name="text">Dashboard</field>
+        </record>
+        <record model="ir.message" id="msg_dashboard_chart_d182dcee">
+            <field name="text">Dashboard chart</field>
+        </record>
+        <record model="ir.message" id="msg_direct_printing_failed_error_s_0c46e137">
+            <field name="text">Direct printing failed: %(error)s</field>
+        </record>
+        <record model="ir.message" id="msg_don_t_show_again_d9afd5ec">
+            <field name="text">Don't show again</field>
+        </record>
+        <record model="ir.message" id="msg_plotly_could_not_be_initialized_71855ebb">
+            <field name="text">Plotly could not be initialized.</field>
+        </record>
+        <record model="ir.message" id="msg_qz_tray_could_not_be_initialized_ff4bcfe4">
+            <field name="text">QZ Tray could not be initialized.</field>
+        </record>
+        <record model="ir.message" id="msg_the_dashboard_view_requires_the_babi_module_a8b9ad85">
+            <field name="text">The Dashboard view requires the babi module.</field>
+        </record>
+        <record model="ir.message" id="msg_the_chart_data_is_not_valid_d50dc29d">
+            <field name="text">The chart data is not valid.</field>
+        </record>
+        <record model="ir.message" id="msg_the_requested_javascript_library_could_not_be_lo_1745ceaa">
+            <field name="text">The requested JavaScript library could not be loaded.</field>
+        </record>
+        <record model="ir.message" id="msg_this_tab_can_not_be_reloaded_aeb04527">
+            <field name="text">This tab can not be reloaded</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_dashboard_64c495b2">
+            <field name="text">Unknown dashboard</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_version_change_2ff41c57">
+            <field name="text">Unknown version change</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_version_change_action_792cf612">
+            <field name="text">Unknown version change action</field>
+        </record>
+        <record model="ir.message" id="msg_version_changes_fd73f751">
+            <field name="text">Version changes</field>
+        </record>
+        <record model="ir.message" id="msg_version_changes_require_nantic_connection_0ef1ce89">
+            <field name="text">Version changes require nantic_connection.</field>
+        </record>
+        <record model="ir.message" id="msg_add_2cceefe2">
+            <field name="text">Add...</field>
+        </record>
+        <record model="ir.message" id="msg_manage_82d54088">
+            <field name="text">Manage...</field>
+        </record>
+        <record model="ir.message" id="msg_attachment_preview_cc8da619">
+            <field name="text">Attachment preview</field>
+        </record>
+        <record model="ir.message" id="msg_no_attachments_f941b4d9">
+            <field name="text">No attachments</field>
+        </record>
+        <record model="ir.message" id="msg_open_attachment_b36bd6b7">
+            <field name="text">Open attachment</field>
+        </record>
+        <record model="ir.message" id="msg_this_record_is_read_only_a31e4eba">
+            <field name="text">This record is read-only</field>
+        </record>
+        <record model="ir.message" id="msg_resource_actions_e4834c66">
+            <field name="text">Resource actions</field>
+        </record>
+        <record model="ir.message" id="msg_preview_f1fbb2b4">
+            <field name="text">Preview</field>
         </record>
     </data>
 </tryton>

@@ -24,6 +24,8 @@ def icon(name, label=None, cls='vs-icon'):
         if not os.path.isfile(os.path.join(SAO_ICON_PATH, icon_name + '.svg')):
             Icon = Pool().get('ir.ui.icon')
             icons = Icon.search([('name', '=', icon_name)], limit=1)
+            if not icons and name != icon_name:
+                icons = Icon.search([('name', '=', name)], limit=1)
             if icons:
                 data = base64.b64encode(
                     icons[0].icon.encode('utf-8')).decode('ascii')

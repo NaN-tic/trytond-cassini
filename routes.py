@@ -16,11 +16,16 @@ HELP_ICON_PATH = os.path.abspath(os.path.join(
 PRIVATE_SAO_IMAGE_PATH = os.path.abspath(os.path.join(
         MODULE_PATH, '..', '..', '..', '..', '..', 'roots',
         'private', 'sao', 'images'))
+PRIVATE_SAO_PATH = os.path.dirname(PRIVATE_SAO_IMAGE_PATH)
 app.wsgi_app = SharedDataMiddlewareIndex(app.wsgi_app, {
         '/cassini-static': STATIC_PATH,
         '/cassini-icons': SAO_ICON_PATH,
         '/cassini-help-icons': HELP_ICON_PATH,
         '/cassini-private-images': PRIVATE_SAO_IMAGE_PATH,
+        '/cassini-qz/qz-tray.js': os.path.join(
+            PRIVATE_SAO_PATH, 'qz-tray.js'),
+        '/cassini-qz/certificate.txt': os.path.join(
+            PRIVATE_SAO_PATH, 'nan-tic-qz-digital-certificate.txt'),
         })
 
 
