@@ -28,6 +28,12 @@
         <record model="ir.message" id="msg_fields_d_modified_fields_in_records_d_records_24ebf815">
             <field name="text">%(fields)d modified fields in %(records)d records</field>
         </record>
+        <record model="ir.message" id="msg_count_d_record_5726c64e">
+            <field name="text">%(count)d record</field>
+        </record>
+        <record model="ir.message" id="msg_count_d_records_7fd6dfd3">
+            <field name="text">%(count)d records</field>
+        </record>
         <record model="ir.message" id="msg_a_cassini_session_can_only_have_one_workspace_4bb90d57">
             <field name="text">A Cassini session can only have one workspace.</field>
         </record>
@@ -394,9 +400,6 @@
         <record model="ir.message" id="msg_next_tab_84c508a2">
             <field name="text">Next tab</field>
         </record>
-        <record model="ir.message" id="msg_no_816c52fd">
-            <field name="text">No</field>
-        </record>
         <record model="ir.message" id="msg_no_actions_2c06c907">
             <field name="text">No actions</field>
         </record>
@@ -505,9 +508,6 @@
         <record model="ir.message" id="msg_print_5b221e9c">
             <field name="text">Print</field>
         </record>
-        <record model="ir.message" id="msg_record_1c54132b">
-            <field name="text">Record</field>
-        </record>
         <record model="ir.message" id="msg_record_pages_ef9cedb4">
             <field name="text">Record pages</field>
         </record>
@@ -598,9 +598,6 @@
         <record model="ir.message" id="msg_search_a_record_b847f64e">
             <field name="text">Search a record</field>
         </record>
-        <record model="ir.message" id="msg_search_and_add_608ea3e6">
-            <field name="text">Search and add</field>
-        </record>
         <record model="ir.message" id="msg_search_documentation_ea548d20">
             <field name="text">Search documentation</field>
         </record>
@@ -609,6 +606,9 @@
         </record>
         <record model="ir.message" id="msg_search_for_records_before_adding_a_bookmark_6e4f214b">
             <field name="text">Search for records before adding a bookmark</field>
+        </record>
+        <record model="ir.message" id="msg_search_model_s_18bdb9f0">
+            <field name="text">Search %(model)s</field>
         </record>
         <record model="ir.message" id="msg_search_navigation_4aba141f">
             <field name="text">Search navigation</field>
@@ -642,6 +642,9 @@
         </record>
         <record model="ir.message" id="msg_select_record_809d3f3a">
             <field name="text">Select record</field>
+        </record>
+        <record model="ir.message" id="msg_select_record_s_4af0864f">
+            <field name="text">Select %(record)s</field>
         </record>
         <record model="ir.message" id="msg_selected_record_actions_fbfc04de">
             <field name="text">Selected record actions</field>
@@ -903,6 +906,9 @@
         </record>
         <record model="ir.message" id="msg_unknown_related_resource_f8dcd623">
             <field name="text">Unknown related resource</field>
+        </record>
+        <record model="ir.message" id="msg_unknown_relation_column_9e4f93b3">
+            <field name="text">Unknown relation column</field>
         </record>
         <record model="ir.message" id="msg_unknown_relation_field_45919c86">
             <field name="text">Unknown relation field</field>

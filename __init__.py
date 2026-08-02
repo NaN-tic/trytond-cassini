@@ -10,6 +10,7 @@ def register():
     Pool.register(
         state.Workspace,
         state.StatefulComponent,
+        website.Session,
         website.Site,
         module='cassini', type_='model')
     Pool.register(
@@ -34,6 +35,7 @@ def register():
         app.ChatSpeech,
         app.HelpDocumentation,
         app.HelpUpdates,
+        app.WizardHelp,
         app.HelpResource,
         app.Menu,
         app.ToggleMenuItem,

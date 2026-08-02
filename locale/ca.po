@@ -2424,3 +2424,23 @@ msgstr "Opera un giny One2Many o Many2Many del Cassini"
 msgctxt "selection:www.site,type:cassini"
 msgid "Cassini"
 msgstr "Cassini"
+
+msgctxt "model:ir.message,text:msg_count_d_record_5726c64e"
+msgid "%(count)d record"
+msgstr "%(count)d registre"
+
+msgctxt "model:ir.message,text:msg_count_d_records_7fd6dfd3"
+msgid "%(count)d records"
+msgstr "%(count)d registres"
+
+msgctxt "model:ir.message,text:msg_search_model_s_18bdb9f0"
+msgid "Search %(model)s"
+msgstr "Cerca %(model)s"
+
+msgctxt "model:ir.message,text:msg_select_record_s_4af0864f"
+msgid "Select %(record)s"
+msgstr "Selecciona %(record)s"
+
+msgctxt "model:ir.message,text:msg_unknown_relation_column_9e4f93b3"
+msgid "Unknown relation column"
+msgstr "Columna de relació desconeguda"

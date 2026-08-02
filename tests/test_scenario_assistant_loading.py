@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from types import SimpleNamespace
 
 from playwright.sync_api import Page, expect
@@ -18,9 +19,14 @@ class TestAssistantLoading(WebTestCase):
         super().setUpClass()
         with Transaction().start(cls.database, 1) as transaction:
             pool = Pool()
+            ActionWizard = pool.get('ir.action.wizard')
             ActionWindow = pool.get('ir.action.act_window')
             Conversation = pool.get('nantic.chat.conversation')
+            Menu = pool.get('ir.ui.menu')
             Notification = pool.get('res.notification')
+            Update = pool.get('nantic_connection.notification')
+            UpdateWizard = pool.get(
+                'nantic_connection.notification.wizard')
             Site = pool.get('www.site')
             if not Site.search([('type', '=', 'cassini')]):
                 Site.create([{
@@ -52,7 +58,29 @@ class TestAssistantLoading(WebTestCase):
                         'icon': 'tryton-goblin',
                         'action': action.id,
                         'action_value': json.dumps(
-                            conversation.get_open_action()),
+                        conversation.get_open_action()),
+                        }])
+            wizard, = ActionWizard.create([{
+                        'name': 'Cassini Help Wizard',
+                        'wiz_name': 'www.uri.builder',
+                        }])
+            update = Update(
+                datetime=datetime(2026, 8, 2, 8, 0),
+                subject_en='Wizard contextual update',
+                subject_ca='Actualització contextual del wizard',
+                subject_es='Actualización contextual del wizard',
+                description_en='Contextual wizard documentation.',
+                description_ca='Documentació contextual del wizard.',
+                description_es='Documentación contextual del wizard.',
+                severity='low')
+            update.save()
+            UpdateWizard.create([{
+                        'notification': update.id,
+                        'name': 'www.uri.builder',
+                        }])
+            Menu.create([{
+                        'name': 'Cassini Help Wizard',
+                        'action': str(wizard),
                         }])
             transaction.commit()
 
@@ -236,3 +264,46 @@ class TestAssistantLoading(WebTestCase):
             user_message.evaluate(
                 'element => getComputedStyle(element).backgroundColor'),
             'rgba(0, 0, 0, 0)')
+
+        panel_controls.get_by_role(
+            'button', name='Menu', exact=True).click()
+        page.get_by_role(
+            'button', name='Cassini Help Wizard', exact=True).click()
+        wizard_dialog = page.get_by_role(
+            'dialog', name='Cassini Help Wizard')
+        expect(wizard_dialog).to_be_visible()
+        wizard_help = wizard_dialog.get_by_role(
+            'button', name='Help', exact=True)
+        expect(wizard_help).to_be_visible()
+        wizard_help.click()
+        wizard_dialog = page.get_by_role(
+            'dialog', name='Cassini Help Wizard')
+        expect(wizard_dialog.locator('.vs-wizard-help')).to_be_visible()
+        expect(wizard_dialog.get_by_role(
+            'button', name='Help', exact=True)).to_have_attribute(
+                'aria-pressed', 'true')
+        contextual_update = wizard_dialog.locator(
+            '.vs-help-update', has_text='Wizard contextual update')
+        expect(contextual_update).to_be_visible()
+        contextual_update.click()
+        wizard_dialog = page.get_by_role(
+            'dialog', name='Cassini Help Wizard')
+        expect(wizard_dialog.get_by_text(
+            'Contextual wizard documentation.', exact=True)).to_be_visible()
+        with page.expect_response(
+                lambda response: '/wizard/help/back' in response.url):
+            wizard_dialog.get_by_role(
+                'button', name='Back', exact=True).click()
+        wizard_dialog = page.get_by_role(
+            'dialog', name='Cassini Help Wizard')
+        with page.expect_response(
+                lambda response: '/wizard/help/filter' in response.url):
+            wizard_dialog.get_by_role(
+                'button', name='All updates', exact=True).click()
+        expect(page.get_by_role(
+            'dialog', name='Cassini Help Wizard').locator(
+                '.vs-wizard-help')).to_be_visible()
+        page.get_by_role(
+            'dialog', name='Cassini Help Wizard').get_by_role(
+                'button', name='Cancel', exact=True).click()
+        expect(page.locator('.vs-wizard')).not_to_be_visible()

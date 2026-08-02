@@ -106,9 +106,14 @@ class TestViewsWidgets(WebTestCase):
                         'data': (
                             '<tree>'
                             '<field name="char_value"/>'
+                            '<field name="many2one_value"/>'
                             '<field name="selection_value"/>'
-                            '<field name="integer_value" optional="1"/>'
+                            '<field name="integer_value" optional="1">'
+                            '<suffix name="integer_value" string=" units"/>'
+                            '</field>'
                             '<button name="mark" string="Mark"/>'
+                            '<button name="mark" string="Hidden Mark" '
+                            'tree_invisible="1"/>'
                             '<button name="mark" string="Mark selected" '
                             'multiple="1"/>'
                             '</tree>'),
@@ -348,6 +353,25 @@ class TestViewsWidgets(WebTestCase):
         page.get_by_role(
             'button', name='Cassini Widget Matrix',
             exact=True).click()
+        expect(page.locator('.vs-row-current')).to_have_count(0)
+        expect(page.locator(
+            '.vs-select-column input[aria-label="Select record"]:checked'
+            )).to_have_count(0)
+        expect(page.get_by_role(
+            'button', name='Hidden Mark', exact=True)).to_have_count(0)
+        alpha_relation = page.locator(
+            '.vs-row', has=page.get_by_text(
+                'Widget Alpha', exact=True)).get_by_role(
+                    'link', name='Widget Group One', exact=True)
+        expect(alpha_relation).to_be_visible()
+        with page.expect_response(
+                lambda response: '/relation/res.group/' in response.url):
+            alpha_relation.click()
+        group_dialog = page.locator('.vs-relation-record-dialog')
+        expect(group_dialog).to_be_visible()
+        group_dialog.get_by_role(
+            'button', name='Cancel', exact=True).click()
+        expect(group_dialog).not_to_be_visible()
         local_search_border = page.locator(
             '.vs-search-toolbar .vs-search-input').evaluate(
                 '''element => {
@@ -428,6 +452,8 @@ class TestViewsWidgets(WebTestCase):
         integer_column.check()
         expect(page.get_by_role(
                 'button', name='Integer', exact=True)).to_be_visible()
+        expect(page.locator(
+            '.vs-tree-affix', has_text='units').first).to_be_visible()
         page.reload(wait_until='domcontentloaded')
         expect(page.get_by_role(
                 'button', name='Integer', exact=True)).to_be_visible()
@@ -440,7 +466,8 @@ class TestViewsWidgets(WebTestCase):
         switch = page.get_by_label('Switch view')
         expect(switch).to_have_attribute('data-next-view', 'tree')
         switch.click()
-        expect(page.locator('.vs-table')).to_be_visible()
+        expect(page.locator(
+            '.vs-screen > .vs-table-wrap > .vs-table')).to_be_visible()
         expect(page.locator('.vs-view-switcher')).to_have_count(0)
         switch = page.get_by_label('Switch view')
         expect(switch).to_have_attribute('data-next-view', 'form')
@@ -581,7 +608,7 @@ class TestViewsWidgets(WebTestCase):
             '.vs-page .vs-separator-label',
             has_text='Boolean')).to_have_count(1)
         form_columns = page.locator('.vs-form').get_attribute('style')
-        self.assertIn('min-content', form_columns)
+        self.assertIn('minmax(0, 1fr)', form_columns)
         self.assertGreater(
             page.locator(
                 '[data-field="char_value"]').bounding_box()['width'],
@@ -644,12 +671,30 @@ class TestViewsWidgets(WebTestCase):
         expect(one2many.get_by_text(
                 'Beta Child One', exact=True)).to_be_visible()
         expect(one2many.locator(
-                '.vs-x2many-badge')).to_have_text('1 / 2')
+            '.vs-x2many-badge')).to_have_text('1 / 2')
+        expect(one2many.locator(
+            'summary[aria-label="Columns"]')).to_be_visible()
+        one2many_add_input = one2many.locator(
+            '[data-x2many-add-input]')
+        expect(one2many_add_input).to_be_editable()
+        one2many_add_input.press('F2')
+        expect(page.get_by_role(
+            'dialog', name='Search One to Many')).to_be_visible()
+        page.get_by_role('button', name='Cancel', exact=True).click()
+        one2many_add_input.press('F3')
+        child_dialog = page.locator('.vs-relation-record-dialog')
+        expect(child_dialog).to_be_visible()
+        child_dialog.get_by_role(
+            'button', name='Cancel', exact=True).click()
+        page.get_by_role(
+            'alertdialog', name='Unsaved changes').get_by_role(
+                'button', name='Close without saving', exact=True).click()
+        expect(child_dialog).not_to_be_visible()
         relation_actions.get_by_role(
             'button', name='Switch', exact=True).click()
         expect(one2many.locator('.vs-x2many-form')).to_be_visible()
-        expect(one2many.get_by_text(
-                'Beta Child One', exact=True)).to_be_visible()
+        expect(one2many.locator(
+            '[data-field="name"] input')).to_have_value('Beta Child One')
         relation_actions.get_by_role(
             'button', name='Switch', exact=True).click()
 
@@ -731,11 +776,64 @@ class TestViewsWidgets(WebTestCase):
         expect(one2many.get_by_text(
                 'Beta Child One', exact=True)).to_be_visible()
         many2many = page.locator('[data-field="many2many_value"]')
-        many2many.get_by_role(
-            'button', name='Search and add', exact=True).click()
+        expect(many2many.locator(
+            '.vs-many2many-panel')).to_be_visible()
+        many2many_actions = many2many.get_by_role(
+            'toolbar', name='Relation actions')
+        expect(many2many.locator(
+            '[data-many2many-input]')).to_be_editable()
+        expect(many2many.locator(
+            'summary[aria-label="Columns"]')).to_be_visible()
+        for action in ('Add', 'Remove', 'Undelete'):
+            expect(many2many_actions.get_by_role(
+                'button', name=action, exact=True)).to_be_visible()
+        for one2many_action in (
+                'Switch', 'Previous', 'Next', 'New', 'Open', 'Delete'):
+            expect(many2many_actions.get_by_role(
+                'button', name=one2many_action,
+                exact=True)).to_have_count(0)
+        many2many_input = many2many.locator(
+            '[data-many2many-input]')
+        many2many_input.press('F2')
         expect(page.get_by_role(
             'dialog', name='Search Many to Many')).to_be_visible()
         page.get_by_role('button', name='Cancel', exact=True).click()
+        many2many_input.press('F3')
+        relation_record_dialog = page.locator(
+            '.vs-relation-record-dialog')
+        expect(relation_record_dialog).to_be_visible()
+        relation_record_dialog.get_by_role(
+            'button', name='Cancel', exact=True).click()
+        page.get_by_role(
+            'alertdialog', name='Unsaved changes').get_by_role(
+                'button', name='Close without saving', exact=True).click()
+        expect(relation_record_dialog).not_to_be_visible()
+        many2many_input.fill('Widget Group Two')
+        many2many_option = many2many.locator(
+            '.vs-relation-option', has_text='Widget Group Two')
+        expect(many2many_option).to_be_visible()
+        many2many_option.click()
+        many2many = page.locator('[data-field="many2many_value"]')
+        expect(many2many.get_by_text(
+            'Widget Group Two', exact=True)).to_be_visible()
+        many2many_actions = many2many.get_by_role(
+            'toolbar', name='Relation actions')
+        many2many_actions.get_by_role(
+            'button', name='Add', exact=True).click()
+        expect(page.get_by_role(
+            'dialog', name='Search Many to Many')).to_be_visible()
+        page.get_by_role('button', name='Cancel', exact=True).click()
+        many2many_actions.get_by_role(
+            'button', name='Remove', exact=True).click()
+        many2many = page.locator('[data-field="many2many_value"]')
+        expect(many2many.locator(
+            '.vs-x2many-row-deleted')).to_contain_text(
+                'Widget Group Two')
+        many2many.get_by_role(
+            'button', name='Undelete', exact=True).click()
+        expect(page.locator(
+            '[data-field="many2many_value"] '
+            '.vs-x2many-row-deleted')).to_have_count(0)
 
         relation = page.locator(
             '[data-field="many2one_value"] [data-relation-input]')

@@ -117,6 +117,11 @@
         if (!focusState.id) {
             return false;
         }
+        const active = document.activeElement;
+        if (active && active !== document.body && active.isConnected &&
+                active.id && active.id !== focusState.id) {
+            return false;
+        }
         const element = document.getElementById(focusState.id);
         if (!element) {
             return false;
@@ -557,6 +562,24 @@
             }
             modal.replaceChildren();
         }
+    }
+
+    function cancelTopModal() {
+        const backdrops = Array.from(document.querySelectorAll(
+            ".vs-modal-backdrop")).filter(isVisible);
+        const backdrop = backdrops.at(-1);
+        const cancel = backdrop?.querySelector(
+            "[data-modal-cancel], [data-close-relation-modal], " +
+            "[data-close-modal]");
+        if (cancel && !cancel.disabled) {
+            cancel.click();
+            return true;
+        }
+        if (backdrop) {
+            closeModal();
+            return true;
+        }
+        return false;
     }
 
     function showShortcutHelp() {
@@ -1245,11 +1268,11 @@
     }
 
     function markTreeRowSelected(row) {
-        const screen = row.closest(".vs-screen");
-        if (!screen) {
+        const tree = row.closest(".vs-table-wrap");
+        if (!tree) {
             return;
         }
-        for (const candidate of screen.querySelectorAll(".vs-row")) {
+        for (const candidate of tree.querySelectorAll(".vs-row")) {
             const selected = candidate === row;
             candidate.classList.toggle("vs-row-current", selected);
             const checkbox = candidate.querySelector(
@@ -1258,7 +1281,7 @@
                 checkbox.checked = selected;
             }
         }
-        const selectAll = screen.querySelector(
+        const selectAll = tree.querySelector(
             "thead input[aria-label='Select all records']");
         if (selectAll) {
             selectAll.checked = false;
@@ -1574,7 +1597,15 @@
                 fallbackTimers.delete(input);
                 input.value = "";
             }
-            search?.querySelector(".vs-search-results")?.remove();
+            const results = search?.querySelector(".vs-search-results");
+            // Hide the popup immediately but keep the clicked HTMX element
+            // connected until its request and target swap have completed.
+            if (results) {
+                results.hidden = true;
+                globalSearchResult.addEventListener(
+                    "htmx:afterRequest", () => results.remove(),
+                    {once: true});
+            }
         }
         const userItem = event.target.closest(
             ".vs-user-menu [role='menuitem']");
@@ -1646,16 +1677,6 @@
             if (confirm) {
                 confirm.disabled = false;
                 fallbackRequest(form);
-            }
-            return;
-        }
-        const x2manyRow = event.target.closest(".vs-x2many-row");
-        if (x2manyRow) {
-            const openAction = x2manyRow.querySelector(
-                "[data-x2many-open-action]");
-            if (openAction) {
-                event.preventDefault();
-                openAction.click();
             }
             return;
         }
@@ -1756,7 +1777,10 @@
             }
         }
         if (event.key === "Escape") {
-            closeModal();
+            if (cancelTopModal()) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
         }
     });
     document.addEventListener("change", function (event) {
@@ -1875,6 +1899,54 @@
             hidden.dispatchEvent(new Event("change", {bubbles: true}));
             input.focus();
             return;
+        }
+    });
+    document.addEventListener("keydown", function (event) {
+        const input = event.target.closest("[data-x2many-add-input]");
+        if (!input) {
+            return;
+        }
+        const widget = input.closest("[data-x2many-add-widget]");
+        const completion = widget?.querySelector(
+            ".vs-relation-completion");
+        if (event.key === "F3") {
+            event.preventDefault();
+            completion?.querySelector(
+                ".vs-relation-completion-action[hx-post]")?.click();
+            return;
+        }
+        if (event.key === "F2") {
+            event.preventDefault();
+            input.closest(".vs-x2many-toolbar")?.querySelector(
+                "[data-x2many-add]")?.click();
+            return;
+        }
+        if (event.key === "Escape") {
+            input.value = "";
+            if (completion) {
+                completion.dataset.open = "false";
+            }
+            return;
+        }
+        if (event.key === "ArrowDown") {
+            const option = completion?.querySelector(
+                ".vs-relation-option");
+            if (option) {
+                event.preventDefault();
+                option.focus();
+            }
+            return;
+        }
+        if (event.key === "Enter" && input.value) {
+            event.preventDefault();
+            const option = completion?.querySelector(
+                ".vs-relation-option");
+            if (option) {
+                option.click();
+            } else {
+                input.closest(".vs-x2many-toolbar")?.querySelector(
+                    "[data-x2many-add]")?.click();
+            }
         }
     });
     document.addEventListener("keydown", function (event) {
@@ -2109,6 +2181,17 @@
     });
     document.addEventListener(
         "htmx:beforeSwap", prepareFocusedPreservation);
+    document.addEventListener("htmx:beforeSwap", function (event) {
+        const responseURL = event.detail?.xhr?.responseURL;
+        if (!responseURL || !document.querySelector(".vs-shell")) {
+            return;
+        }
+        const url = new URL(responseURL, window.location.href);
+        if (url.pathname.endsWith("/cassini/login")) {
+            event.detail.shouldSwap = false;
+            window.location.replace(url.href);
+        }
+    });
     document.addEventListener("htmx:afterSwap", function () {
         restoreFocus();
         initializeSearchCompletions();
@@ -2405,6 +2488,140 @@
             }
         });
     }
+
+    const deferredScreenActions = new Set();
+    const pendingFieldRequests = new WeakMap();
+
+    function editorValue(editor) {
+        return editor?.value ?? "";
+    }
+
+    document.addEventListener("focusin", function (event) {
+        const editor = event.target.closest?.(
+            "input[hx-post], textarea[hx-post]");
+        if (editor && editor.dataset.serverValue === undefined) {
+            editor.dataset.serverValue = editor.defaultValue ?? editorValue(editor);
+        }
+    });
+
+    document.addEventListener("htmx:beforeRequest", function (event) {
+        const editor = event.detail?.elt;
+        if (!editor?.matches?.("input[hx-post], textarea[hx-post]")) {
+            return;
+        }
+        const owner = editor.closest(".vs-screen, .vs-wizard");
+        if (!owner) {
+            return;
+        }
+        const pending = Number(owner.dataset.pendingFieldRequests || 0) + 1;
+        owner.dataset.pendingFieldRequests = String(pending);
+        const request = event.detail?.xhr || editor;
+        pendingFieldRequests.set(request, {
+            ownerId: owner.id,
+            editor: editor,
+            value: editorValue(editor),
+        });
+    });
+
+    document.addEventListener("htmx:afterSettle", function (event) {
+        const request = event.detail?.xhr || event.detail?.elt;
+        const fieldRequest = request && pendingFieldRequests.get(request);
+        if (!fieldRequest) {
+            return;
+        }
+        pendingFieldRequests.delete(request);
+        if (fieldRequest.editor.isConnected &&
+                editorValue(fieldRequest.editor) === fieldRequest.value) {
+            fieldRequest.editor.dataset.serverValue = fieldRequest.value;
+        }
+        const owner = document.getElementById(fieldRequest.ownerId);
+        if (!owner) {
+            return;
+        }
+        const pending = Math.max(
+            0, Number(owner.dataset.pendingFieldRequests || 0) - 1);
+        if (pending) {
+            owner.dataset.pendingFieldRequests = String(pending);
+        } else {
+            delete owner.dataset.pendingFieldRequests;
+        }
+    });
+
+    function deferActionUntilFieldsAreStored(event) {
+        const action = event.target.closest(
+            "button[hx-post], button[hx-get], a[hx-post], a[hx-get]");
+        if (!action || action.matches("input, textarea, select")) {
+            return;
+        }
+        const owner = action.closest(".vs-screen, .vs-wizard") ||
+            document.getElementById(action.dataset.screenOwner || "");
+        if (!owner) {
+            return;
+        }
+        const editor = document.activeElement;
+        if (editor && editor !== action && owner.contains(editor) &&
+                editor.matches("input[hx-post], textarea[hx-post]") &&
+                editorValue(editor) !== (
+                    editor.dataset.serverValue ?? editor.defaultValue ?? "")) {
+            editor.dispatchEvent(new Event("change", {bubbles: true}));
+        }
+        if (!owner.querySelector(".htmx-request") &&
+                !owner.dataset.pendingFieldRequests) {
+            return;
+        }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const ownerId = owner.id;
+        const method = action.hasAttribute("hx-post") ? "hx-post" : "hx-get";
+        const url = action.getAttribute(method);
+        const shortcut = action.getAttribute("data-shortcut-action");
+        const key = ownerId + "\n" + method + "\n" + url;
+        if (deferredScreenActions.has(key)) {
+            return;
+        }
+        deferredScreenActions.add(key);
+        const started = Date.now();
+        const resume = function () {
+            const currentOwner = document.getElementById(ownerId);
+            if (!currentOwner) {
+                deferredScreenActions.delete(key);
+                return;
+            }
+            if (currentOwner.querySelector(".htmx-request") ||
+                    currentOwner.dataset.pendingFieldRequests) {
+                if (Date.now() - started < 10000) {
+                    window.setTimeout(resume, 25);
+                } else {
+                    deferredScreenActions.delete(key);
+                }
+                return;
+            }
+            let currentAction = null;
+            if (shortcut) {
+                currentAction = currentOwner.querySelector(
+                    "[data-shortcut-action=\"" +
+                    CSS.escape(shortcut) + "\"]");
+            }
+            if (!currentAction) {
+                currentAction = Array.from(currentOwner.querySelectorAll(
+                    "[" + method + "]")).find(
+                        candidate => candidate.getAttribute(method) === url);
+            }
+            if (!currentAction && action.dataset.screenOwner) {
+                currentAction = Array.from(document.querySelectorAll(
+                    "[data-screen-owner=\"" + CSS.escape(ownerId) +
+                    "\"][" + method + "]")).find(
+                        candidate => candidate.getAttribute(method) === url);
+            }
+            deferredScreenActions.delete(key);
+            if (currentAction && !currentAction.disabled) {
+                currentAction.click();
+            }
+        };
+        window.setTimeout(resume, 25);
+    }
+
+    document.addEventListener("click", deferActionUntilFieldsAreStored, true);
 
     document.addEventListener("mousedown", function (event) {
         const option = event.target.closest(

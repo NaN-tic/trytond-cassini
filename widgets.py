@@ -4,8 +4,8 @@ from decimal import Decimal
 from xml.etree import ElementTree
 
 from dominate.tags import (
-    a, button, col, colgroup, div, img, input_, label, option, progress,
-    select, span, table, tbody, td, textarea, th, thead, tr, ul)
+    a, button, div, img, input_, label, option, progress, select, span,
+    textarea, ul)
 from trytond.pool import Pool
 from trytond.pyson import PYSONDecoder
 from trytond.tools import timezone
@@ -128,7 +128,10 @@ class WidgetRenderer:
                 self.state_context[name] = False
             else:
                 self.state_context[name] = None
-        self.state_context['id'] = self.record.get('id')
+        record_id = self.record.get('id')
+        if record_id is None and self.record.get('new'):
+            record_id = -1
+        self.state_context['id'] = record_id
         transaction_context = dict(Transaction().context)
         self.state_context['context'] = transaction_context
         self.state_context.update(transaction_context)
@@ -162,6 +165,9 @@ class WidgetRenderer:
                 rules.append('min-width: %spx' % attributes['width'])
             if str(attributes.get('height', '')).isdigit():
                 rules.append('min-height: %spx' % attributes['height'])
+            if str(attributes.get('xexpand', '1')).lower() in {
+                    '0', 'false', 'no'}:
+                rules.extend(['min-width:0', 'min-inline-size:0'])
             if str(attributes.get('xfill', '1')).lower() in {
                     '0', 'false', 'no'}:
                 try:
@@ -258,16 +264,17 @@ class WidgetRenderer:
 
     def htmx(self, name, field_id, widget):
         preserve_self = widget in (
-            self.text_widgets | self.textarea_widgets | self.date_widgets)
+            self.text_widgets | self.textarea_widgets
+            | self.numeric_widgets | self.date_widgets)
         if self.endpoint == 'preferences':
             UpdateField = self.pool.get(
                 'cassini.update.preference.field')
             trigger = 'change'
             synchronization = '#preferences-form:queue last'
-            if widget in self.text_widgets | self.textarea_widgets:
-                trigger = 'input changed delay:400ms'
-            if preserve_self:
-                synchronization = 'this:replace'
+            if widget in (
+                    self.text_widgets | self.textarea_widgets
+                    | self.numeric_widgets):
+                trigger = 'input changed delay:400ms, change changed'
             return {
                 'hx_post': UpdateField.url(field=name),
                 'hx_trigger': trigger,
@@ -283,10 +290,10 @@ class WidgetRenderer:
             UpdateField = self.pool.get('cassini.update.wizard.field')
             trigger = 'change'
             synchronization = 'closest .vs-wizard:queue last'
-            if widget in self.text_widgets | self.textarea_widgets:
-                trigger = 'input changed delay:400ms'
-            if preserve_self:
-                synchronization = 'this:replace'
+            if widget in (
+                    self.text_widgets | self.textarea_widgets
+                    | self.numeric_widgets):
+                trigger = 'input changed delay:400ms, change changed'
             return {
                 'hx_post': UpdateField.url(
                     tab=self.tab['id'], field=name),
@@ -304,10 +311,10 @@ class WidgetRenderer:
         UpdateField = self.pool.get('cassini.update.field')
         trigger = 'change'
         synchronization = 'closest .vs-screen:queue last'
-        if widget in self.text_widgets | self.textarea_widgets:
-            trigger = 'input changed delay:400ms'
-        if preserve_self:
-            synchronization = 'this:replace'
+        if widget in (
+                self.text_widgets | self.textarea_widgets
+                | self.numeric_widgets):
+            trigger = 'input changed delay:400ms, change changed'
         values = {
             'hx_post': UpdateField.url(
                 tab=self.tab['id'], record=self.record['key'], field=name),
@@ -459,7 +466,13 @@ class WidgetRenderer:
                     multiple=multiple or None,
                     size=max(2, len(choices)) if multiple else None,
                     **common) as control:
-                if not required and not multiple:
+                has_selected_choice = any(
+                    key in selected for key, _ in choices)
+                if (
+                        not multiple
+                        and (
+                            not required
+                            or not has_selected_choice)):
                     option('', value='', selected=value in (None, ''))
                 for key, title in choices:
                     option(
@@ -788,6 +801,36 @@ class WidgetRenderer:
             return Relation.fields_view_get(
                 view_id=view_id, view_type=view_type)
 
+    @staticmethod
+    def tree_read_fields(view, Model):
+        """Return every model field required by the shared tree renderer."""
+        root = ElementTree.fromstring(view.get('arch') or '<tree/>')
+        names = []
+        for node in root.iter('field'):
+            candidates = [node.attrib.get('name'), node.attrib.get('icon')]
+            for affix in node:
+                if affix.tag not in {'prefix', 'suffix'}:
+                    continue
+                candidates.extend([
+                        affix.attrib.get('name', node.attrib.get('name')),
+                        affix.attrib.get('icon'),
+                        ])
+            for name in candidates:
+                if (
+                        name in Model._fields
+                        and Model._fields[name]._type != 'binary'
+                        and name not in names):
+                    names.append(name)
+        child_field = view.get('field_childs')
+        if (
+                child_field in Model._fields
+                and Model._fields[child_field]._type != 'binary'
+                and child_field not in names):
+            names.append(child_field)
+        if 'rec_name' not in names:
+            names.append('rec_name')
+        return names
+
     def x2many_rows(self, definition, attributes, values, state, view_type):
         deleted = list(state.get('deleted', []))
         entries = []
@@ -804,24 +847,8 @@ class WidgetRenderer:
                     })
         relation_view = self.x2many_view(
             definition, attributes, view_type)
-        root = ElementTree.fromstring(
-            relation_view.get('arch') or '<%s/>' % view_type)
-        field_nodes = []
-        for node in root.iter('field'):
-            name = node.attrib.get('name')
-            if (name and name not in {
-                        field.attrib.get('name') for field in field_nodes}
-                    and str(node.attrib.get(
-                            'tree_invisible', '0')).lower()
-                    not in {'1', 'true', 'yes'}):
-                field_nodes.append(node)
         Relation = self.pool.get(definition['relation'])
-        read_fields = [
-            node.attrib['name'] for node in field_nodes
-            if node.attrib['name'] in Relation._fields
-            and Relation._fields[node.attrib['name']]._type != 'binary']
-        if 'rec_name' not in read_fields:
-            read_fields.append('rec_name')
+        read_fields = self.tree_read_fields(relation_view, Relation)
         ids = [entry['id'] for entry in entries if entry['id']]
         records = {
             record['id']: record
@@ -840,33 +867,115 @@ class WidgetRenderer:
                         Relation._rec_name, translate('New record')))
             else:
                 entry['values'] = {'rec_name': stringify(item)}
-        return relation_view, field_nodes, entries
+        return relation_view, entries
 
-    def x2many_display_value(
-            self, definition, name, value, field_definition=None):
-        Relation = self.pool.get(definition['relation'])
-        field = Relation._fields.get(name)
-        if field and field._type == 'boolean':
-            return translate('Yes') if value else translate('No')
-        if field and field._type in {'many2one', 'one2one'} and value:
-            related = {'relation': field.model_name}
-            return self.relation_title(related, value)
-        field_definition = field_definition or {}
-        selection = field_definition.get('selection') or []
-        if field and field._type in {'selection', 'multiselection'}:
-            titles = dict(selection) if not isinstance(selection, str) else {}
-            if field._type == 'multiselection':
-                return ', '.join(
-                    str(titles.get(item, item)) for item in (value or []))
-            return stringify(titles.get(value, value))
-        if field and field._type in {'one2many', 'many2many'}:
-            return str(len(value or []))
-        return stringify(value)
+    def tree_affix(self, attributes, protocol=None):
+        attributes = dict(attributes)
+        name = attributes.get('name')
+        definition = self.view.get('fields', {}).get(name, {})
+        if name and self.states(definition, attributes)[2]:
+            return None
+        value = self.values.get(name)
+        icon_name = attributes.get('icon')
+        if icon_name and icon_name in self.Model._fields:
+            icon_name = self.values.get(icon_name)
+        icon_type = attributes.get('icon_type', 'icon')
+        title = attributes.get('string', '')
+        border = attributes.get('border')
+        image_class = 'vs-tree-affix'
+        if border in {'rounded', 'circle'}:
+            image_class += ' vs-image-' + border
+        if protocol:
+            href = stringify(value)
+            if href:
+                href = {
+                    'email': 'mailto:',
+                    'callto': 'callto:',
+                    'sip': 'sip:',
+                    }.get(protocol, '') + href
+            with a(
+                    href=href or None,
+                    target='_blank', rel='noreferrer noopener',
+                    cls=image_class,
+                    title=title or stringify(value)) as link:
+                icon(icon_name or 'public')
+            return link
+        if icon_name:
+            if icon_type == 'url':
+                return img(
+                    src=icon_name, alt=title,
+                    cls=image_class)
+            if icon_type == 'color':
+                from .views import css_color
+                color = css_color(icon_name)
+                return span(
+                    '', cls=image_class + ' vs-tree-affix-color',
+                    style=(
+                        'background-color:%s' % color if color else None),
+                    title=title)
+            with span(cls=image_class, title=title) as image:
+                icon(str(icon_name).removeprefix('tryton-'))
+            return image
+        text = title if title else stringify(value)
+        if text:
+            return span(text, cls=image_class)
+        return None
+
+    def x2many_suggestions(
+            self, id_, choices, name, field_id, can_create=False,
+            modal_target='#modal', input_id=None, open_=False):
+        X2ManyAction = self.pool.get('cassini.x2many.action')
+        RelationSearch = self.pool.get('cassini.relation.search')
+        OpenRelationNew = self.pool.get('cassini.open.relation.new')
+        include = '#' + input_id if input_id else None
+        with div(
+                id=id_, cls='vs-relation-completion',
+                role='listbox',
+                data_open=str(bool(open_)).lower()) as suggestions:
+            for record_id, title in choices:
+                button(
+                    title, type='button',
+                    cls='vs-relation-option',
+                    role='option',
+                    data_many2many_choice=record_id,
+                    hx_post=X2ManyAction.url(
+                        tab=self.tab['id'],
+                        record=self.record['key'],
+                        field=name,
+                        action='add'),
+                    hx_vals=json.dumps({'value': record_id}),
+                    hx_target='#' + field_id,
+                    hx_swap='outerHTML')
+            with div(cls='vs-relation-completion-actions'):
+                button(
+                    translate('Search…'), type='button',
+                    cls='vs-relation-completion-action',
+                    hx_get=RelationSearch.url(
+                        tab=self.tab['id'],
+                        record=self.record['key'],
+                        field=name),
+                    hx_include=include,
+                    hx_target=modal_target,
+                    hx_swap='innerHTML')
+                if can_create and self.endpoint != 'preferences':
+                    button(
+                        translate('Create…'), type='button',
+                        cls='vs-relation-completion-action',
+                        hx_post=OpenRelationNew.url(
+                            tab=self.tab['id'],
+                            record=self.record['key'],
+                            field=name),
+                        hx_include=include,
+                        hx_target='#workspace',
+                        hx_swap='outerHTML')
+        return suggestions
 
     def x2many(
             self, name, widget, value, definition, attributes,
             field_id, readonly, required):
         X2ManyAction = self.pool.get('cassini.x2many.action')
+        RelationAutocomplete = self.pool.get(
+            'cassini.relation.autocomplete')
         OpenRelationNew = self.pool.get(
             'cassini.open.relation.new')
         RelationSearch = self.pool.get(
@@ -874,6 +983,26 @@ class WidgetRenderer:
         OpenRelationRecord = self.pool.get(
             'cassini.open.relation.record')
         relation = definition.get('relation')
+        if self.tab.get('_x2many_form_depth', 0) >= 1:
+            with div(
+                    id=field_id + '-input',
+                    cls='vs-x2many-panel vs-x2many-nested-summary') as control:
+                label(
+                    attributes.get('string')
+                    or definition.get('string')
+                    or name,
+                    cls='vs-x2many-string%s' % (
+                        ' vs-label-required' if required else ''))
+                span(
+                    translate(
+                        '%(count)d record',
+                        count=len(value or []))
+                    if len(value or []) == 1 else
+                    translate(
+                        '%(count)d records',
+                        count=len(value or [])),
+                    cls='vs-x2many-nested-count')
+            return control
         relation_access = {
             'read': False, 'write': False,
             'create': False, 'delete': False}
@@ -884,23 +1013,25 @@ class WidgetRenderer:
         modal_target = (
             '#relation-modal'
             if self.endpoint == 'preferences' else '#modal')
+        modes = (
+            ['tree']
+            if widget == 'many2many' else [
+                mode.strip() for mode in attributes.get(
+                    'mode', 'tree,form').split(',')
+                if mode.strip() in {'tree', 'form'}])
+        if not modes:
+            modes = ['tree']
         state = self.record.setdefault(
             'x2many', {}).setdefault(name, {
-                'view': 'tree',
+                'view': modes[0],
                 'current': None,
                 'deleted': [],
                 })
-        modes = [
-            mode.strip() for mode in attributes.get(
-                'mode', 'tree,form').split(',')
-            if mode.strip() in {'tree', 'form'}]
-        if not modes:
-            modes = ['tree']
         view_type = state.get('view')
         if view_type not in modes:
             view_type = modes[0]
             state['view'] = view_type
-        relation_view, field_nodes, rows = self.x2many_rows(
+        relation_view, rows = self.x2many_rows(
             definition, attributes, value, state, view_type)
         row_keys = [row['key'] for row in rows]
         current = state.get('current')
@@ -922,6 +1053,24 @@ class WidgetRenderer:
                 or relation_access['delete'])
             and str(attributes.get('delete', '1')).lower()
             not in {'0', 'false', 'no'})
+        size = self.evaluate(attributes.get('size'))
+        size_limit = (
+            widget == 'many2many'
+            and isinstance(size, (int, float))
+            and not isinstance(size, bool)
+            and size >= 0
+            and len(value or []) >= size)
+        has_add_remove = (
+            widget == 'many2many'
+            or attributes.get(
+                'add_remove', definition.get('add_remove')) is not None)
+        can_add = (
+            has_add_remove
+            and not readonly
+            and relation_access['read']
+            and not size_limit)
+        if widget == 'many2many' and size_limit:
+            can_create = False
         target = '#' + field_id
 
         def action_button(
@@ -948,7 +1097,9 @@ class WidgetRenderer:
 
         with div(
                 id=field_id + '-input',
-                cls='vs-x2many-panel',
+                cls='vs-x2many-panel%s' % (
+                    ' vs-many2many-panel'
+                    if widget == 'many2many' else ' vs-one2many-panel'),
                 data_x2many=name,
                 data_orientation=attributes.get(
                     'orientation', 'left_to_right')) as control:
@@ -963,269 +1114,254 @@ class WidgetRenderer:
                         cls='vs-x2many-toolbar',
                         role='toolbar',
                         aria_label=translate('Relation actions')):
-                    action_button(
-                        'switch', 'switch', translate('Switch'),
-                        disabled=len(modes) < 2 or not rows)
-                    action_button(
-                        'previous', 'back', translate('Previous'),
-                        disabled=position <= 1)
-                    span(
-                        '%s / %s' % (
-                            position if position else '_', len(rows)),
-                        cls='vs-x2many-badge',
-                        title='%s / %s' % (
-                            position if position else '_', len(rows)))
-                    action_button(
-                        'next', 'forward', translate('Next'),
-                        disabled=not position or position >= len(rows))
-                    if (widget == 'many2many'
-                            or definition.get('add_remove') is not None):
+                    if has_add_remove:
+                        suggestions_id = field_id + '-suggestions'
+                        entry_id = field_id + '-relation-input'
+                        with div(
+                                cls=(
+                                    'vs-relation '
+                                    'vs-many2many-entry'),
+                                data_x2many_add_widget='true',
+                                data_many2many_widget=(
+                                    'true'
+                                    if widget == 'many2many' else None)) as entry:
+                            input_(
+                                id=entry_id,
+                                type='text', name='query',
+                                autocomplete='off',
+                                disabled=not can_add or None,
+                                cls='vs-input vs-x2many-add-input',
+                                placeholder=attributes.get('help'),
+                                data_x2many_add_input='true',
+                                data_many2many_input=(
+                                    'true'
+                                    if widget == 'many2many' else None),
+                                hx_post=(
+                                    RelationAutocomplete.url(
+                                        tab=self.tab['id'],
+                                        record=self.record['key'],
+                                        field=name)
+                                    if can_add and str(attributes.get(
+                                        'completion', '1')).lower()
+                                    not in {'0', 'false', 'no'} else None),
+                                hx_trigger=(
+                                    'input changed delay:250ms'
+                                    if can_add and str(attributes.get(
+                                        'completion', '1')).lower()
+                                    not in {'0', 'false', 'no'} else None),
+                                hx_target='#' + suggestions_id,
+                                hx_swap='outerHTML',
+                                hx_sync='this:replace',
+                                hx_include='this')
+                            entry.add(self.x2many_suggestions(
+                                    suggestions_id, [], name, field_id,
+                                    can_create=can_create,
+                                    modal_target=modal_target,
+                                    input_id=entry_id))
                         with button(
                                 type='button',
                                 cls='vs-icon-button',
-                                title=translate('Search and add'),
-                                aria_label=translate('Search and add'),
-                                disabled=(
-                                    readonly
-                                    or not relation_access['read']) or None,
+                                title=translate('Add'),
+                                aria_label=translate('Add'),
+                                disabled=not can_add or None,
                                 hx_get=(
                                     RelationSearch.url(
                                         tab=self.tab['id'],
                                         record=self.record['key'],
                                         field=name)
-                                    if (
-                                        not readonly
-                                        and relation_access['read'])
-                                    else None),
+                                    if can_add else None),
+                                hx_include=(
+                                    '#' + entry_id if can_add else None),
                                 hx_target=modal_target,
-                                hx_swap='innerHTML'):
+                                hx_swap='innerHTML',
+                                data_x2many_add='true',
+                                data_many2many_add=(
+                                    'true'
+                                    if widget == 'many2many' else None)):
                             icon('add')
+                    if widget == 'many2many':
+                        span(
+                            '%s / %s' % (
+                                position if position else '_', len(rows)),
+                            cls='vs-x2many-badge',
+                            title='%s / %s' % (
+                                position if position else '_', len(rows)))
                         action_button(
                             'remove', 'remove', translate('Remove'),
                             disabled=not can_delete or not current_row)
-                    with button(
-                            type='button',
-                            cls='vs-icon-button',
-                            title=translate('New'),
-                            aria_label=translate('New'),
-                            disabled=not can_create or None,
-                            hx_post=(
-                                OpenRelationNew.url(
-                                    tab=self.tab['id'],
-                                    record=self.record['key'],
-                                    field=name)
-                                if can_create else None),
-                            hx_target='#workspace',
-                            hx_swap='outerHTML'):
-                        icon('create')
-                    with button(
-                            type='button',
-                            cls='vs-icon-button',
-                            title=translate('Open'),
-                            aria_label=translate('Open'),
-                            disabled=(
-                                not current_row
-                                or (
-                                    current_row['id']
-                                    and not relation_access['read'])
-                                or (
-                                    not current_row['id']
-                                    and not can_create)) or None,
-                            hx_post=(
-                                (
-                                    OpenRelationRecord.url(
-                                        tab=self.tab['id'],
-                                        model=definition.get('relation'),
-                                        record=current_row['id'],
-                                        source_record=self.record['key'],
-                                        field=name)
-                                    if current_row['id'] else
+                        action_button(
+                            'undelete', 'undo', translate('Undelete'),
+                            disabled=not can_delete
+                            or not state.get('deleted'))
+                    else:
+                        action_button(
+                            'switch', 'switch', translate('Switch'),
+                            disabled=len(modes) < 2 or not rows)
+                        action_button(
+                            'previous', 'back', translate('Previous'),
+                            disabled=position <= 1)
+                        span(
+                            '%s / %s' % (
+                                position if position else '_', len(rows)),
+                            cls='vs-x2many-badge',
+                            title='%s / %s' % (
+                                position if position else '_', len(rows)))
+                        action_button(
+                            'next', 'forward', translate('Next'),
+                            disabled=not position or position >= len(rows))
+                        if has_add_remove:
+                            action_button(
+                                'remove', 'remove', translate('Remove'),
+                                disabled=not can_delete or not current_row)
+                        with button(
+                                type='button',
+                                cls='vs-icon-button',
+                                title=translate('New'),
+                                aria_label=translate('New'),
+                                disabled=not can_create or None,
+                                hx_post=(
                                     OpenRelationNew.url(
                                         tab=self.tab['id'],
                                         record=self.record['key'],
-                                        field=name,
-                                        item=current_row['key']))
-                                if current_row and (
-                                    (
+                                        field=name)
+                                    if can_create else None),
+                                hx_target='#workspace',
+                                hx_swap='outerHTML'):
+                            icon('create')
+                        with button(
+                                type='button',
+                                cls='vs-icon-button',
+                                title=translate('Open'),
+                                aria_label=translate('Open'),
+                                disabled=(
+                                    not current_row
+                                    or (
                                         current_row['id']
-                                        and relation_access['read'])
+                                        and not relation_access['read'])
                                     or (
                                         not current_row['id']
-                                        and can_create))
-                                else None),
-                            hx_target='#workspace',
-                            hx_swap='outerHTML'):
-                        icon('open')
-                    action_button(
-                        'delete', 'delete', translate('Delete'),
-                        disabled=(
-                            not can_delete or not current_row
-                            or current_row['deleted']))
-                    action_button(
-                        'undelete', 'undo', translate('Undelete'),
-                        disabled=not can_delete
-                        or not state.get('deleted'))
+                                        and not can_create)) or None,
+                                hx_post=(
+                                    (
+                                        OpenRelationRecord.url(
+                                            tab=self.tab['id'],
+                                            model=definition.get('relation'),
+                                            record=current_row['id'],
+                                            source_record=self.record['key'],
+                                            field=name)
+                                        if current_row['id'] else
+                                        OpenRelationNew.url(
+                                            tab=self.tab['id'],
+                                            record=self.record['key'],
+                                            field=name,
+                                            item=current_row['key']))
+                                    if current_row and (
+                                        (
+                                            current_row['id']
+                                            and relation_access['read'])
+                                        or (
+                                            not current_row['id']
+                                            and can_create))
+                                    else None),
+                                hx_target='#workspace',
+                                hx_swap='outerHTML'):
+                            icon('open')
+                        action_button(
+                            'delete', 'delete', translate('Delete'),
+                            disabled=(
+                                not can_delete or not current_row
+                                or current_row['deleted']))
+                        action_button(
+                            'undelete', 'undo', translate('Undelete'),
+                            disabled=not can_delete
+                            or not state.get('deleted'))
             with div(
                     cls='vs-x2many-content',
                     style=(
                         'min-height:%spx;max-height:%spx'
                         % (attributes['height'], attributes['height'])
                         if str(attributes.get('height', '')).isdigit()
-                        else None)):
+                        else None)) as content:
                 if view_type == 'tree':
-                    self.x2many_tree(
-                        definition, relation_view, field_nodes,
-                        rows, current, X2ManyAction, name, target)
+                    from .views import ViewRenderer
+
+                    records = {}
+                    for row in rows:
+                        records[row['key']] = {
+                            'key': row['key'],
+                            'id': row['id'],
+                            'values': row['values'],
+                            'new': row['id'] is None,
+                            'deleted': row['deleted'],
+                            }
+                    relation_tab = {
+                        'id': self.tab['id'],
+                        'model': definition['relation'],
+                        'records': records,
+                        'record_order': [row['key'] for row in rows],
+                        'current_record': current,
+                        'selected': [current] if current else [],
+                        'expanded': state.setdefault('expanded', []),
+                        'column_visibility': state.setdefault(
+                            'column_visibility', {}),
+                        'access': relation_access,
+                        'context': self.tab.get('context', {}),
+                        'screen_width': self.tab.get('screen_width'),
+                        'relation_origin': {
+                            'record': self.record['key'],
+                            'field': name,
+                            'target': target,
+                            },
+                        }
+                    content.add(ViewRenderer(None).tree(
+                            relation_tab, relation_view))
                 else:
                     self.x2many_form(
-                        definition, relation_view, field_nodes,
+                        name, definition, attributes, relation_view,
                         current_row)
         return control
 
-    def x2many_tree(
-            self, definition, relation_view, field_nodes, rows, current,
-            X2ManyAction, name, target):
-        OpenRelationRecord = self.pool.get(
-            'cassini.open.relation.record')
-        ResizeTreeColumns = self.pool.get(
-            'cassini.resize.tree.columns')
-        columns = field_nodes or [None]
-        occurrences = {}
-        column_occurrences = []
-        for node in columns:
-            field_name = (
-                node.attrib.get('name') if node is not None
-                else 'rec_name')
-            occurrences[field_name] = occurrences.get(field_name, 0) + 1
-            column_occurrences.append(occurrences[field_name])
-        with table(
-                cls='vs-x2many-table vs-resizable-table',
-                data_column_model=definition.get('relation'),
-                data_column_resize_url=ResizeTreeColumns.url()):
-            with colgroup():
-                for node, occurrence in zip(
-                        columns, column_occurrences):
-                    field_name = (
-                        node.attrib.get('name') if node is not None
-                        else 'rec_name')
-                    width = (
-                        node.attrib.get('width')
-                        if node is not None else None)
-                    col(
-                        style=(
-                            'width:%spx' % width
-                            if str(width).isdigit() else None),
-                        data_column_field=(
-                            field_name
-                            if field_name != 'rec_name' else None),
-                        data_column_occurrence=occurrence)
-            with thead():
-                with tr():
-                    for node, occurrence in zip(
-                            columns, column_occurrences):
-                        field_name = (
-                            node.attrib.get('name') if node is not None
-                            else 'rec_name')
-                        field_definition = relation_view.get(
-                            'fields', {}).get(field_name, {})
-                        with th():
-                            span((
-                                node.attrib.get('string')
-                                if node is not None else None)
-                                or field_definition.get('string')
-                                or translate('Record'))
-                            if field_name != 'rec_name':
-                                span(
-                                    '', cls='vs-column-resizer',
-                                    role='separator',
-                                    tabindex='0',
-                                    aria_label=translate(
-                                        'Resize %(column)s column',
-                                        column=(
-                                            (
-                                                node.attrib.get('string')
-                                                if node is not None else None)
-                                            or field_definition.get('string')
-                                            or field_name)),
-                                    aria_orientation='vertical',
-                                    data_column_resizer='true')
-            with tbody():
-                for row in rows:
-                    with tr(
-                            cls='vs-x2many-row%s%s' % (
-                                ' vs-x2many-row-current'
-                                if row['key'] == current else '',
-                                ' vs-x2many-row-deleted'
-                                if row['deleted'] else ''),
-                            data_x2many_record=row['key']):
-                        for column_index, node in enumerate(columns):
-                            field_name = (
-                                node.attrib.get('name')
-                                if node is not None else 'rec_name')
-                            title = self.x2many_display_value(
-                                definition, field_name,
-                                row['values'].get(field_name),
-                                relation_view.get(
-                                    'fields', {}).get(field_name, {}))
-                            with td():
-                                if column_index == 0:
-                                    button(
-                                        title or translate('Record'),
-                                        type='button',
-                                        cls='vs-x2many-row-button',
-                                        hx_post=X2ManyAction.url(
-                                            tab=self.tab['id'],
-                                            record=self.record['key'],
-                                            field=name,
-                                            action='select'),
-                                        hx_vals=json.dumps({
-                                                'item': row['key']}),
-                                        hx_target=target,
-                                        hx_swap='outerHTML')
-                                    if row['id']:
-                                        button(
-                                            '', type='button',
-                                            cls='vs-row-action',
-                                            tabindex='-1',
-                                            aria_hidden='true',
-                                            data_x2many_open_action='true',
-                                            hx_post=OpenRelationRecord.url(
-                                                tab=self.tab['id'],
-                                                model=definition.get(
-                                                    'relation'),
-                                                record=row['id'],
-                                                source_record=(
-                                                    self.record['key']),
-                                                field=name),
-                                            hx_target='#workspace',
-                                            hx_swap='outerHTML')
-                                else:
-                                    span(title)
-        if not rows:
-            div(translate('No records'), cls='vs-empty')
-
     def x2many_form(
-            self, definition, relation_view, field_nodes, current_row):
-        if not current_row:
-            div(translate('No record selected'), cls='vs-empty')
-            return
-        with div(cls='vs-x2many-form'):
-            for node in field_nodes:
-                name = node.attrib.get('name')
-                if not name:
-                    continue
-                field_definition = relation_view.get(
-                    'fields', {}).get(name, {})
-                with div(cls='vs-x2many-form-field'):
-                    span(
-                        node.attrib.get('string')
-                        or field_definition.get('string')
-                        or name,
-                        cls='vs-x2many-form-label')
-                    span(self.x2many_display_value(
-                            definition, name,
-                            current_row['values'].get(name),
-                            field_definition))
+            self, name, definition, attributes, relation_view,
+            current_row):
+        # Sao keeps rendering the form view when the relation is empty.  The
+        # disabled fields explain what a new row will contain and, crucially,
+        # preserve the layout selected by ``mode="form,tree"``.
+        from .views import ViewRenderer, parse_architecture
+
+        root = parse_architecture(relation_view)
+        values = current_row['values'] if current_row else {}
+        record_id = current_row['id'] if current_row else None
+        relation_field = (
+            definition.get('relation_field')
+            or getattr(self.Model._fields.get(name), 'field', None))
+        relation_tab = dict(self.tab)
+        relation_tab.update({
+                'model': definition['relation'],
+                'exclude_field': relation_field,
+                '_x2many_form_depth': (
+                    self.tab.get('_x2many_form_depth', 0) + 1),
+                })
+        relation_record = {
+            'key': '%s-%s' % (
+                self.record['key'], current_row['key']
+                if current_row else 'empty'),
+            'id': record_id,
+            'values': values,
+            'new': record_id is None,
+            'x2many': {},
+            }
+        renderer = WidgetRenderer(
+            relation_tab, relation_record, relation_view,
+            editable=False, endpoint=self.endpoint)
+        with div(
+                cls='vs-form vs-x2many-form',
+                style=ViewRenderer.form_grid_style(
+                    root, root.attrib.get('col', 4))) as form:
+            ViewRenderer(None).form_children(
+                form, root, renderer, relation_tab, relation_record,
+                inherited_readonly=True,
+                columns=root.attrib.get('col', 4))
 
     def selection(self, definition):
         if definition.get('relation'):
@@ -1234,27 +1370,23 @@ class WidgetRenderer:
         if isinstance(selection, str):
             dependencies = (
                 definition.get('selection_change_with') or [])
-            if dependencies:
-                record_values = {}
-                for name in dependencies:
-                    if name == 'id' or name not in self.Model._fields:
-                        continue
-                    value = self.values.get(name)
-                    field = self.Model._fields[name]
-                    if (field._type in {'many2one', 'one2one'}
-                            and isinstance(value, (list, tuple))):
-                        value = value[0] if value else None
-                    if (field._type in {'many2one', 'one2one'}
-                            and value is not None
-                            and not isinstance(value, (dict, int))):
-                        continue
-                    record_values[name] = value
-                record = self.Model(
-                    self.record.get('id'),
-                    **record_values)
-                method = getattr(record, selection, None)
-            else:
-                method = getattr(self.Model, selection, None)
+            record_values = {}
+            for name in dependencies:
+                if name == 'id' or name not in self.Model._fields:
+                    continue
+                value = self.values.get(name)
+                field = self.Model._fields[name]
+                if (field._type in {'many2one', 'one2one'}
+                        and isinstance(value, (list, tuple))):
+                    value = value[0] if value else None
+                if (field._type in {'many2one', 'one2one'}
+                        and value is not None
+                        and not isinstance(value, (dict, int))):
+                    continue
+                record_values[name] = value
+            record = self.Model(
+                self.record.get('id'), **record_values)
+            method = getattr(record, selection, None)
             selection = method() if method else []
         return selection
 
@@ -1262,8 +1394,13 @@ class WidgetRenderer:
         relation = definition.get('relation')
         if not relation:
             return []
-        domain = definition.get('domain') or []
-        add_remove = definition.get('add_remove')
+        attributes = next((
+                node.attrib for node in self.root.iter('field')
+                if node.attrib.get('name') in self.view.get('fields', {})
+                and self.view['fields'][node.attrib['name']] is definition), {})
+        domain = definition.get('domain', attributes.get('domain')) or []
+        add_remove = definition.get(
+            'add_remove', attributes.get('add_remove'))
         if isinstance(domain, str) or isinstance(add_remove, str):
             try:
                 context = {}
@@ -1378,10 +1515,12 @@ class WidgetRenderer:
         definition = self.view.get('fields', {}).get(name, {})
         widget = attributes.get('widget') or definition.get('type', 'char')
         value = self.values.get(name)
+        relation_value = None
         if widget in self.relation_widgets and value:
             try:
                 if isinstance(value, (list, tuple)):
                     value = value[0] if value else None
+                relation_value = value
                 Relation = self.pool.get(definition['relation'])
                 value = Relation(int(value)).rec_name
             except Exception:
@@ -1419,4 +1558,27 @@ class WidgetRenderer:
                 value = format(value, ',')
             except (TypeError, ValueError):
                 pass
+        if relation_value and definition.get('relation'):
+            relation = definition['relation']
+            try:
+                relation_id = int(relation_value)
+            except (TypeError, ValueError):
+                relation_id = None
+            ModelAccess = self.pool.get('ir.model.access')
+            if (relation_id and relation_id > 0
+                    and ModelAccess.get_access(
+                        [relation])[relation]['read']):
+                OpenRelationRecord = self.pool.get(
+                    'cassini.open.relation.record')
+                OpenResource = self.pool.get('cassini.open.resource')
+                return a(
+                    stringify(value), href='#',
+                    cls='vs-value vs-tree-relation-link',
+                    hx_post=OpenRelationRecord.url(
+                        tab=self.tab['id'], model=relation,
+                        record=relation_id),
+                    hx_target='#workspace', hx_swap='outerHTML',
+                    data_relation_open='true',
+                    data_open_tab_url=OpenResource.url(
+                        model=relation, record=relation_id))
         return span(stringify(value), cls='vs-value')

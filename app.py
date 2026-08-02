@@ -8,16 +8,17 @@ from xml.etree import ElementTree
 
 import dominate
 from dominate.tags import (
-    a, article, aside, button, col, colgroup, details, div, form, h1, h2, h4,
+    a, article, aside, button, details, div, form, h1, h2, h4,
     header, img, input_, label, li, link, main, meta, nav, option, p, script,
-    section, select, span, strong, summary, table, tbody, td, textarea, th,
-    thead, tr, ul)
+    section, select, span, strong, summary, textarea, ul)
 from dominate.util import raw
 from trytond.exceptions import (
     LoginException, RateLimitException, TrytonException, UserWarning)
 from trytond.model import fields
 from trytond.modules.voyager.voyager import Component, Endpoint
 from trytond.pool import Pool
+from trytond.protocols.wrappers import (
+    TRYTON_SESSION_COOKIE, add_auth_cookies, remove_auth_cookies)
 from trytond.transaction import Transaction
 from werkzeug.utils import redirect
 from werkzeug.wrappers import Response
@@ -29,7 +30,8 @@ from .state import (
     Fragment, FragmentResponse, current_request, decode_value, encode_value,
     normalize_htmx_markup, render_state_component)
 from .views import ViewRenderer, WorkspaceRenderer, parse_architecture
-from .widgets import HierarchyWidget, WidgetRenderer, dom_id, stringify
+from .website import cassini_session_id
+from .widgets import HierarchyWidget, WidgetRenderer, dom_id
 
 APP_TYPE = 'cassini'
 STATIC = '/cassini-static'
@@ -482,6 +484,8 @@ class SaoComponent(Component):
         if self.session.system_user:
             return None
         LoginPage = Pool().get('cassini.login.page')
+        if is_htmx_request():
+            return Response('', headers={'HX-Redirect': LoginPage.url()})
         return redirect(LoginPage.url())
 
     def workspace_fragment(self):
@@ -637,7 +641,7 @@ class LoginForm(SaoComponent):
                             value=self.password or '')
                         label(
                             self.challenge_message or self.challenge,
-                            for_='login-challenge', cls='vs-label')
+                            html_for='login-challenge', cls='vs-label')
                         input_(
                             id='login-challenge',
                             name=self.challenge,
@@ -649,13 +653,17 @@ class LoginForm(SaoComponent):
                             required=True, autofocus=True,
                             cls='vs-input')
                     else:
-                        label(translate('User'), for_='username', cls='vs-label')
+                        label(
+                            translate('User'), html_for='username',
+                            cls='vs-label')
                         input_(
                             id='username', name='username', type='text',
                             value=self.username or '',
                             autocomplete='username', required=True,
                             autofocus=True, cls='vs-input')
-                        label(translate('Password'), for_='password', cls='vs-label')
+                        label(
+                            translate('Password'), html_for='password',
+                            cls='vs-label')
                         input_(
                             id='password', name='password', type='password',
                             autocomplete='current-password', required=True,
@@ -731,11 +739,19 @@ class Login(SaoEndpoint):
             return layout.render_page(
                 LoginForm(error='The user or password is incorrect.').tag(),
                 'Sign in — Tryton')
-        Session.new()
+        with Transaction().set_user(user_id):
+            token = Session.new()
+        self.session.session_id = cassini_session_id(
+            Transaction().database.name, token)
+        self.session.save()
         self.session.set_system_user(user_id)
         Workspace = Pool().get('cassini.workspace')
         Workspace.get(self.session, User(user_id))
-        return redirect(Pool().get('cassini.shell').url())
+        response = redirect(Pool().get('cassini.shell').url())
+        add_auth_cookies(
+            response, Transaction().database.name,
+            self.username or '', str(user_id), token)
+        return response
 
 
 class Logout(SaoEndpoint):
@@ -744,6 +760,8 @@ class Logout(SaoEndpoint):
     _url = '/logout'
 
     def render(self):
+        request = current_request()
+        authentication = request.session if request else None
         if self.session.system_user:
             Workspace = Pool().get('cassini.workspace')
             workspaces = Workspace.search([
@@ -751,7 +769,13 @@ class Logout(SaoEndpoint):
                     ])
             Workspace.delete(workspaces)
         self.session.set_system_user(None)
-        return redirect(Pool().get('cassini.login.page').url())
+        if authentication:
+            Pool().get('ir.session').remove(authentication.token)
+        response = redirect(Pool().get('cassini.login.page').url())
+        remove_auth_cookies(response, Transaction().database.name)
+        if request and request.cookies.get(TRYTON_SESSION_COOKIE):
+            response.delete_cookie('session_id', path='/')
+        return response
 
 
 class Shell(SaoEndpoint):
@@ -2001,6 +2025,56 @@ class HelpUpdates(SaoEndpoint):
         return Pool().get('cassini.help.panel')().tag()
 
 
+class WizardHelp(SaoEndpoint):
+    'Toggle and Navigate Contextual Wizard Help'
+    __name__ = 'cassini.wizard.help'
+    _url = '/tab/<string:tab>/wizard/help/<string:action>'
+
+    tab = fields.Char('Tab')
+    action = fields.Char('Action')
+    filter = fields.Char('Filter')
+    update = fields.Char('Update')
+
+    @handle_endpoint_errors
+    def render(self):
+        engine = self.engine
+        tab = engine.interface.get_tab(self.tab)
+        if not tab or tab.get('kind') != 'wizard':
+            raise ValueError(translate('Unknown tab'))
+        if self.action == 'toggle':
+            tab['wizard_help_open'] = not tab.get('wizard_help_open', False)
+        elif self.action == 'filter':
+            if self.filter not in {'all', 'unread'}:
+                raise ValueError(translate('Unknown help section'))
+            tab['wizard_help_filter'] = self.filter
+            tab['wizard_help_update'] = None
+        elif self.action == 'update':
+            Notification = optional_model('nantic_connection.notification')
+            if not Notification or not self.update:
+                raise ValueError(translate('Unknown notification'))
+            view = decode_value(tab.get('view', {}))
+            view_ids = [view['view_id']] if view.get('view_id') else []
+            notifications = Notification.get_notifications(
+                view_ids, [tab.get('wizard_name')], 'all')
+            if str(self.update) not in {
+                    str(notification.get('id'))
+                    for notification in notifications}:
+                raise ValueError(translate('Unknown notification'))
+            records = Notification.search([
+                    ('id', '=', int(self.update)),
+                    ], limit=1)
+            if not records:
+                raise ValueError(translate('Unknown notification'))
+            Notification.set_has_read(records, None, True)
+            tab['wizard_help_update'] = self.update
+        elif self.action == 'back':
+            tab['wizard_help_update'] = None
+        else:
+            raise ValueError(translate('Unknown help section'))
+        engine.save()
+        return workspace_response(engine)
+
+
 class HelpResource(SaoEndpoint):
     'Open a Help Resource in the Workspace'
     __name__ = 'cassini.help.resource'
@@ -2276,7 +2350,9 @@ class Demo(SaoEndpoint):
             with section(cls='vs-demo-grid'):
                 with article(cls='vs-demo-card'):
                     h2(translate('Persistent draft'))
-                    label(translate('Page title'), for_='demo-title', cls='vs-label')
+                    label(
+                        translate('Page title'), html_for='demo-title',
+                        cls='vs-label')
                     input_(
                         id='demo-title', type='text', name='text',
                         value=state.get('title', ''),
@@ -2518,27 +2594,28 @@ class GlobalSearch(SaoEndpoint):
                         span(
                             translate('No favorites yet'),
                             cls='vs-popup-empty')
-            input_(
-                type='search', name='query',
-                id='global-search-input',
-                value=self.query or '',
-                placeholder=placeholder,
-                aria_label=translate('Global search'),
-                autocomplete='off',
-                cls='vs-global-search-input',
-                hx_post=GlobalSearchResults.url(),
-                hx_trigger='input changed delay:300ms, search',
-                hx_target='#global-search-results',
-                hx_swap='outerHTML',
-                hx_sync='this:replace',
-                hx_preserve='true',
-                data_global_search_input='true',
-                data_global_search_assistant=(
-                    'true'
-                    if optional_model('nantic.chat.conversation')
-                    else None),
-                hx_include='this')
-            search.add(self.render_results())
+            with div(cls='vs-global-search-entry') as entry:
+                input_(
+                    type='search', name='query',
+                    id='global-search-input',
+                    value=self.query or '',
+                    placeholder=placeholder,
+                    aria_label=translate('Global search'),
+                    autocomplete='off',
+                    cls='vs-global-search-input',
+                    hx_post=GlobalSearchResults.url(),
+                    hx_trigger='input changed delay:300ms, search',
+                    hx_target='#global-search-results',
+                    hx_swap='outerHTML',
+                    hx_sync='this:replace',
+                    hx_preserve='true',
+                    data_global_search_input='true',
+                    data_global_search_assistant=(
+                        'true'
+                        if optional_model('nantic.chat.conversation')
+                        else None),
+                    hx_include='this')
+                entry.add(self.render_results())
         return search
 
 
@@ -3298,8 +3375,8 @@ class RelationAutocomplete(SaoEndpoint):
     @handle_endpoint_errors
     def render(self):
         (
-            _tab, _stored, view, renderer,
-            _Parent, _field, endpoint,
+            _tab, stored, view, renderer,
+            _Parent, field, endpoint,
             ) = relation_source(
                 self.engine, self.tab, self.record, self.field)
         query = (self.query or '').strip()
@@ -3323,10 +3400,38 @@ class RelationAutocomplete(SaoEndpoint):
             and str(attributes.get(
                     'create', '1')).lower()
             not in {'0', 'false', 'no'})
+        field_id = dom_id(
+            'field', self.tab, self.record, self.field)
+        if field._type in {'one2many', 'many2many'}:
+            values = decode_value(stored.get('values', {}))
+            existing = {
+                item.get('id') if isinstance(item, dict) else int(item)
+                for item in (values.get(self.field) or [])
+                if (isinstance(item, dict) and item.get('id'))
+                or str(item).lstrip('-').isdigit()
+                }
+            choices = [
+                choice for choice in choices
+                if choice[0] not in existing]
+            size = renderer.evaluate(attributes.get('size'))
+            if (
+                    isinstance(size, (int, float))
+                    and not isinstance(size, bool)
+                    and size >= 0
+                    and len(existing) >= size):
+                choices = []
+                create_allowed = False
+            return renderer.x2many_suggestions(
+                field_id + '-suggestions',
+                choices, self.field, field_id,
+                can_create=create_allowed,
+                open_=bool(query),
+                modal_target=(
+                    '#relation-modal'
+                    if endpoint == 'preferences' else '#modal'),
+                input_id=field_id + '-relation-input')
         return renderer.relation_suggestions(
-            dom_id(
-                'field', self.tab, self.record,
-                self.field) + '-suggestions',
+            field_id + '-suggestions',
             choices,
             search_url=Pool().get('cassini.relation.search').url(
                 tab=self.tab, record=self.record, field=self.field),
@@ -3352,6 +3457,9 @@ class RelationSearch(SaoEndpoint):
     field = fields.Char('Field')
     query = fields.Char('Query')
     value = fields.Char('Value')
+    column = fields.Char('Column')
+    item = fields.Char('Item')
+    visible = fields.Boolean('Visible')
 
     @handle_endpoint_errors
     def render(self):
@@ -3517,34 +3625,49 @@ class RelationSearch(SaoEndpoint):
                     'screen_size': (int(screen_width), 0),
                     'view_tree_width': True,
                     })
+        view_ids = [
+            view_id.strip()
+            for view_id in attributes.get('view_ids', '').split(',')]
+        tree_view_id = (
+            int(view_ids[0])
+            if view_ids and view_ids[0].isdigit() else None)
         with Transaction().set_context(context):
-            tree_view = Relation.fields_view_get(view_type='tree')
-        tree_root = ElementTree.fromstring(
-            tree_view.get('arch') or '<tree/>')
-        columns = [
-            node for node in tree_root
-            if node.tag == 'field'
-            and node.attrib.get('name') in Relation._fields
-            and str(node.attrib.get(
-                    'tree_invisible', '0')).lower()
-            not in {'1', 'true', 'yes'}
-            ]
-        read_fields = [
-            node.attrib['name'] for node in columns
-            if Relation._fields[node.attrib['name']]._type != 'binary']
-        if 'rec_name' not in read_fields:
-            read_fields.append('rec_name')
-        rows = {
-            values['id']: values
-            for values in Relation.read(
-                [record.id for record in records], read_fields)
-            } if records else {}
+            tree_view = Relation.fields_view_get(
+                view_id=tree_view_id, view_type='tree')
+        read_fields = WidgetRenderer.tree_read_fields(tree_view, Relation)
+        rows = Relation.read(
+            [record.id for record in records], read_fields) if records else []
+        tree_records = {
+            str(values['id']): {
+                'key': str(values['id']),
+                'id': values['id'],
+                'values': values,
+                'new': False,
+                }
+            for values in rows}
+        search_state = stored.setdefault(
+            'relation_search', {}).setdefault(self.field, {
+                'column_visibility': {},
+                })
+        if self.column:
+            if self.column not in Relation._fields:
+                raise ValueError(translate('Unknown relation column'))
+            search_state.setdefault(
+                'column_visibility', {})[self.column] = bool(self.visible)
+            self.engine.save()
+        if self.item:
+            if self.item not in tree_records:
+                raise ValueError(translate('Unknown related record'))
+            expanded = search_state.setdefault('expanded', [])
+            if self.item in expanded:
+                expanded.remove(self.item)
+            else:
+                expanded.append(self.item)
+            self.engine.save()
         OpenRelationNew = Pool().get(
             'cassini.open.relation.new')
         RelationSearch = Pool().get(
             'cassini.relation.search')
-        ResizeTreeColumns = Pool().get(
-            'cassini.resize.tree.columns')
         create_allowed = (
             endpoint != 'preferences'
             and not readonly
@@ -3568,9 +3691,11 @@ class RelationSearch(SaoEndpoint):
                     aria_labelledby='relation-search-title',
                     cls='vs-modal vs-relation-search-dialog'):
                 h2(
-                    'Search %s' % (
-                        definition.get('string')
-                        or definition['relation']),
+                    translate(
+                        'Search %(model)s',
+                        model=(
+                            definition.get('string')
+                            or definition['relation'])),
                     id='relation-search-title')
                 with div(cls='vs-search-toolbar'):
                     with form(
@@ -3598,106 +3723,33 @@ class RelationSearch(SaoEndpoint):
                             record=self.record,
                             field=self.field),
                         hx_target=selection_target,
-                        hx_swap='outerHTML'):
-                    with div(cls='vs-table-wrap'):
-                        with table(
-                                cls=(
-                                    'vs-table vs-resizable-table '
-                                    'vs-relation-search-table'),
-                                data_column_model=definition['relation'],
-                                data_column_resize_url=(
-                                    ResizeTreeColumns.url())):
-                            with colgroup():
-                                col(cls='vs-select-column')
-                                if columns:
-                                    for node in columns:
-                                        width = node.attrib.get('width')
-                                        col(
-                                            style=(
-                                                'width:%spx' % width
-                                                if str(width).isdigit()
-                                                else None),
-                                            data_column_field=(
-                                                node.attrib['name']),
-                                            data_column_occurrence='1')
-                                else:
-                                    col()
-                            with thead():
-                                with tr():
-                                    th('', cls='vs-select-column')
-                                    if columns:
-                                        for node in columns:
-                                            field_definition = (
-                                                tree_view.get(
-                                                    'fields', {}).get(
-                                                        node.attrib['name'],
-                                                        {}))
-                                            with th():
-                                                span(
-                                                    node.attrib.get('string')
-                                                    or field_definition.get(
-                                                        'string')
-                                                    or node.attrib['name'])
-                                                span(
-                                                    '',
-                                                    cls=(
-                                                        'vs-column-resizer'),
-                                                    role='separator',
-                                                    tabindex='0',
-                                                    aria_label=(
-                                                        'Resize %s column'
-                                                        % (
-                                                            node.attrib.get(
-                                                                'string')
-                                                            or field_definition
-                                                            .get('string')
-                                                            or node.attrib[
-                                                                'name'])),
-                                                    aria_orientation=(
-                                                        'vertical'),
-                                                    data_column_resizer='true')
-                                    else:
-                                        th(translate('Record'))
-                            with tbody():
-                                for record in records:
-                                    values = rows.get(record.id, {
-                                            'id': record.id,
-                                            'rec_name': record.rec_name,
-                                            })
-                                    with tr(
-                                            cls='vs-relation-search-row',
-                                            data_relation_search_row='true'):
-                                        with td(cls='vs-select-column'):
-                                            input_(
-                                                type=(
-                                                    'checkbox'
-                                                    if multiple else 'radio'),
-                                                name='value',
-                                                value=record.id,
-                                                aria_label=(
-                                                    'Select %s'
-                                                    % record.rec_name))
-                                        if columns:
-                                            for node in columns:
-                                                name = node.attrib['name']
-                                                td(
-                                                    renderer
-                                                    .x2many_display_value(
-                                                        definition, name,
-                                                        values.get(name),
-                                                        tree_view.get(
-                                                            'fields', {}).get(
-                                                                name, {})),
-                                                    title=stringify(
-                                                        values.get(name)))
-                                        else:
-                                            td(
-                                                record.rec_name,
-                                                title=record.rec_name)
-                    if not records:
-                        div(
-                            translate('No matching records'),
-                            cls='vs-relation-search-empty')
+                        hx_swap='outerHTML') as selection_form:
+                    tree_tab = {
+                        'id': tab['id'],
+                        'model': definition['relation'],
+                        'records': tree_records,
+                        'record_order': [str(record.id) for record in records],
+                        'current_record': None,
+                        'selected': [],
+                        'expanded': search_state.setdefault('expanded', []),
+                        'column_visibility': search_state.setdefault(
+                            'column_visibility', {}),
+                        'access': relation_access,
+                        'context': tab.get('context', {}),
+                        'screen_width': screen_width,
+                        'empty_message': translate('No matching records'),
+                        'relation_search_origin': {
+                            'multiple': multiple,
+                            'target': modal_target,
+                            'url': RelationSearch.url(
+                                tab=self.tab,
+                                record=self.record,
+                                field=self.field,
+                                query=query),
+                            },
+                        }
+                    selection_form.add(
+                        ViewRenderer(None).tree(tree_tab, tree_view))
                     with div(cls='vs-dialog-actions'):
                         button(
                             translate('Cancel'), type='button', cls='vs-button',
@@ -3736,6 +3788,7 @@ class OpenRelationNew(SaoEndpoint):
     record = fields.Char('Record')
     field = fields.Char('Field')
     item = fields.Char('Item')
+    query = fields.Char('Query')
 
     @handle_endpoint_errors
     def render(self):
@@ -3777,10 +3830,11 @@ class OpenRelationNew(SaoEndpoint):
                 break
             else:
                 raise ValueError(translate('Unknown related record'))
-        view_ids = [
-            int(view_id)
-            for view_id in attributes.get('view_ids', '').split(',')
-            if view_id]
+        view_ids = (
+            [
+                int(view_id) if view_id else None
+                for view_id in attributes['view_ids'].split(',')]
+            if attributes.get('view_ids') else [])
         if field._type in {'many2one', 'one2one'}:
             # Sao uses the configured tree view for the search window and
             # opens creation with the following form view, when present.
@@ -3829,6 +3883,12 @@ class OpenRelationNew(SaoEndpoint):
         context = decode_value(related.get('context', {}))
         for name, value in renderer.relation_defaults(definition).items():
             context['default_' + name] = value
+        if self.query:
+            Relation = Pool().get(relation)
+            rec_name = Relation._rec_name
+            if rec_name in Relation._fields:
+                context.setdefault(
+                    'default_' + rec_name, self.query.strip())
         if relation_field and parent_id:
             context['default_' + relation_field] = parent_id
         related['context'] = encode_value(context)
@@ -3903,9 +3963,17 @@ class X2ManyAction(SaoEndpoint):
                 raise ValueError(translate('This relation is not readable'))
         values = decode_value(stored.get('values', {}))
         relation_values = list(values.get(self.field) or [])
+        modes = (
+            ['tree']
+            if field._type == 'many2many' else [
+                mode.strip() for mode in attributes.get(
+                    'mode', 'tree,form').split(',')
+                if mode.strip() in {'tree', 'form'}])
+        if not modes:
+            modes = ['tree']
         state = stored.setdefault(
             'x2many', {}).setdefault(self.field, {
-                'view': 'tree',
+                'view': modes[0],
                 'current': None,
                 'deleted': [],
                 })
@@ -3932,6 +4000,20 @@ class X2ManyAction(SaoEndpoint):
             if self.item not in keys:
                 raise ValueError(translate('Unknown related record'))
             current = self.item
+        elif self.action == 'column':
+            Relation = Pool().get(definition['relation'])
+            if self.item not in Relation._fields:
+                raise ValueError(translate('Unknown relation column'))
+            visibility = state.setdefault('column_visibility', {})
+            visibility[self.item] = not visibility.get(self.item, False)
+        elif self.action == 'toggle':
+            if self.item not in keys:
+                raise ValueError(translate('Unknown related record'))
+            expanded = state.setdefault('expanded', [])
+            if self.item in expanded:
+                expanded.remove(self.item)
+            else:
+                expanded.append(self.item)
         elif self.action in {'previous', 'next'}:
             if current:
                 index = keys.index(current)
@@ -3939,10 +4021,6 @@ class X2ManyAction(SaoEndpoint):
                 index = max(0, min(index, len(keys) - 1))
                 current = keys[index]
         elif self.action == 'switch':
-            modes = [
-                mode.strip() for mode in attributes.get(
-                    'mode', 'tree,form').split(',')
-                if mode.strip() in {'tree', 'form'}]
             if len(modes) > 1:
                 current_view = state.get('view', modes[0])
                 state['view'] = modes[
@@ -4099,13 +4177,14 @@ class UpdateField(SaoEndpoint):
         preserve_self = widget in (
             WidgetRenderer.text_widgets
             | WidgetRenderer.textarea_widgets
+            | WidgetRenderer.numeric_widgets
             | WidgetRenderer.date_widgets)
-        if not preserve_self:
-            return screen_response(
-                self.engine, tab, all_out_of_band=True)
-        if self.field in visible_changed:
-            visible_changed.remove(self.field)
-        if not preserve_self:
+        if preserve_self:
+            if self.field in visible_changed:
+                visible_changed.remove(self.field)
+        else:
+            if self.field in visible_changed:
+                visible_changed.remove(self.field)
             visible_changed.insert(0, self.field)
         fragments = []
         for name in visible_changed:

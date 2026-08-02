@@ -8,6 +8,7 @@
     --vs-line: #cad8d2;
     --vs-primary: #1f6d5d;
     --vs-primary-dark: #174f45;
+    --vs-primary-contrast: #ffffff;
     --vs-primary-soft: #d9eee7;
     --vs-danger: #a43b3b;
     --vs-focus: #d79c36;
@@ -27,6 +28,7 @@
     --vs-line: #344640;
     --vs-primary: #5fc2aa;
     --vs-primary-dark: #8bddc9;
+    --vs-primary-contrast: #0f1715;
     --vs-primary-soft: #1d4037;
     --vs-danger: #ff9999;
     --vs-focus: #f2b953;
@@ -490,6 +492,7 @@ a {
     border-radius: .48rem;
     background: transparent;
     color: var(--vs-ink);
+    font-size: 14px;
     text-overflow: ellipsis;
     white-space: nowrap;
     text-align: left;
@@ -507,7 +510,6 @@ a {
 
 .vs-menu-group {
     color: var(--vs-muted);
-    font-size: .82rem;
     font-weight: 650;
     letter-spacing: .02em;
 }
@@ -613,9 +615,20 @@ button.vs-menu-group:focus-visible {
     height: 1rem;
 }
 
-.vs-global-search > .vs-global-search-input {
+.vs-global-search-entry {
+    position: relative;
+    min-width: 0;
+    flex: 1;
+}
+
+.vs-global-search-entry > .vs-global-search-input {
     min-width: 0;
     border-radius: 0;
+}
+
+.vs-global-search-entry > #global-search-results > .vs-search-results {
+    right: auto;
+    left: 0;
 }
 
 .vs-global-search-input,
@@ -1384,7 +1397,16 @@ button.vs-menu-group:focus-visible {
 .vs-button-active {
     border-color: var(--vs-primary);
     background: var(--vs-primary);
-    color: white;
+    color: var(--vs-primary-contrast);
+}
+
+.vs-button.vs-button-primary:hover:not(:disabled),
+.vs-button.vs-button-primary:focus-visible,
+.vs-button.vs-button-active:hover:not(:disabled),
+.vs-button.vs-button-active:focus-visible {
+    border-color: var(--vs-primary-dark);
+    background: var(--vs-primary-dark);
+    color: var(--vs-primary-contrast);
 }
 
 .vs-button-danger {
@@ -1424,6 +1446,7 @@ button.vs-menu-group:focus-visible {
 .vs-paned {
     grid-column: span 6;
     min-width: 0;
+    min-inline-size: 0;
 }
 
 .vs-form > .vs-field,
@@ -1468,6 +1491,7 @@ button.vs-menu-group:focus-visible {
     justify-self: end;
     margin-bottom: 0;
     text-align: right;
+    white-space: nowrap;
 }
 
 .vs-standalone-label:not([for]) {
@@ -1777,8 +1801,13 @@ textarea.vs-input {
 }
 
 .vs-x2many-add-input {
-    width: min(18rem, 100%);
+    width: 100%;
     min-height: 2.15rem;
+}
+
+.vs-many2many-entry {
+    min-width: min(14rem, 100%);
+    flex: 1 1 18rem;
 }
 
 .vs-x2many-content {
@@ -1823,20 +1852,6 @@ textarea.vs-input {
     color: var(--vs-muted);
     text-decoration: line-through;
     opacity: .7;
-}
-
-.vs-x2many-row-button {
-    display: block;
-    width: 100%;
-    overflow: hidden;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: left;
 }
 
 .vs-x2many-form {
@@ -2101,6 +2116,19 @@ textarea.vs-input {
 
 .vs-tree-content > .vs-value {
     min-width: 0;
+}
+
+.vs-tree-relation-link {
+    overflow: hidden;
+    color: var(--vs-focus);
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vs-tree-relation-link:hover,
+.vs-tree-relation-link:focus-visible {
+    text-decoration: underline;
 }
 
 .vs-tree-hierarchy {
@@ -3183,6 +3211,10 @@ textarea.vs-input {
     width: min(58rem, calc(100vw - 4rem));
 }
 
+.vs-wizard-dialog-wide {
+    width: calc(100vw - 4rem);
+}
+
 .vs-relation-record-dialog {
     width: min(72rem, calc(100vw - 4rem));
 }
@@ -3311,14 +3343,65 @@ textarea.vs-input {
     color: var(--vs-muted);
 }
 
-.vs-wizard > h2,
+.vs-wizard > .vs-wizard-header,
 .vs-wizard > .vs-wizard-content,
 .vs-wizard > .vs-dialog-actions {
     grid-column: 1 / -1;
 }
 
-.vs-wizard > h2 {
+.vs-wizard-header {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.vs-wizard-header h2,
+.vs-wizard-help-header h3 {
     margin: 0;
+}
+
+.vs-wizard-help-open > .vs-wizard-content,
+.vs-wizard-help-open > .vs-dialog-actions {
+    grid-column: 1 / span 8;
+}
+
+.vs-wizard-help {
+    display: flex;
+    min-width: 0;
+    max-height: calc(100vh - 12rem);
+    grid-column: 9 / -1;
+    grid-row: 2 / span 2;
+    flex-direction: column;
+    gap: .75rem;
+    overflow: auto;
+    padding: .8rem;
+    border: 1px solid var(--vs-line);
+    border-radius: .6rem;
+    background: var(--vs-panel-soft);
+}
+
+.vs-wizard-help-header {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.vs-wizard-help-actions {
+    display: inline-flex;
+    align-items: center;
+}
+
+.vs-wizard-help-actions .vs-help-heading-button {
+    border: 1px solid var(--vs-line);
+}
+
+.vs-wizard-help-actions .vs-help-heading-button +
+.vs-help-heading-button {
+    border-left: 0;
 }
 
 .vs-unsaved-dialog {

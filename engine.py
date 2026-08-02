@@ -453,6 +453,7 @@ class SaoEngine:
                 })
         self._apply_wizard_result(tab, result)
         if tab.get('ended'):
+            self._reload_wizard_source(tab)
             self.interface.close(tab['id'])
             return self.interface.get_tab(return_tab)
         return tab
@@ -500,6 +501,32 @@ class SaoEngine:
                 self.open_action(action, data)
         return downloads
 
+    def _reload_wizard_source(self, wizard_tab):
+        source = self.interface.get_tab(wizard_tab.get('return_tab'))
+        if not source or source.get('kind') != 'window':
+            return
+        data = decode_value(wizard_tab.get('data', {}))
+        source_model = source.get('model')
+        wizard_model = data.get('model')
+        if not wizard_model or wizard_model == 'ir.ui.menu':
+            return
+        if source_model != wizard_model:
+            # Sao reloads the current parent when a wizard was launched from
+            # one of its children.
+            current = source.get('current_record')
+            if not current or current not in source.get('records', {}):
+                return
+        if source.get('res_id') or source.get('relation_modal'):
+            ids = [
+                source['records'][key].get('id')
+                for key in source.get('record_order', [])
+                if key in source.get('records', {})
+                and source['records'][key].get('id')
+                ]
+            self.load_tab(source, ids=ids)
+        else:
+            self.load_tab(source)
+
     def wizard_step(self, tab_id, button_state, values):
         tab = self._tab(tab_id, kind='wizard')
         startup_action = bool(tab.get('startup_action'))
@@ -519,6 +546,7 @@ class SaoEngine:
                     result.setdefault('actions', []).append((end_action, {}))
         downloads = self._apply_wizard_result(tab, result)
         if tab.get('ended'):
+            self._reload_wizard_source(tab)
             self.interface.close(tab_id)
             if startup_action:
                 self._start_next_user_actions()
@@ -832,7 +860,9 @@ class SaoEngine:
         tab['selected'] = [
             key for key in tab.get('selected', []) if key in records]
         if tab.get('current_record') not in records:
-            tab['current_record'] = order[0] if order else None
+            tab['current_record'] = (
+                order[0]
+                if tab.get('view_type') != 'tree' and order else None)
         tab['dirty'] = any(record.get('dirty') for record in records.values())
         return tab
 

@@ -53,7 +53,9 @@ class TestTreeFeatures(WebTestCase):
                             '<field name="name">'
                             '<prefix id="bullet" string="•"/>'
                             '</field>'
-                            '<field name="amount" sum="1"/>'
+                            '<field name="amount" sum="1">'
+                            '<suffix name="amount" string=" €"/>'
+                            '</field>'
                             '<field name="sequence" optional="1"/>'
                             '</tree>'),
                         }])
@@ -97,6 +99,10 @@ class TestTreeFeatures(WebTestCase):
 
         rows = page.locator('.vs-row')
         expect(rows).to_have_count(2)
+        expect(page.locator('.vs-row-current')).to_have_count(0)
+        expect(page.locator(
+            '.vs-select-column input[aria-label="Select record"]:checked'
+            )).to_have_count(0)
         self.assertIn(
             'vs-visual-success',
             rows.first.get_attribute('class'))
@@ -131,6 +137,8 @@ class TestTreeFeatures(WebTestCase):
         expect(parent.get_by_role(
                 'checkbox', name='Select record')).to_be_checked()
         expect(parent.get_by_text('•', exact=True)).to_be_visible()
+        expect(parent.locator(
+            '.vs-tree-affix', has_text='€')).to_be_visible()
         parent.get_by_role(
             'button', name='Expand node').click()
         expect(rows).to_have_count(3)

@@ -119,7 +119,7 @@ class TestPreferencesState(WebTestCase):
                 'tab', name='Group Membership', exact=True).click()
         membership = dialog.locator('[role="tabpanel"]:visible')
         long_cell = membership.locator(
-            '.vs-x2many-row-button',
+            '.vs-x2many-row .vs-tree-content',
             has_text='A deliberately very long group membership name')
         expect(long_cell).to_be_visible()
         truncation = long_cell.evaluate(

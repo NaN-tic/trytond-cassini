@@ -66,7 +66,16 @@ class TestWebClient(WebTestCase):
                 'heading', name='Sign in')).to_be_visible()
         page.locator('#username').fill(self.user)
         page.locator('#password').fill(self.password)
-        page.get_by_role('button', name='Sign in').click()
+        sign_in = page.get_by_role('button', name='Sign in')
+        sign_in.hover()
+        sign_in_colors = sign_in.evaluate(
+            '''element => ({
+                background: getComputedStyle(element).backgroundColor,
+                foreground: getComputedStyle(element).color,
+            })''')
+        self.assertNotEqual(
+            sign_in_colors['foreground'], sign_in_colors['background'])
+        sign_in.click()
         page.locator('[data-panel-option="menu"]').click()
 
         expect(page.locator('.vs-app')).to_be_visible()
@@ -130,6 +139,11 @@ class TestWebClient(WebTestCase):
             'element => { window.cassiniGlobalSearch = element; }')
         global_search.fill('Cassini')
         expect(page.locator('.vs-search-results')).to_be_visible()
+        search_input_box = global_search.bounding_box()
+        search_popup_box = page.locator(
+            '.vs-search-results').bounding_box()
+        self.assertAlmostEqual(
+            search_popup_box['x'], search_input_box['x'], delta=1)
         long_result = page.locator(
             '.vs-search-result',
             has_text=(

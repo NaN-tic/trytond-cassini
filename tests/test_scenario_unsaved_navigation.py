@@ -134,9 +134,11 @@ class TestUnsavedNavigation(WebTestCase):
         expect(name).to_have_value('Saved While Closing')
 
         page.locator('.vs-tab-close').click()
-        page.get_by_role(
-            'alertdialog', name='Unsaved changes').get_by_role(
-                'button', name='Save and close').click()
+        with page.expect_response(
+                lambda response: '/leave/close-tab' in response.url):
+            page.get_by_role(
+                'alertdialog', name='Unsaved changes').get_by_role(
+                    'button', name='Save and close').click()
         expect(page.locator('.vs-tab')).to_have_count(0)
 
         page.get_by_role(

@@ -56,8 +56,11 @@ class TestMultipleTabs(WebTestCase):
                 lambda response: '/open/menu/' in response.url):
             menu.click()
         expect(page.locator('.vs-tab')).to_have_count(1)
-        page.get_by_role('button', name='New', exact=True).click()
+        with page.expect_response(
+                lambda response: '/record/new' in response.url):
+            page.get_by_role('button', name='New', exact=True).click()
         first_name = page.locator('[data-field="name"] input')
+        expect(first_name).to_be_visible()
         with page.expect_response(
                 lambda response: '/field/name' in response.url):
             first_name.press_sequentially('First unsaved tab')
@@ -66,8 +69,11 @@ class TestMultipleTabs(WebTestCase):
                 lambda response: '/open/menu/' in response.url):
             menu.click()
         expect(page.locator('.vs-tab')).to_have_count(2)
-        page.get_by_role('button', name='New', exact=True).click()
+        with page.expect_response(
+                lambda response: '/record/new' in response.url):
+            page.get_by_role('button', name='New', exact=True).click()
         second_name = page.locator('[data-field="name"] input')
+        expect(second_name).to_be_visible()
         with page.expect_response(
                 lambda response: '/field/name' in response.url):
             second_name.press_sequentially('Second unsaved tab')

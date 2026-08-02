@@ -33,7 +33,8 @@ class Widget(ModelSQL, ModelView):
             ], 'Multi-selection')
     numeric_value = fields.Numeric('Numeric')
     one2many_value = fields.One2Many(
-        'cassini.test.widget.child', 'widget', 'One to Many')
+        'cassini.test.widget.child', 'widget', 'One to Many',
+        add_remove=[])
     one2one_value = fields.One2One(
         'cassini.test.widget-res.group.one2one',
         'widget', 'group', 'One to One')

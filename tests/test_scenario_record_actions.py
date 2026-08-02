@@ -65,6 +65,10 @@ class TestRecordActions(WebTestCase):
         expect(page.locator('.vs-toolbar')).to_have_css('z-index', '150')
         expect(window_menu.locator(
             '.vs-window-menu-list')).to_have_css('z-index', '155')
+        window_menu.locator('.vs-window-title').click()
+        group_name.locator('xpath=ancestor::tr').get_by_role(
+            'checkbox', name='Select record').check()
+        window_menu.locator('.vs-window-title').click()
         window_menu.get_by_role(
             'menuitem', name='Duplicate', exact=True).click()
         expect(rows).to_have_count(initial_rows + 1)

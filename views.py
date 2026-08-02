@@ -4,9 +4,10 @@ from datetime import date, datetime
 from xml.etree import ElementTree
 
 from dominate.tags import (
-    a, article, button, col, colgroup, details, div, fieldset, form, h2, h3,
-    header, hr, img, input_, label, legend, li, nav, option, p, section,
-    select, span, summary, table, tbody, td, th, thead, tfoot, tr, ul)
+    a, article, aside, button, col, colgroup, details, div, fieldset, form,
+    h2, h3, header, hr, img, input_, label, legend, li, nav, option, p,
+    section, select, span, strong, summary, table, tbody, td, th, thead,
+    tfoot, tr, ul)
 from dominate.util import raw
 from trytond.pool import Pool
 from trytond.pyson import PYSONEncoder
@@ -28,7 +29,8 @@ def parse_architecture(view):
         name = node.attrib.get('name')
         definition = fields.get(name, {})
         if (
-                'string' not in node.attrib
+                node.tag not in {'prefix', 'suffix'}
+                and 'string' not in node.attrib
                 and definition.get('string') is not None):
             node.attrib['string'] = definition['string']
         for attribute in ('states', 'invisible'):
@@ -75,6 +77,7 @@ class ViewRenderer:
         screen = section(
             id='screen-' + tab['id'],
             cls='vs-screen',
+            hx_sync='closest .vs-screen:queue all',
             data_tab=tab['id'],
             data_initial_focus='true',
             data_view=tab.get('view_type'))
@@ -148,6 +151,7 @@ class ViewRenderer:
         with div(cls='vs-dialog-actions vs-relation-dialog-actions') as tag:
             button(
                 translate('Cancel'), type='button', cls='vs-button',
+                data_modal_cancel='true',
                 hx_post=CloseTab.url(tab=tab['id']),
                 hx_target='#workspace', hx_swap='outerHTML')
             button(
@@ -439,7 +443,7 @@ class ViewRenderer:
                                 cls=(
                                     'vs-popup-item '
                                     'vs-popup-item-icon'),
-                                for_='import-' + tab['id'],
+                                html_for='import-' + tab['id'],
                                 role='menuitem'):
                             icon('import')
                             span(translate('Import'))
@@ -944,14 +948,30 @@ class ViewRenderer:
 
     def tree(self, tab, view):
         root = parse_architecture(view)
+        relation_origin = tab.get('relation_origin')
+        relation_search_origin = tab.get('relation_search_origin')
+        embedded = relation_origin or relation_search_origin
+        tree_target = (
+            relation_origin['target'] if relation_origin
+            else relation_search_origin['target']
+            if relation_search_origin else '#screen-' + tab['id'])
         editable = (
-            root.attrib.get('editable') in {'top', 'bottom', '1'}
+            not embedded
+            and root.attrib.get('editable') in {'top', 'bottom', '1'}
             and tab.get('access', {}).get('write', True)
             and not decode_value(
                 tab.get('context', {})).get('_datetime'))
+        tree_context = dict(Transaction().context)
+        tree_context.update(decode_value(tab.get('context', {})))
+        tree_context['context'] = dict(tree_context)
+
+        def visible_in_tree(node):
+            return not bool(evaluate(
+                    node.attrib.get('tree_invisible'), tree_context, False))
+
         all_buttons = [
             node for node in root
-            if node.tag == 'button'
+            if node.tag == 'button' and visible_in_tree(node)
             ]
         multiple_buttons = [
             node for node in all_buttons
@@ -962,6 +982,7 @@ class ViewRenderer:
             node for node in root
             if node.tag in {'field', 'button'}
             and node not in multiple_buttons
+            and visible_in_tree(node)
             ]
         visibility = tab.get('column_visibility', {})
         columns = []
@@ -973,10 +994,7 @@ class ViewRenderer:
             optional = str(node.attrib.get('optional', '0')).lower() in {
                 '1', 'true', 'yes'}
             visible = visibility.get(name, not optional)
-            tree_invisible = str(
-                node.attrib.get('tree_invisible', '0')).lower() in {
-                    '1', 'true', 'yes'}
-            if visible and not tree_invisible:
+            if visible:
                 columns.append(node)
         SelectRecord = self.pool.get('cassini.select.record')
         SelectAll = self.pool.get('cassini.select.all.records')
@@ -987,6 +1005,10 @@ class ViewRenderer:
             'cassini.move.tree.record')
         ResizeTreeColumns = self.pool.get(
             'cassini.resize.tree.columns')
+        if relation_origin:
+            X2ManyAction = self.pool.get('cassini.x2many.action')
+            OpenRelationRecord = self.pool.get(
+                'cassini.open.relation.record')
         sequence_field = root.attrib.get('sequence')
         select_column_class = (
             'vs-select-column vs-sequence-column'
@@ -1013,7 +1035,10 @@ class ViewRenderer:
                 stored_widths = ViewTreeWidth.get_width(
                     tab['model'], int(tab['screen_width']))
             with table(
-                    cls='vs-table vs-resizable-table',
+                    cls='vs-table vs-resizable-table%s%s' % (
+                        ' vs-x2many-table' if relation_origin else '',
+                        ' vs-relation-search-table'
+                        if relation_search_origin else ''),
                 data_column_model=tab['model'],
                 data_column_resize_url=ResizeTreeColumns.url()):
                 with colgroup():
@@ -1076,13 +1101,36 @@ class ViewRenderer:
                                                         checked=(
                                                             visible or None),
                                                         hx_post=(
-                                                            ToggleColumn.url(
+                                                            X2ManyAction.url(
+                                                                tab=tab['id'],
+                                                                record=(
+                                                                    relation_origin[
+                                                                        'record']),
+                                                                field=(
+                                                                    relation_origin[
+                                                                        'field']),
+                                                                action='column')
+                                                            if relation_origin
+                                                            else None
+                                                            if relation_search_origin
+                                                            else ToggleColumn.url(
                                                                 tab=tab['id'],
                                                                 field=name)),
+                                                        hx_get=(
+                                                            relation_search_origin[
+                                                                'url']
+                                                            if relation_search_origin
+                                                            else None),
+                                                        hx_vals=(
+                                                            '{"item":"%s"}'
+                                                            % name
+                                                            if relation_origin
+                                                            else '{"column":"%s"}'
+                                                            % name
+                                                            if relation_search_origin
+                                                            else None),
                                                         hx_trigger='change',
-                                                        hx_target=(
-                                                            '#screen-'
-                                                            + tab['id']),
+                                                        hx_target=tree_target,
                                                         hx_swap='outerHTML',
                                                         hx_include='this')
                                                     span(
@@ -1095,25 +1143,34 @@ class ViewRenderer:
                                             span(
                                                 translate('No optional columns'),
                                                 cls='vs-popup-empty')
-                                input_(
-                                    type='checkbox', name='selected',
-                                    value='true',
-                                    checked=bool(tab.get('record_order'))
-                                    and len(tab.get('selected', []))
-                                    == len(tab.get('record_order', []))
-                                    or None,
-                                    aria_label=translate('Select all records'),
-                                    hx_post=SelectAll.url(tab=tab['id']),
-                                    hx_trigger='change',
-                                    hx_target='#screen-' + tab['id'],
-                                    hx_swap='outerHTML',
-                                    hx_include='this')
+                                if not embedded:
+                                    input_(
+                                        type='checkbox', name='selected',
+                                        value='true',
+                                        checked=bool(tab.get('record_order'))
+                                        and len(tab.get('selected', []))
+                                        == len(tab.get('record_order', []))
+                                        or None,
+                                        aria_label=translate(
+                                            'Select all records'),
+                                        hx_post=SelectAll.url(tab=tab['id']),
+                                        hx_trigger='change',
+                                        hx_target=tree_target,
+                                        hx_swap='outerHTML',
+                                        hx_include='this')
                         for node in columns:
                             if node.tag == 'field':
                                 definition = view.get('fields', {}).get(
                                     node.attrib['name'], {})
                                 with th():
-                                    button(
+                                    if embedded:
+                                        span(
+                                            node.attrib.get('string')
+                                            or definition.get('string')
+                                            or node.attrib['name'],
+                                            cls='vs-sort-button')
+                                    else:
+                                        button(
                                         node.attrib.get('string')
                                         or definition.get('string')
                                         or node.attrib['name'],
@@ -1122,7 +1179,7 @@ class ViewRenderer:
                                         hx_post=SortRecords.url(
                                             tab=tab['id'],
                                             field=node.attrib['name']),
-                                        hx_target='#screen-' + tab['id'],
+                                        hx_target=tree_target,
                                         hx_swap='outerHTML')
                                     span(
                                         '', cls='vs-column-resizer',
@@ -1153,49 +1210,126 @@ class ViewRenderer:
                                 'muted', 'success', 'warning', 'danger'}
                             else None)
                         with tr(
-                                cls='vs-row%s%s%s' % (
+                                cls='vs-row%s%s%s%s%s%s%s' % (
                                     ' vs-row-current'
                                     if key == tab.get('current_record') else '',
                                     ' vs-row-dirty'
                                     if record.get('dirty') else '',
                                     ' vs-visual-' + row_visual
-                                    if row_visual else ''),
-                                data_record=key):
+                                    if row_visual else '',
+                                    ' vs-x2many-row'
+                                    if relation_origin else '',
+                                    ' vs-x2many-row-current'
+                                    if relation_origin
+                                    and key == tab.get('current_record')
+                                    else '',
+                                    ' vs-x2many-row-deleted'
+                                    if record.get('deleted') else '',
+                                    ' vs-relation-search-row'
+                                    if relation_search_origin else '',
+                                    ),
+                                data_record=key,
+                                data_x2many_record=(
+                                    key if relation_origin else None),
+                                data_relation_search_row=(
+                                    'true'
+                                    if relation_search_origin else None)):
                             with td(cls=select_column_class):
-                                input_(
-                                    type='checkbox', name='selected',
-                                    value='true',
-                                    checked=key in tab.get('selected', [])
-                                    or None,
-                                    aria_label=translate('Select record'),
-                                    hx_post=SelectRecord.url(
-                                        tab=tab['id'], record=key),
-                                    hx_trigger='change',
-                                    hx_target='#screen-' + tab['id'],
-                                    hx_swap='outerHTML',
-                                    hx_include='this')
-                                button(
-                                    '', type='button',
-                                    cls='vs-row-action',
-                                    tabindex='-1',
-                                    aria_hidden='true',
-                                    data_row_select_action='true',
-                                    hx_post=SelectRecord.url(
-                                        tab=tab['id'], record=key,
-                                        row='true', silent='true'),
-                                    hx_target='#screen-' + tab['id'],
-                                    hx_swap='none')
-                                button(
-                                    '', type='button',
-                                    cls='vs-row-action',
-                                    tabindex='-1',
-                                    aria_hidden='true',
-                                    data_row_open_action='true',
-                                    hx_post=SelectRecord.url(
-                                        tab=tab['id'], record=key,
-                                        row='true', open='true'),
-                                    hx_target='#screen-' + tab['id'],
-                                    hx_swap='outerHTML')
+                                if relation_search_origin:
+                                    input_(
+                                        type=(
+                                            'checkbox'
+                                            if relation_search_origin[
+                                                'multiple'] else 'radio'),
+                                        name='value', value=record['id'],
+                                        aria_label=translate(
+                                            'Select %(record)s',
+                                            record=(
+                                                decode_value(record.get(
+                                                        'values', {})).get(
+                                                            'rec_name')
+                                                or record['id'])))
+                                elif relation_origin:
+                                    input_(
+                                        type='checkbox', name='selected',
+                                        value='true',
+                                        checked=(
+                                            key == tab.get('current_record'))
+                                        or None,
+                                        aria_label=translate('Select record'),
+                                        hx_post=X2ManyAction.url(
+                                            tab=tab['id'],
+                                            record=relation_origin['record'],
+                                            field=relation_origin['field'],
+                                            action='select'),
+                                        hx_vals='{"item":"%s"}' % key,
+                                        hx_trigger='change',
+                                        hx_target=tree_target,
+                                        hx_swap='outerHTML')
+                                else:
+                                    input_(
+                                        type='checkbox', name='selected',
+                                        value='true',
+                                        checked=key in tab.get('selected', [])
+                                        or None,
+                                        aria_label=translate('Select record'),
+                                        hx_post=SelectRecord.url(
+                                            tab=tab['id'], record=key),
+                                        hx_trigger='change',
+                                        hx_target=tree_target,
+                                        hx_swap='outerHTML',
+                                        hx_include='this')
+                                if not relation_search_origin:
+                                    button(
+                                        '', type='button',
+                                        cls='vs-row-action',
+                                        tabindex='-1',
+                                        aria_hidden='true',
+                                        data_row_select_action='true',
+                                        hx_post=(
+                                            X2ManyAction.url(
+                                                tab=tab['id'],
+                                                record=(
+                                                    relation_origin['record']),
+                                                field=(
+                                                    relation_origin['field']),
+                                                action='select')
+                                            if relation_origin else
+                                            SelectRecord.url(
+                                                tab=tab['id'], record=key,
+                                                row='true', silent='true')),
+                                        hx_vals=(
+                                            '{"item":"%s"}' % key
+                                            if relation_origin else None),
+                                        hx_target=tree_target,
+                                        hx_swap='none')
+                                    if not relation_origin or record.get('id'):
+                                        button(
+                                            '', type='button',
+                                            cls='vs-row-action',
+                                            tabindex='-1',
+                                            aria_hidden='true',
+                                            data_row_open_action='true',
+                                            hx_post=(
+                                                OpenRelationRecord.url(
+                                                    tab=tab['id'],
+                                                    model=tab['model'],
+                                                    record=record.get('id'),
+                                                    source_record=(
+                                                        relation_origin[
+                                                            'record']),
+                                                    field=(
+                                                        relation_origin[
+                                                            'field']))
+                                                if relation_origin else
+                                                SelectRecord.url(
+                                                    tab=tab['id'], record=key,
+                                                    row='true', open='true')),
+                                            hx_target=(
+                                                '#workspace'
+                                                if relation_origin else
+                                                tree_target),
+                                            hx_swap='outerHTML')
                                 if sequence_field and editable:
                                     with div(cls='vs-sequence-controls'):
                                         for direction, image in (
@@ -1254,12 +1388,31 @@ class ViewRenderer:
                                                     aria_expanded=str(
                                                         is_expanded).lower(),
                                                     hx_post=(
-                                                        ToggleTreeNode.url(
+                                                        X2ManyAction.url(
+                                                            tab=tab['id'],
+                                                            record=(
+                                                                relation_origin[
+                                                                    'record']),
+                                                            field=(
+                                                                relation_origin[
+                                                                    'field']),
+                                                            action='toggle')
+                                                        if relation_origin
+                                                        else None
+                                                        if relation_search_origin
+                                                        else ToggleTreeNode.url(
                                                             tab=tab['id'],
                                                             record=key)),
-                                                    hx_target=(
-                                                        '#screen-'
-                                                        + tab['id']),
+                                                    hx_get=(
+                                                        relation_search_origin[
+                                                            'url']
+                                                        if relation_search_origin
+                                                        else None),
+                                                    hx_vals=(
+                                                        '{"item":"%s"}' % key
+                                                        if embedded
+                                                        else None),
+                                                    hx_target=tree_target,
                                                     hx_swap='outerHTML')
                                                 toggle.add(icon(
                                                         'arrow-down'
@@ -1269,10 +1422,41 @@ class ViewRenderer:
                                                     cls=(
                                                         'vs-tree-content')) \
                                                     as content:
+                                                definition = view.get(
+                                                    'fields', {}).get(
+                                                        name, {})
+                                                widget = (
+                                                    node.attrib.get('widget')
+                                                    or definition.get(
+                                                        'type', 'char'))
+                                                if widget in {
+                                                        'callto', 'email',
+                                                        'sip', 'url'}:
+                                                    affix = (
+                                                        renderer.tree_affix(
+                                                            node.attrib,
+                                                            protocol=widget))
+                                                    if affix is not None:
+                                                        content.add(affix)
+                                                if node.attrib.get('icon'):
+                                                    affix = (
+                                                        renderer.tree_affix(
+                                                            node.attrib))
+                                                    if affix is not None:
+                                                        content.add(affix)
                                                 for affix in node:
                                                     if affix.tag == 'prefix':
-                                                        self.tree_affix(
-                                                            renderer, affix)
+                                                        affix_attributes = dict(
+                                                            affix.attrib)
+                                                        affix_attributes \
+                                                            .setdefault(
+                                                                'name', name)
+                                                        tag = (
+                                                            renderer
+                                                            .tree_affix(
+                                                                affix_attributes))
+                                                        if tag is not None:
+                                                            content.add(tag)
                                                 if editable:
                                                     renderer.render(
                                                         name, node.attrib,
@@ -1282,8 +1466,17 @@ class ViewRenderer:
                                                         name, node.attrib)
                                                 for affix in node:
                                                     if affix.tag == 'suffix':
-                                                        self.tree_affix(
-                                                            renderer, affix)
+                                                        affix_attributes = dict(
+                                                            affix.attrib)
+                                                        affix_attributes \
+                                                            .setdefault(
+                                                                'name', name)
+                                                        tag = (
+                                                            renderer
+                                                            .tree_affix(
+                                                                affix_attributes))
+                                                        if tag is not None:
+                                                            content.add(tag)
                                             cell_depth = (
                                                 depth
                                                 if name == first_field else 0)
@@ -1292,7 +1485,7 @@ class ViewRenderer:
                                                 is_expanded,
                                                 extra_class=(
                                                     'vs-tree-hierarchy'))
-                                    else:
+                                    elif not embedded:
                                         attributes = dict(node.attrib)
                                         readonly, _, invisible = (
                                             renderer.states({}, attributes))
@@ -1325,11 +1518,13 @@ class ViewRenderer:
                                     for key in tab.get('record_order', []))
                                 td(stringify(total), cls='vs-tree-total')
             if not tab.get('record_order'):
-                p(translate('No records'), cls='vs-empty')
+                p(
+                    tab.get('empty_message') or translate('No records'),
+                    cls='vs-empty')
             selected = [
                 key for key in tab.get('selected', [])
                 if key in tab.get('records', {})]
-            if selected and multiple_buttons:
+            if selected and multiple_buttons and not embedded:
                 with div(
                         cls='vs-tree-multiple-actions',
                         role='toolbar',
@@ -1357,33 +1552,9 @@ class ViewRenderer:
                         self.record_button(
                             tab, tab['records'][selected[0]],
                             attributes)
-            self.pagination(wrapper, tab)
+            if not embedded:
+                self.pagination(wrapper, tab)
         return wrapper
-
-    def tree_affix(self, renderer, node):
-        attributes = node.attrib
-        value = renderer.values.get(attributes.get('name'))
-        icon_name = attributes.get('icon')
-        type_ = attributes.get('icon_type', 'icon')
-        if type_ == 'url' and value:
-            img(
-                src=value,
-                alt=attributes.get('string', ''),
-                cls='vs-tree-affix')
-        elif type_ == 'color' and value:
-            span(
-                '', cls='vs-tree-affix vs-tree-affix-color',
-                style='background-color: %s' % value,
-                title=attributes.get('string', ''))
-        elif icon_name:
-            icon(
-                icon_name.removeprefix('tryton-'),
-                attributes.get('string'),
-                cls='vs-icon vs-tree-affix')
-        elif value not in (None, ''):
-            span(stringify(value), cls='vs-tree-affix')
-        elif attributes.get('string'):
-            span(attributes['string'], cls='vs-tree-affix')
 
     def tree_rows(self, tab, view):
         child_field = view.get('field_childs')
@@ -1484,18 +1655,30 @@ class ViewRenderer:
     def form_layout_style(attributes, columns):
         """Translate Tryton's grid/alignment attributes to CSS grid rules."""
         rules = []
-        try:
-            colspan = max(1, int(attributes.get('colspan', 1)))
-            rules.append(
-                'grid-column: span %d' % min(columns, colspan))
-        except (TypeError, ValueError):
-            pass
+        grid_column = attributes.get('_grid_column')
+        grid_row = attributes.get('_grid_row')
         try:
             rowspan = max(1, int(attributes.get('rowspan', 1)))
-            if rowspan > 1:
-                rules.append('grid-row: span %d' % rowspan)
         except (TypeError, ValueError):
-            pass
+            rowspan = 1
+        if grid_column:
+            rules.append('grid-column:%s' % grid_column)
+        else:
+            try:
+                colspan = max(1, int(attributes.get('colspan', 1)))
+                rules.append(
+                    'grid-column: span %d' % min(columns, colspan))
+            except (TypeError, ValueError):
+                pass
+        if grid_row:
+            try:
+                row = int(str(grid_row).split('/', 1)[0])
+                rules.append(
+                    'grid-row:%d / %d' % (row, row + rowspan))
+            except (TypeError, ValueError):
+                rules.append('grid-row:%s' % grid_row)
+        elif rowspan > 1:
+            rules.append('grid-row: span %d' % rowspan)
         if str(attributes.get('width', '')).isdigit():
             rules.append('min-width: %spx' % attributes['width'])
         if str(attributes.get('height', '')).isdigit():
@@ -1506,6 +1689,8 @@ class ViewRenderer:
             '0', 'false', 'no'}
         if xexpand and xfill:
             rules.append('width:100%')
+        elif not xexpand:
+            rules.extend(['min-width:0', 'min-inline-size:0'])
         if 'xalign' in attributes:
             try:
                 xalign = float(attributes.get('xalign', 0))
@@ -1568,7 +1753,7 @@ class ViewRenderer:
             if not expanded.intersection(span_columns):
                 expanded.add(span_columns[(len(span_columns) - 1) // 2])
         tracks = [
-            'minmax(min-content, 1fr)'
+            'minmax(0, 1fr)'
             if column in expanded else 'min-content'
             for column in range(columns)
             ]
@@ -1613,7 +1798,8 @@ class ViewRenderer:
                     {}, scan_states)
                 with form(
                         cls='vs-scan-code%s' % (
-                            ' vs-hidden' if scan_invisible else '')):
+                            ' vs-hidden' if scan_invisible else ''),
+                        style='grid-column:1/-1;grid-row:1'):
                     input_(
                         type='text', name='code',
                         placeholder=translate('Scan or enter a code'),
@@ -1632,12 +1818,13 @@ class ViewRenderer:
                         icon('barcode-scanner')
             self.form_children(
                 tag, root, renderer, tab, record,
-                columns=root.attrib.get('col', 4))
+                columns=root.attrib.get('col', 4),
+                row_start=2 if root.attrib.get('scan_code') else 1)
         return tag
 
     def form_children(
             self, parent, node, renderer, tab, record, path=(),
-            inherited_readonly=False, columns=4):
+            inherited_readonly=False, columns=4, row_start=1):
         columns = self.form_columns(node, columns)
         mnemonics = {}
         for item in node:
@@ -1650,23 +1837,41 @@ class ViewRenderer:
                 or definition.get('string')
                 or item.attrib['name'])
             mnemonics[item.attrib['name']] = form_accesskey(text)
+        grid_column = 1
+        grid_row = row_start
         for index, child in enumerate(node):
             attributes = dict(child.attrib)
             child_path = path + (index,)
-            if (
-                    attributes.get('name') == tab.get('exclude_field')
-                    and child.tag in {
-                        'field', 'label', 'separator', 'page', 'group'}):
-                continue
             if child.tag == 'label':
                 attributes.setdefault('xexpand', '0')
                 attributes.setdefault('xalign', '1.0')
                 attributes.setdefault('yalign', '0.5')
             if child.tag in {'notebook', 'hpaned', 'vpaned'}:
                 attributes.setdefault('colspan', '4')
-            layout_style = self.form_layout_style(attributes, columns)
             if child.tag == 'newline':
-                layout_style = 'grid-column:1/-1'
+                grid_column = 1
+                grid_row += 1
+                continue
+            try:
+                colspan = max(1, int(attributes.get('colspan', 1)))
+            except (TypeError, ValueError):
+                colspan = 1
+            colspan = min(columns, colspan)
+            if grid_column + colspan > columns + 1:
+                grid_column = 1
+                grid_row += 1
+            attributes['_grid_column'] = '%d / %d' % (
+                grid_column, grid_column + colspan)
+            attributes['_grid_row'] = '%d / %d' % (
+                grid_row, grid_row + 1)
+            grid_column += colspan
+            if (
+                    tab.get('exclude_field')
+                    and attributes.get('name') == tab['exclude_field']
+                    and child.tag in {
+                        'field', 'label', 'separator', 'page', 'group'}):
+                continue
+            layout_style = self.form_layout_style(attributes, columns)
             state_readonly = inherited_readonly
             if child.tag != 'field':
                 definition = renderer.view.get(
@@ -1693,7 +1898,7 @@ class ViewRenderer:
                     attributes.get('string')
                     or definition.get('string')
                     or name or '',
-                    for_=(
+                    html_for=(
                         dom_id(
                             'field', renderer.tab['id'],
                             renderer.record['key'], name) + '-input'
@@ -1788,7 +1993,9 @@ class ViewRenderer:
                 pages = [
                     page for page in child
                     if page.tag == 'page'
-                    and page.attrib.get('name') != tab.get('exclude_field')
+                    and (
+                        not tab.get('exclude_field')
+                        or page.attrib.get('name') != tab['exclude_field'])
                     and not renderer.states({}, dict(page.attrib))[2]
                     ]
                 active = int(tab.get('pages', {}).get(notebook_id, 0))
@@ -1974,9 +2181,6 @@ class ViewRenderer:
                             cls='vs-separator-label')
                     hr(cls='vs-separator')
                 parent.add(separator)
-            elif child.tag == 'newline':
-                parent.add(div(
-                        cls='vs-newline', style=layout_style))
             else:
                 container_style = ';'.join(filter(None, (
                             layout_style,
@@ -2330,6 +2534,7 @@ class ViewRenderer:
 
     def wizard(self, tab):
         WizardStep = self.pool.get('cassini.wizard.step')
+        WizardHelp = self.pool.get('cassini.wizard.help')
         view = decode_value(tab.get('view', {}))
         values = decode_value(tab.get('values', {}))
         pseudo_tab = {
@@ -2341,7 +2546,9 @@ class ViewRenderer:
             }
         pseudo_record = {
             'key': 'wizard',
+            'id': None,
             'values': values,
+            'new': True,
             'x2many': tab.setdefault('x2many', {}),
             }
         renderer = WidgetRenderer(
@@ -2350,17 +2557,65 @@ class ViewRenderer:
         root = parse_architecture(view)
         wizard = form(
             id='wizard-' + tab['id'],
-            cls='vs-form vs-wizard')
-        wizard.add(h2(
-                tab['title'], id='wizard-title-' + tab['id']))
-        content = div(
-            cls='vs-form vs-wizard-content',
-            style=self.form_grid_style(
-                root, root.attrib.get('col', 4)))
-        self.form_children(
-            content, root, renderer, pseudo_tab, pseudo_record,
-            columns=root.attrib.get('col', 4))
+            cls='vs-form vs-wizard%s' % (
+                ' vs-wizard-help-open'
+                if tab.get('wizard_help_open') else ''),
+            hx_sync='closest .vs-wizard:queue all')
+        with header(cls='vs-wizard-header') as wizard_header:
+            h2(tab['title'], id='wizard-title-' + tab['id'])
+            try:
+                self.pool.get('nantic.chat.conversation')
+            except KeyError:
+                pass
+            else:
+                with button(
+                        type='button',
+                        cls='vs-icon-button vs-wizard-help-toggle%s' % (
+                            ' vs-button-active'
+                            if tab.get('wizard_help_open') else ''),
+                        title=translate('Help'),
+                        aria_label=translate('Help'),
+                        aria_pressed=str(bool(tab.get(
+                                    'wizard_help_open'))).lower(),
+                        hx_post=WizardHelp.url(
+                            tab=tab['id'], action='toggle'),
+                        hx_target='#workspace',
+                        hx_swap='outerHTML'):
+                    icon('question')
+        wizard.add(wizard_header)
+        if root.tag == 'tree':
+            preview_tab = dict(pseudo_tab)
+            preview_tab.update({
+                    'access': {
+                        'create': False,
+                        'delete': False,
+                        'read': True,
+                        'write': False,
+                        },
+                    'column_visibility': {},
+                    'count': 1,
+                    'current_record': 'wizard',
+                    'expanded': [],
+                    'offset': 0,
+                    'record_order': ['wizard'],
+                    'records': {'wizard': pseudo_record},
+                    'selected': [],
+                    'view': tab['view'],
+                    'view_type': 'tree',
+                    })
+            content = div(cls='vs-wizard-content')
+            content.add(self.tree(preview_tab, view))
+        else:
+            content = div(
+                cls='vs-form vs-wizard-content',
+                style=self.form_grid_style(
+                    root, root.attrib.get('col', 4)))
+            self.form_children(
+                content, root, renderer, pseudo_tab, pseudo_record,
+                columns=root.attrib.get('col', 4))
         wizard.add(content)
+        if tab.get('wizard_help_open'):
+            wizard.add(self.wizard_help(tab))
         with div(cls='vs-dialog-actions') as actions:
             for definition in decode_value(tab.get('buttons', [])):
                 button(
@@ -2368,6 +2623,10 @@ class ViewRenderer:
                     cls='vs-button%s' % (
                         ' vs-button-primary'
                         if definition.get('default') else ''),
+                    data_modal_cancel=(
+                        'true'
+                        if definition['state'] == tab.get(
+                            'wizard_end_state') else None),
                     hx_post=WizardStep.url(
                         tab=tab['id'], state=definition['state']),
                     hx_include='closest form',
@@ -2375,6 +2634,88 @@ class ViewRenderer:
                     hx_swap='outerHTML')
         wizard.add(actions)
         return wizard
+
+    def wizard_help(self, tab):
+        WizardHelp = self.pool.get('cassini.wizard.help')
+        Notification = self.pool.get('nantic_connection.notification')
+        filter_ = tab.get('wizard_help_filter') or 'unread'
+        view = decode_value(tab.get('view', {}))
+        view_ids = [view['view_id']] if view.get('view_id') else []
+        notifications = Notification.get_notifications(
+            view_ids, [tab.get('wizard_name')], filter_)
+        selected = next((
+                notification for notification in notifications
+                if str(notification.get('id'))
+                == str(tab.get('wizard_help_update'))), None)
+        if tab.get('wizard_help_update') and not selected:
+            selected = next((
+                    notification for notification
+                    in Notification.get_notifications(
+                        view_ids, [tab.get('wizard_name')], 'all')
+                    if str(notification.get('id'))
+                    == str(tab.get('wizard_help_update'))), None)
+        with aside(
+                id='wizard-help-' + tab['id'],
+                cls='vs-wizard-help') as panel:
+            with header(cls='vs-wizard-help-header'):
+                h3(translate('Updates'))
+                with div(
+                        cls='vs-wizard-help-actions',
+                        role='group',
+                        aria_label=translate('Updates')):
+                    for value, image, title in (
+                            ('unread', 'notification',
+                                translate('Unread updates')),
+                            ('all', 'history',
+                                translate('All updates'))):
+                        with button(
+                                type='button',
+                                cls='vs-help-heading-button%s' % (
+                                    ' vs-button-active'
+                                    if filter_ == value else ''),
+                                title=title, aria_label=title,
+                                hx_post=WizardHelp.url(
+                                    tab=tab['id'], action='filter',
+                                    filter=value),
+                                hx_target='#workspace',
+                                hx_swap='outerHTML'):
+                            icon(image)
+            if selected:
+                with button(
+                        translate('Back'), type='button',
+                        cls='vs-help-document-back',
+                        hx_post=WizardHelp.url(
+                            tab=tab['id'], action='back'),
+                        hx_target='#workspace', hx_swap='outerHTML'):
+                    pass
+                content = selected.get('notification_html')
+                if isinstance(content, (bytes, bytearray)):
+                    content = bytes(content).decode('utf-8')
+                elif isinstance(content, list):
+                    content = bytes(content).decode('utf-8')
+                div(raw(content or ''), cls='vs-help-update-content')
+            elif notifications:
+                with div(cls='vs-help-update-list'):
+                    for notification in notifications:
+                        with button(
+                                type='button',
+                                cls='vs-help-update%s' % (
+                                    '' if notification.get('has_read')
+                                    else ' vs-help-update-unread'),
+                                hx_post=WizardHelp.url(
+                                    tab=tab['id'], action='update',
+                                    update=notification['id']),
+                                hx_target='#workspace',
+                                hx_swap='outerHTML'):
+                            strong(
+                                notification.get('subject')
+                                or translate('Update'))
+                            span(
+                                str(notification.get('datetime') or ''),
+                                cls='vs-muted')
+            else:
+                p(translate('No updates available.'), cls='vs-muted')
+        return panel
 
     def url(self, tab):
         with div(cls='vs-url-tab') as tag:
@@ -2390,6 +2731,28 @@ class WorkspaceRenderer:
     def __init__(self, interface):
         self.interface = interface
         self.pool = Pool()
+
+    @staticmethod
+    def wizard_dialog_class(tab):
+        view = decode_value(tab.get('view', {}))
+        root = ElementTree.fromstring(view.get('arch') or '<form/>')
+        expanded_widgets = {
+            'dict', 'document', 'html', 'many2many', 'multiselection',
+            'one2many', 'richtext', 'text',
+            }
+        expanded = root.tag != 'form' or tab.get('wizard_help_open')
+        if not expanded:
+            fields = view.get('fields', {})
+            for node in root.iter('field'):
+                definition = fields.get(node.attrib.get('name'), {})
+                widget = (
+                    node.attrib.get('widget')
+                    or definition.get('type', 'char'))
+                if widget in expanded_widgets:
+                    expanded = True
+                    break
+        return 'vs-modal vs-wizard-dialog%s' % (
+            ' vs-wizard-dialog-wide' if expanded else '')
 
     def render(self, include_tabs=False):
         view_renderer = ViewRenderer(self.interface)
@@ -2433,7 +2796,8 @@ class WorkspaceRenderer:
                                 aria_labelledby=(
                                     'wizard-title-'
                                     + modal_wizard['id']),
-                                cls='vs-modal vs-wizard-dialog'):
+                                cls=self.wizard_dialog_class(
+                                    modal_wizard)):
                             view_renderer.wizard(modal_wizard)
             elif modal_relation:
                 with div(
@@ -2563,6 +2927,9 @@ class WorkspaceRenderer:
                             aria_selected=str(
                                 tab['id'] == active_tab).lower(),
                             cls='vs-tab-title',
+                            data_screen_owner=(
+                                'screen-' + active_tab
+                                if active_tab else None),
                             hx_post=ActivateTab.url(tab=tab['id']),
                             hx_target='#workspace',
                             hx_swap='outerHTML',
@@ -2572,6 +2939,9 @@ class WorkspaceRenderer:
                             aria_label=translate(
                                 'Close %(tab)s', tab=tab['title']),
                             cls='vs-tab-close',
+                            data_screen_owner=(
+                                'screen-' + active_tab
+                                if active_tab else None),
                             hx_post=CloseTab.url(tab=tab['id']),
                             hx_target='#workspace',
                             hx_swap='outerHTML')
