@@ -1193,9 +1193,9 @@ class ViewRenderer:
                     hx_swap='outerHTML'):
                 icon('back')
             span(
-                '%d–%d / %d' % (
-                    offset + 1 if count else 0,
-                    min(offset + limit, count), count),
+                '%d/%d' % (
+                    offset // limit + 1 if count else 0,
+                    (count + limit - 1) // limit if count else 0),
                 cls='vs-page-navigation-position')
             with button(
                     type='button', cls='vs-icon-button',
@@ -1336,9 +1336,12 @@ class ViewRenderer:
             else relation_search_origin['target']
             if relation_search_origin else '#screen-' + tab['id'])
         editable = (
-            not embedded
+            not relation_search_origin
             and root.attrib.get('editable') in {'top', 'bottom', '1'}
             and tab.get('access', {}).get('write', True)
+            and (
+                not relation_origin
+                or relation_origin.get('editable', True))
             and not decode_value(
                 tab.get('context', {})).get('_datetime'))
         tree_context = dict(Transaction().context)
@@ -1397,7 +1400,21 @@ class ViewRenderer:
         first_field = next((
                 node.attrib['name']
                 for node in columns if node.tag == 'field'), None)
-        with div(cls='vs-table-wrap') as wrapper:
+        with div(
+                cls='vs-table-wrap',
+                data_editable_tree='true' if editable else None) \
+                as wrapper:
+            if editable and relation_origin:
+                button(
+                    '', type='button', hidden=True,
+                    data_editable_tree_new='true',
+                    hx_post=X2ManyAction.url(
+                        tab=tab['id'],
+                        record=relation_origin['record'],
+                        field=relation_origin['field'],
+                        action='new'),
+                    hx_target=tree_target,
+                    hx_swap='outerHTML')
             optional_columns = [
                 node for node in all_columns
                 if node.tag == 'field' and node.attrib.get('optional')]
@@ -1581,7 +1598,12 @@ class ViewRenderer:
                         record = tab['records'][key]
                         is_expanded = key in tab.get('expanded', [])
                         renderer = WidgetRenderer(
-                            tab, record, view, editable=editable)
+                            tab, record, view,
+                            editable=(
+                                editable and not record.get('deleted')),
+                            endpoint=(
+                                'x2many'
+                                if relation_origin else 'record'))
                         row_visual = renderer.evaluate(
                             root.attrib.get('visual'))
                         row_visual = (
@@ -1728,14 +1750,29 @@ class ViewRenderer:
                                                     aria_label=(
                                                         'Move ' + direction),
                                                     hx_post=(
-                                                        MoveTreeRecord.url(
+                                                        X2ManyAction.url(
+                                                            tab=tab['id'],
+                                                            record=(
+                                                                relation_origin[
+                                                                    'record']),
+                                                            field=(
+                                                                relation_origin[
+                                                                    'field']),
+                                                            action=(
+                                                                'move-'
+                                                                + direction))
+                                                        if relation_origin
+                                                        else MoveTreeRecord.url(
                                                             tab=tab['id'],
                                                             record=key,
                                                             direction=(
                                                                 direction))),
+                                                    hx_vals=(
+                                                        '{"item":"%s"}' % key
+                                                        if relation_origin
+                                                        else None),
                                                     hx_target=(
-                                                        '#screen-'
-                                                        + tab['id']),
+                                                        tree_target),
                                                     hx_swap='outerHTML'):
                                                 icon(image)
                             for node in columns:
@@ -1842,7 +1879,9 @@ class ViewRenderer:
                                                                 affix_attributes))
                                                         if tag is not None:
                                                             content.add(tag)
-                                                if editable:
+                                                if widget == 'url':
+                                                    pass
+                                                elif editable:
                                                     renderer.render(
                                                         name, node.attrib,
                                                         compact=True)
@@ -2609,23 +2648,28 @@ class ViewRenderer:
                 hx_post=OpenAction.url(
                     action=action_id,
                     model=tab['model'],
-                    record=record['id']),
+                    record=record['id'], origin=True),
                 hx_target='#workspace',
                 hx_swap='outerHTML') as control:
             if attributes.get('icon'):
                 icon(attributes['icon'].removeprefix('tryton-'))
-            span(title, cls='vs-link-title')
-            if domain_titles:
-                for name, count in zip(domain_titles, counts):
-                    with span(cls='vs-link-domain'):
-                        span(name)
-                        span(
-                            '99+' if count > 99 else str(count),
-                            cls='vs-link-count')
-            elif counts:
-                span(
-                    '99+' if counts[0] > 99 else str(counts[0]),
-                    cls='vs-link-count')
+            with span(cls='vs-link-label'):
+                if domain_titles:
+                    span(title, cls='vs-link-title')
+                    for name, count in zip(domain_titles, counts):
+                        with span(cls='vs-link-domain'):
+                            span(name)
+                            span(
+                                '99+' if count > 99 else str(count),
+                                cls='vs-link-count')
+                else:
+                    with span(cls='vs-link-domain vs-link-title'):
+                        span(title)
+                        if counts:
+                            span(
+                                '99+' if counts[0] > 99
+                                else str(counts[0]),
+                                cls='vs-link-count')
         return control
 
     def record_button(self, tab, record, attributes, renderer=None):

@@ -2373,6 +2373,31 @@
         }
     });
     document.addEventListener("keydown", function (event) {
+        const completionOption = event.target.closest?.(
+            ".vs-relation-option, .vs-relation-completion-action");
+        if (completionOption && [
+                "ArrowDown", "ArrowUp", "Home", "End",
+            ].includes(event.key)) {
+            const completion = completionOption.closest(
+                ".vs-relation-completion");
+            const options = Array.from(completion?.querySelectorAll(
+                ".vs-relation-option:not(:disabled), " +
+                ".vs-relation-completion-action:not(:disabled)") || []);
+            if (options.length) {
+                event.preventDefault();
+                let index = options.indexOf(completionOption);
+                if (event.key === "Home") {
+                    index = 0;
+                } else if (event.key === "End") {
+                    index = options.length - 1;
+                } else {
+                    index += event.key === "ArrowDown" ? 1 : -1;
+                    index = (index + options.length) % options.length;
+                }
+                options[index].focus({preventScroll: true});
+            }
+            return;
+        }
         const input = event.target.closest("[data-x2many-add-input]");
         if (!input) {
             return;
@@ -2401,7 +2426,7 @@
         }
         if (event.key === "ArrowDown") {
             const option = completion?.querySelector(
-                ".vs-relation-option");
+                ".vs-relation-option, .vs-relation-completion-action");
             if (option) {
                 event.preventDefault();
                 option.focus();
@@ -2458,7 +2483,8 @@
             return;
         }
         if (event.key === "ArrowDown") {
-            const option = widget.querySelector(".vs-relation-option");
+            const option = widget.querySelector(
+                ".vs-relation-option, .vs-relation-completion-action");
             if (option) {
                 event.preventDefault();
                 option.focus();
@@ -2472,6 +2498,54 @@
             input.dataset.relationSelectedTitle = "";
             hidden.value = "";
             hidden.dispatchEvent(new Event("change", {bubbles: true}));
+        }
+    });
+    document.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter" || event.defaultPrevented ||
+                event.isComposing || event.shiftKey || event.ctrlKey ||
+                event.altKey || event.metaKey) {
+            return;
+        }
+        const input = event.target.closest?.(
+            "[data-editable-tree='true'] .vs-row input, " +
+            "[data-editable-tree='true'] .vs-row select");
+        if (!input || input.matches(
+                "[data-relation-input], [data-x2many-add-input], " +
+                "[data-temporal-input], input[type='checkbox'], " +
+                "input[type='radio'], input[type='file']")) {
+            return;
+        }
+        const table = input.closest("[data-editable-tree='true']");
+        const create = function () {
+            const embedded = table.querySelector(
+                "[data-editable-tree-new]");
+            const main = table.closest(".vs-screen")?.querySelector(
+                "[data-shortcut-action='new']");
+            (embedded || main)?.click();
+        };
+        event.preventDefault();
+        event.stopPropagation();
+        let completed = false;
+        const finish = function () {
+            if (completed) {
+                return;
+            }
+            completed = true;
+            document.body.removeEventListener(
+                "htmx:afterRequest", afterRequest);
+            window.clearTimeout(timeout);
+            create();
+        };
+        const afterRequest = function (requestEvent) {
+            if (requestEvent.detail?.elt === input) {
+                finish();
+            }
+        };
+        document.body.addEventListener("htmx:afterRequest", afterRequest);
+        const timeout = window.setTimeout(finish, 650);
+        input.dispatchEvent(new Event("change", {bubbles: true}));
+        if (!input.hasAttribute("hx-post")) {
+            finish();
         }
     });
     document.addEventListener("click", function (event) {

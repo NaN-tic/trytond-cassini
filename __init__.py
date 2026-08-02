@@ -84,6 +84,7 @@ def register():
         app.RelationSearch,
         app.OpenRelationNew,
         app.X2ManyAction,
+        app.UpdateX2ManyField,
         app.UpdateField,
         app.ScanCode,
         app.SaveRecord,

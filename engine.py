@@ -1569,6 +1569,21 @@ class SaoEngine:
             if (field._type in {'many2one', 'one2one'}
                     and isinstance(value, (list, tuple))):
                 value = value[0] if value else None
+            elif field._type in {'one2many', 'many2many'}:
+                relation_value = []
+                for item in (value or []):
+                    if not isinstance(item, dict):
+                        relation_value.append(item)
+                        continue
+                    if item.get('id') and item.get('values'):
+                        item = dict(
+                            {'id': item['id']},
+                            **decode_value(item['values']))
+                    else:
+                        item = decode_value(item)
+                    item.pop('__key__', None)
+                    relation_value.append(item)
+                value = relation_value
             result[name] = value
         return result
 
@@ -1764,9 +1779,15 @@ class SaoEngine:
                 current = list(value or [])
                 previous = [] if creating else list(baseline.get(name) or [])
                 current_ids = {
-                    item for item in current if isinstance(item, int)}
+                    item.get('id') if isinstance(item, dict) else item
+                    for item in current
+                    if isinstance(item, int)
+                    or (isinstance(item, dict) and item.get('id'))}
                 previous_ids = {
-                    item for item in previous if isinstance(item, int)}
+                    item.get('id') if isinstance(item, dict) else item
+                    for item in previous
+                    if isinstance(item, int)
+                    or (isinstance(item, dict) and item.get('id'))}
                 operations = []
                 removed = sorted(previous_ids - current_ids)
                 added = sorted(current_ids - previous_ids)

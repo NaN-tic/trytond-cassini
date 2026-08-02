@@ -90,6 +90,16 @@ class TestEditableTree(WebTestCase):
                 lambda response: '/field/name' in response.url):
             beta_name.press_sequentially('Editable Beta Changed')
 
+        rows = page.locator('.vs-table tbody .vs-row')
+        row_count = rows.count()
+        beta_name.press('Enter')
+        expect(rows).to_have_count(row_count + 1)
+        new_name = rows.first.locator('[data-field="name"] input')
+        expect(new_name).to_be_editable()
+        with page.expect_response(
+                lambda response: '/field/name' in response.url):
+            new_name.press_sequentially('Editable Created with Enter')
+
         page.get_by_role('button', name='Save', exact=True).click()
         expect(page.get_by_text('Unsaved changes')).not_to_be_visible()
         page.reload(wait_until='domcontentloaded')
@@ -97,3 +107,5 @@ class TestEditableTree(WebTestCase):
                 'input[value="Editable Alpha Changed"]')).to_be_visible()
         expect(page.locator(
                 'input[value="Editable Beta Changed"]')).to_be_visible()
+        expect(page.locator(
+                'input[value="Editable Created with Enter"]')).to_be_visible()

@@ -1310,6 +1310,22 @@ button.vs-menu-group:focus-visible {
     border-top: 1px solid var(--vs-line);
 }
 
+.vs-search-toolbar > .vs-filter-popup {
+    order: 0;
+}
+
+.vs-search-toolbar > .vs-search-query-group {
+    order: 1;
+}
+
+.vs-search-toolbar > .vs-icon-button {
+    order: 2;
+}
+
+.vs-search-toolbar > .vs-page-navigation {
+    order: 3;
+}
+
 .vs-toolbar:has(.vs-filter-popup[open]) {
     z-index: 105;
 }
@@ -1539,12 +1555,13 @@ button.vs-menu-group:focus-visible {
     border-radius: 0;
 }
 
-.vs-toolbar-secondary > :not(:first-child) > summary,
+.vs-toolbar-secondary > .vs-popup:not(:first-child) > summary,
 .vs-toolbar-secondary > .vs-icon-button:not(:first-child) {
     border-left: 0;
 }
 
-.vs-toolbar-secondary > .vs-icon-button:first-child {
+.vs-toolbar-secondary > .vs-icon-button:first-child,
+.vs-toolbar-secondary > .vs-popup:first-child > summary {
     border-radius: .5rem 0 0 .5rem;
 }
 
@@ -2171,6 +2188,11 @@ textarea.vs-input {
 .vs-x2many-add-input {
     width: 100%;
     min-height: 2.15rem;
+}
+
+.vs-many2many-entry .vs-x2many-add-input {
+    background: #fff;
+    color: #17222a;
 }
 
 .vs-many2many-entry {
@@ -3257,7 +3279,6 @@ textarea.vs-input {
     align-self: stretch;
 }
 
-.vs-link-button,
 .vs-link {
     border: 0;
     background: transparent;
@@ -3270,12 +3291,24 @@ textarea.vs-input {
 .vs-link-button {
     display: inline-flex;
     min-height: 2rem;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: .35rem;
     align-items: center;
     justify-self: start;
-    padding: .2rem .1rem;
-    text-align: left;
+    padding: .35rem .45rem;
+    border: 0;
+    border-radius: .35rem;
+    background: transparent;
+    color: var(--vs-ink);
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+}
+
+.vs-link-button:hover,
+.vs-link-button:focus-visible {
+    outline: none;
+    background: var(--vs-primary-soft);
 }
 
 .vs-link-button .vs-icon {
@@ -3287,13 +3320,31 @@ textarea.vs-input {
     font-weight: 600;
 }
 
+.vs-link-label {
+    display: grid;
+    gap: .15rem;
+    justify-items: center;
+}
+
 .vs-link-domain {
-    display: inline-flex;
+    display: flex;
     gap: .25rem;
     align-items: center;
+    justify-content: center;
     color: var(--vs-muted);
     font-size: .78rem;
     text-decoration: none;
+}
+
+.vs-link-domain.vs-link-title {
+    color: var(--vs-ink);
+    font-size: inherit;
+}
+
+.vs-relation-option:focus-visible,
+.vs-relation-completion-action:focus-visible {
+    outline: none;
+    background: var(--vs-primary-soft);
 }
 
 .vs-link-count {

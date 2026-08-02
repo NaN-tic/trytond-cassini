@@ -144,7 +144,9 @@ class WidgetRenderer:
         value = self.values.get(name)
         readonly, required, invisible = self.states(definition, attributes)
         readonly = readonly or not self.editable
-        field_id = dom_id('field', self.tab['id'], self.record['key'], name)
+        field_id = dom_id(
+            'field', self.tab['id'],
+            self.record.get('dom_key', self.record['key']), name)
         style = attributes.get('_layout_style')
         if not compact:
             rules = []
@@ -307,6 +309,27 @@ class WidgetRenderer:
                 'hx_include': 'this',
                 'hx_sync': synchronization,
                 }
+        if self.endpoint == 'x2many':
+            UpdateField = self.pool.get(
+                'cassini.update.x2many.field')
+            origin = self.tab['relation_origin']
+            trigger = 'change'
+            synchronization = 'body:queue all'
+            if widget in (
+                    self.text_widgets | self.textarea_widgets
+                    | self.numeric_widgets):
+                trigger = 'input changed delay:400ms, change changed'
+            return {
+                'hx_post': UpdateField.url(
+                    tab=self.tab['id'], record=origin['record'],
+                    field=origin['field'], item=self.record['key'],
+                    child=name),
+                'hx_trigger': trigger,
+                'hx_target': '#' + field_id,
+                'hx_swap': 'none' if preserve_self else 'outerHTML',
+                'hx_include': 'this',
+                'hx_sync': synchronization,
+                }
         if self.endpoint != 'record':
             return {}
         UpdateField = self.pool.get('cassini.update.field')
@@ -334,7 +357,9 @@ class WidgetRenderer:
             self, name, field_id, widget, readonly, required):
         values = {
             'id': field_id + '-input',
-            'name': 'value' if self.endpoint == 'record' else name,
+            'name': (
+                'value'
+                if self.endpoint in {'record', 'x2many'} else name),
             'disabled': readonly or None,
             'required': required or None,
             'aria_required': str(bool(required)).lower(),
@@ -818,6 +843,8 @@ class WidgetRenderer:
 
     @staticmethod
     def x2many_item_key(item, index):
+        if isinstance(item, dict) and item.get('__key__'):
+            return str(item['__key__'])
         if isinstance(item, dict) and item.get('id'):
             return str(item['id'])
         if isinstance(item, int):
@@ -838,8 +865,17 @@ class WidgetRenderer:
         view_id = None
         if view_type in modes:
             index = modes.index(view_type)
-            if index < len(view_ids) and view_ids[index].isdigit():
-                view_id = int(view_ids[index])
+            if index < len(view_ids):
+                reference = view_ids[index]
+                if reference.isdigit():
+                    view_id = int(reference)
+                elif '.' in reference:
+                    module, fs_id = reference.split('.', 1)
+                    try:
+                        view_id = self.pool.get(
+                            'ir.model.data').get_id(module, fs_id)
+                    except KeyError:
+                        view_id = None
         context = {}
         screen_width = self.tab.get('screen_width')
         if screen_width:
@@ -855,7 +891,10 @@ class WidgetRenderer:
     def tree_read_fields(view, Model):
         """Return every model field required by the shared tree renderer."""
         root = ElementTree.fromstring(view.get('arch') or '<tree/>')
-        names = []
+        names = [
+            name for name in view.get('fields', {})
+            if name in Model._fields
+            and Model._fields[name]._type != 'binary']
         for node in root.iter('field'):
             candidates = [node.attrib.get('name'), node.attrib.get('icon')]
             for affix in node:
@@ -908,6 +947,9 @@ class WidgetRenderer:
             item = entry['item']
             if entry['id']:
                 entry['values'] = records.get(entry['id'], {})
+                if isinstance(item, dict):
+                    entry['values'].update(decode_value(
+                            item.get('values', {})))
             elif isinstance(item, dict):
                 entry['values'] = decode_value(
                     item.get('values', item))
@@ -1339,6 +1381,8 @@ class WidgetRenderer:
                     for row in rows:
                         records[row['key']] = {
                             'key': row['key'],
+                            'dom_key': '%s-%s-%s' % (
+                                self.record['key'], name, row['key']),
                             'id': row['id'],
                             'values': row['values'],
                             'new': row['id'] is None,
@@ -1354,26 +1398,31 @@ class WidgetRenderer:
                         'expanded': state.setdefault('expanded', []),
                         'column_visibility': state.setdefault(
                             'column_visibility', {}),
-                        'access': relation_access,
+                        'access': dict(relation_access),
                         'context': self.tab.get('context', {}),
                         'screen_width': self.tab.get('screen_width'),
                         'relation_origin': {
                             'record': self.record['key'],
                             'field': name,
                             'target': target,
+                            'editable': not readonly,
                             },
                         }
+                    relation_tab['access']['write'] = (
+                        relation_tab['access']['write'] and not readonly)
+                    relation_tab['access']['create'] = (
+                        relation_tab['access']['create'] and not readonly)
                     content.add(ViewRenderer(None).tree(
                             relation_tab, relation_view))
                 else:
                     self.x2many_form(
                         name, definition, attributes, relation_view,
-                        current_row)
+                        current_row, readonly, relation_access)
         return control
 
     def x2many_form(
             self, name, definition, attributes, relation_view,
-            current_row):
+            current_row, readonly, relation_access):
         # Sao keeps rendering the form view when the relation is empty.  The
         # disabled fields explain what a new row will contain and, crucially,
         # preserve the layout selected by ``mode="form,tree"``.
@@ -1389,13 +1438,26 @@ class WidgetRenderer:
         relation_tab.update({
                 'model': definition['relation'],
                 'exclude_field': relation_field,
+                'relation_origin': {
+                    'record': self.record['key'],
+                    'field': name,
+                    'target': '#' + dom_id(
+                        'field', self.tab['id'], self.record['key'], name),
+                    'editable': not readonly,
+                    },
                 '_x2many_form_depth': (
                     self.tab.get('_x2many_form_depth', 0) + 1),
                 })
+        can_edit = bool(
+            current_row and not current_row.get('deleted') and not readonly
+            and (
+                relation_access['write']
+                if current_row.get('id') else relation_access['create']))
         relation_record = {
-            'key': '%s-%s' % (
-                self.record['key'], current_row['key']
-                if current_row else 'empty'),
+            'key': current_row['key'] if current_row else 'empty',
+            'dom_key': '%s-%s-%s' % (
+                self.record['key'], name,
+                current_row['key'] if current_row else 'empty'),
             'id': record_id,
             'values': values,
             'new': record_id is None,
@@ -1403,14 +1465,14 @@ class WidgetRenderer:
             }
         renderer = WidgetRenderer(
             relation_tab, relation_record, relation_view,
-            editable=False, endpoint=self.endpoint)
+            editable=can_edit, endpoint='x2many')
         with div(
                 cls='vs-form vs-x2many-form',
                 style=ViewRenderer.form_grid_style(
                     root, root.attrib.get('col', 4))) as form:
             ViewRenderer(None).form_children(
                 form, root, renderer, relation_tab, relation_record,
-                inherited_readonly=True,
+                inherited_readonly=not can_edit,
                 columns=root.attrib.get('col', 4))
 
     def selection(self, definition):

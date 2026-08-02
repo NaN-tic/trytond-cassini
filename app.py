@@ -145,13 +145,28 @@ def relation_source(engine, tab_id, record_key, field_name):
 
 def update_relation_source(
         engine, tab_id, record_key, field_name, view, endpoint, value):
+    on_change_value = value
+    if isinstance(value, (list, tuple)):
+        on_change_value = []
+        for item in value:
+            if not isinstance(item, dict):
+                on_change_value.append(item)
+                continue
+            if item.get('id') and item.get('values'):
+                item = dict(
+                    {'id': item['id']},
+                    **decode_value(item['values']))
+            else:
+                item = decode_value(item)
+            item.pop('__key__', None)
+            on_change_value.append(item)
     if endpoint == 'preferences':
-        engine.update_preference(view, field_name, value)
+        engine.update_preference(view, field_name, on_change_value)
     elif endpoint == 'wizard':
-        engine.update_wizard_field(tab_id, field_name, value)
+        engine.update_wizard_field(tab_id, field_name, on_change_value)
     else:
         engine.update_field(
-            tab_id, record_key, field_name, value,
+            tab_id, record_key, field_name, on_change_value,
             field_attributes(view, field_name))
     return relation_source(engine, tab_id, record_key, field_name)
 
@@ -2849,6 +2864,7 @@ class OpenAction(SaoEndpoint):
     action = fields.Integer('Action')
     model = fields.Char('Model')
     record = fields.Integer('Record')
+    origin = fields.Boolean('Include Origin')
 
     @handle_endpoint_errors
     def render(self):
@@ -2861,7 +2877,13 @@ class OpenAction(SaoEndpoint):
             'ids': [self.record] if self.record else [],
             }
         engine = self.engine
-        tab = engine.open_action(self.action, data)
+        action = self.action
+        if self.origin and self.model and self.record:
+            action = engine.action_value(self.action)
+            Model = Pool().get(self.model)
+            action['name'] = '%s (%s)' % (
+                action.get('name') or '', Model(self.record).rec_name)
+        tab = engine.open_action(action, data)
         if isinstance(tab, Response):
             return tab
         if tab is None:
@@ -3917,9 +3939,18 @@ class RelationSearch(SaoEndpoint):
         view_ids = [
             view_id.strip()
             for view_id in attributes.get('view_ids', '').split(',')]
-        tree_view_id = (
-            int(view_ids[0])
-            if view_ids and view_ids[0].isdigit() else None)
+        tree_view_id = None
+        if view_ids:
+            reference = view_ids[0]
+            if reference.isdigit():
+                tree_view_id = int(reference)
+            elif '.' in reference:
+                module, fs_id = reference.split('.', 1)
+                try:
+                    tree_view_id = Pool().get(
+                        'ir.model.data').get_id(module, fs_id)
+                except KeyError:
+                    pass
         with Transaction().set_context(context):
             tree_view = Relation.fields_view_get(
                 view_id=tree_view_id, view_type='tree')
@@ -4119,11 +4150,22 @@ class OpenRelationNew(SaoEndpoint):
                 break
             else:
                 raise ValueError(translate('Unknown related record'))
-        view_ids = (
-            [
-                int(view_id) if view_id else None
-                for view_id in attributes['view_ids'].split(',')]
-            if attributes.get('view_ids') else [])
+        view_ids = []
+        for reference in attributes.get('view_ids', '').split(','):
+            reference = reference.strip()
+            if not reference:
+                view_ids.append(None)
+            elif reference.isdigit():
+                view_ids.append(int(reference))
+            elif '.' in reference:
+                module, fs_id = reference.split('.', 1)
+                try:
+                    view_ids.append(Pool().get(
+                            'ir.model.data').get_id(module, fs_id))
+                except KeyError:
+                    view_ids.append(None)
+            else:
+                view_ids.append(None)
         if field._type in {'many2one', 'one2one'}:
             # Sao uses the configured tree view for the search window and
             # opens creation with the following form view, when present.
@@ -4242,7 +4284,8 @@ class X2ManyAction(SaoEndpoint):
         relation_access = ModelAccess.get_access(
             [definition.get('relation')])[definition.get('relation')]
         if self.action in {
-                'delete', 'remove', 'undelete', 'add'}:
+                'delete', 'remove', 'undelete', 'add', 'new',
+                'move-up', 'move-down'}:
             if readonly:
                 raise ValueError(translate('This relation field is read-only'))
             if (
@@ -4257,6 +4300,15 @@ class X2ManyAction(SaoEndpoint):
                         translate('Deleting related records is not allowed'))
             if self.action == 'add' and not relation_access['read']:
                 raise ValueError(translate('This relation is not readable'))
+            if (
+                    self.action == 'new'
+                    and (
+                        not relation_access['create']
+                        or str(attributes.get(
+                                'create', '1')).lower()
+                        in {'0', 'false', 'no'})):
+                raise ValueError(
+                    translate('Creating related records is not allowed'))
         values = decode_value(stored.get('values', {}))
         relation_values = list(values.get(self.field) or [])
         modes = (
@@ -4367,6 +4419,75 @@ class X2ManyAction(SaoEndpoint):
                 relation_values.append(record_id)
                 update_value = True
             current = str(record_id)
+        elif self.action == 'new':
+            Relation = Pool().get(definition['relation'])
+            relation_view, _rows = renderer.x2many_rows(
+                definition, attributes, relation_values, state,
+                state.get('view', modes[0]))
+            field_names = [
+                name for name in relation_view.get('fields', {})
+                if name in Relation._fields]
+            context = self.engine.context(
+                decode_value(tab.get('context', {})))
+            with Transaction().set_context(context):
+                defaults = Relation.default_get(field_names)
+                defaults.update(renderer.relation_defaults(definition))
+                relation_field = (
+                    definition.get('relation_field')
+                    or getattr(field, 'field', None))
+                record_values = self.engine._record_values(
+                    Relation, defaults)
+                if relation_field and stored.get('id'):
+                    parent_value = _Parent(stored['id'])
+                    relation_definition = Relation._fields.get(
+                        relation_field)
+                    if (
+                            relation_definition
+                            and relation_definition._type == 'reference'):
+                        parent_value = '%s,%s' % (
+                            tab['model'], stored['id'])
+                    record_values[relation_field] = parent_value
+                relation_record = Relation(**record_values)
+                changed_defaults = set(defaults)
+                if changed_defaults:
+                    relation_record.on_change(changed_defaults)
+                dependent = self.engine._dependent_fields(
+                    relation_view, changed_defaults)
+                if dependent:
+                    relation_record.on_change_with(dependent)
+                defaults.update(relation_record._default_values)
+                if relation_field:
+                    defaults.pop(relation_field, None)
+            current = 'new-%s' % uuid.uuid4().hex
+            defaults['__key__'] = current
+            relation_values.append(defaults)
+            update_value = True
+        elif self.action in {'move-up', 'move-down'}:
+            match = next((
+                    index for index, (key, _value) in enumerate(active)
+                    if key == self.item), None)
+            if match is None:
+                raise ValueError(translate('Unknown related record'))
+            target = match + (-1 if self.action == 'move-up' else 1)
+            if 0 <= target < len(relation_values):
+                relation_values[match], relation_values[target] = (
+                    relation_values[target], relation_values[match])
+                relation_view = renderer.x2many_view(
+                    definition, attributes, state.get('view', modes[0]))
+                root = ElementTree.fromstring(
+                    relation_view.get('arch') or '<tree/>')
+                sequence = root.attrib.get('sequence')
+                if sequence:
+                    for position, item in enumerate(relation_values, 1):
+                        if isinstance(item, dict) and item.get('id'):
+                            draft = decode_value(item.get('values', {}))
+                            draft[sequence] = position * 10
+                            relation_values[position - 1] = {
+                                'id': item['id'], 'values': draft}
+                        elif isinstance(item, dict):
+                            item[sequence] = position * 10
+                update_value = True
+            current = self.item
         else:
             raise ValueError(translate('Unknown x2many action'))
 
@@ -4424,6 +4545,217 @@ class X2ManyAction(SaoEndpoint):
                     WorkspaceRenderer(self.engine.interface).tabs()))
         return FragmentResponse.response(
             fragments, stream=len(fragments) > 2)
+
+
+class UpdateX2ManyField(SaoEndpoint):
+    'Update a Field in an Embedded Cassini X2Many View'
+    __name__ = 'cassini.update.x2many.field'
+    _url = (
+        '/tab/<string:tab>/record/<string:record>/'
+        'field/<string:field>/x2many/<string:item>/field/<string:child>')
+
+    tab = fields.Char('Tab')
+    record = fields.Char('Record')
+    field = fields.Char('Field')
+    item = fields.Char('Item')
+    child = fields.Char('Child Field')
+    value = fields.Char('Value')
+
+    @handle_endpoint_errors
+    def render(self):
+        (
+            tab, stored, view, renderer, _Parent, parent_field, endpoint,
+            ) = relation_source(
+                self.engine, self.tab, self.record, self.field)
+        definition = view.get('fields', {}).get(self.field, {})
+        attributes = field_attributes(view, self.field)
+        parent_readonly = (
+            not renderer.editable
+            or renderer.states(definition, attributes)[0])
+        if parent_readonly:
+            raise ValueError(translate('This relation field is read-only'))
+
+        ModelAccess = Pool().get('ir.model.access')
+        relation = definition.get('relation')
+        relation_access = ModelAccess.get_access([relation])[relation]
+        values = decode_value(stored.get('values', {}))
+        relation_values = list(values.get(self.field) or [])
+        modes = (
+            ['tree']
+            if parent_field._type == 'many2many' else [
+                mode.strip() for mode in attributes.get(
+                    'mode', 'tree,form').split(',')
+                if mode.strip() in {'tree', 'form'}])
+        if not modes:
+            modes = ['tree']
+        state = stored.setdefault(
+            'x2many', {}).setdefault(self.field, {
+                'view': modes[0], 'current': None, 'deleted': []})
+        view_type = state.get('view', modes[0])
+        relation_view, rows = renderer.x2many_rows(
+            definition, attributes, relation_values, state, view_type)
+        row = next((row for row in rows if row['key'] == self.item), None)
+        if not row or row.get('deleted'):
+            raise ValueError(translate('Unknown related record'))
+        if not (
+                relation_access['write']
+                if row.get('id') else relation_access['create']):
+            raise ValueError(translate('This relation field is read-only'))
+
+        Relation = Pool().get(relation)
+        relation_definition = relation_view.get(
+            'fields', {}).get(self.child)
+        child_field = Relation._fields.get(self.child)
+        if not relation_definition or not child_field:
+            raise ValueError(translate('Unknown relation field'))
+        relation_record = {
+            'key': row['key'],
+            'dom_key': '%s-%s-%s' % (
+                self.record, self.field, row['key']),
+            'id': row.get('id'),
+            'values': row['values'],
+            'new': row.get('id') is None,
+            }
+        relation_tab = dict(tab)
+        relation_tab.update({
+                'model': relation,
+                'relation_origin': {
+                    'record': self.record,
+                    'field': self.field,
+                    'target': '#' + dom_id(
+                        'field', self.tab, self.record, self.field),
+                    'editable': True,
+                    },
+                })
+        child_renderer = WidgetRenderer(
+            relation_tab, relation_record, relation_view,
+            editable=True, endpoint='x2many')
+        child_attributes = field_attributes(relation_view, self.child)
+        if child_renderer.states(
+                relation_definition, child_attributes)[0]:
+            raise ValueError(translate('This relation field is read-only'))
+
+        request = current_request()
+        raw_values = request.form.getlist('value') if request else []
+        raw_value = (
+            raw_values
+            if relation_definition.get('type') in {
+                'many2many', 'one2many', 'multiselection'}
+            else self.value)
+        child_definition = dict(relation_definition)
+        child_definition.update(child_attributes)
+        parsed = self.engine.parse_value(
+            child_field, raw_value, child_definition)
+        record_values = self.engine._record_values(
+            Relation, row['values'])
+        relation_instance = Relation(row.get('id'), **record_values)
+        before = encode_value(relation_instance._default_values)
+        setattr(relation_instance, self.child, parsed)
+        relation_instance.on_change({self.child})
+        dependent = self.engine._dependent_fields(
+            relation_view, {self.child})
+        if dependent:
+            relation_instance.on_change_with(dependent)
+        child_changes = self.engine._record_changes(
+            relation_instance, before)
+        child_changes[self.child] = getattr(
+            relation_instance, self.child)
+
+        for index, relation_value in enumerate(relation_values):
+            if WidgetRenderer.x2many_item_key(
+                    relation_value, index) != self.item:
+                continue
+            if row.get('id'):
+                draft = (
+                    decode_value(relation_value.get('values', {}))
+                    if isinstance(relation_value, dict) else {})
+                draft.update(child_changes)
+                relation_values[index] = {
+                    'id': row['id'], 'values': draft}
+            else:
+                draft = decode_value(
+                    relation_value.get('values', relation_value))
+                draft.update(child_changes)
+                draft['__key__'] = self.item
+                relation_values[index] = draft
+            break
+        else:
+            raise ValueError(translate('Unknown related record'))
+
+        (
+            tab, stored, view, renderer,
+            _Parent, _field, endpoint,
+            ) = update_relation_source(
+                self.engine, self.tab, self.record,
+                self.field, view, endpoint, relation_values)
+        if endpoint == 'record':
+            stored_values = decode_value(stored.get('values', {}))
+            stored_values[self.field] = relation_values
+            stored['values'] = encode_value(stored_values)
+        elif endpoint == 'wizard':
+            stored_values = decode_value(tab.get('values', {}))
+            stored_values[self.field] = relation_values
+            tab['values'] = encode_value(stored_values)
+        else:
+            preference_state = self.engine.interface.component(
+                'preferences')
+            stored_values = decode_value(
+                preference_state.get('values', {}))
+            stored_values[self.field] = relation_values
+            preference_state['values'] = encode_value(stored_values)
+        stored.setdefault('x2many', {}).setdefault(
+            self.field, state)['current'] = self.item
+        self.engine.save()
+        (
+            tab, stored, view, renderer,
+            _Parent, _field, endpoint,
+            ) = relation_source(
+                self.engine, self.tab, self.record, self.field)
+
+        child_widget = (
+            child_attributes.get('widget')
+            or relation_definition.get('type', 'char'))
+        preserve_self = child_widget in (
+            WidgetRenderer.text_widgets
+            | WidgetRenderer.textarea_widgets
+            | WidgetRenderer.numeric_widgets
+            | WidgetRenderer.date_widgets)
+        fragments = []
+        if preserve_self:
+            updated_row = dict(relation_record)
+            updated_values = dict(row['values'])
+            updated_values.update(child_changes)
+            updated_row['values'] = updated_values
+            updated_renderer = WidgetRenderer(
+                relation_tab, updated_row, relation_view,
+                editable=True, endpoint='x2many')
+            for name in child_changes:
+                if name == self.child or name not in relation_view.get(
+                        'fields', {}):
+                    continue
+                fragments.append(Fragment(
+                        dom_id(
+                            'field', self.tab,
+                            updated_row['dom_key'], name),
+                        updated_renderer.render(
+                            name, field_attributes(relation_view, name))))
+        else:
+            fragments.append(Fragment(
+                    dom_id('field', self.tab, self.record, self.field),
+                    renderer.render(
+                        self.field, field_attributes(view, self.field))))
+        if endpoint == 'record':
+            fragments.extend([
+                    Fragment(
+                        'toolbar-' + self.tab,
+                        ViewRenderer(self.engine.interface).toolbar(tab)),
+                    Fragment(
+                        'workspace-tabs',
+                        WorkspaceRenderer(self.engine.interface).tabs()),
+                    ])
+        return FragmentResponse.response(
+            fragments, stream=len(fragments) > 2,
+            all_out_of_band=True)
 
 
 class UpdateField(SaoEndpoint):
