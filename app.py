@@ -5583,6 +5583,13 @@ class UpdateField(SaoEndpoint):
                     and binary_name in view_definition.get('fields', {})
                     and binary_name not in visible_changed):
                 visible_changed.append(binary_name)
+            definition = view_definition.get('fields', {}).get(
+                binary_name, {})
+            symbol = node.attrib.get('symbol') or definition.get('symbol')
+            if (
+                    symbol == self.field
+                    and binary_name not in visible_changed):
+                visible_changed.append(binary_name)
         attributes = field_attributes(view_definition, self.field)
         widget = (
             attributes.get('widget')

@@ -210,14 +210,50 @@ class WidgetRenderer:
             control = self.control(
                 name, widget, value, definition, attributes,
                 field_id, readonly, required)
-            wrapper.add(control)
-            symbol = attributes.get('symbol')
+            symbol, position = self.get_symbol(
+                value, definition, attributes)
             if symbol:
-                symbol_value = self.values.get(symbol, symbol)
-                span(
-                    stringify(symbol_value),
-                    cls='vs-field-symbol')
+                with div(cls='vs-monetary-widget') as monetary:
+                    if position < .5:
+                        span(symbol, cls='vs-field-symbol vs-symbol-start')
+                    monetary.add(control)
+                    if position >= .5:
+                        span(symbol, cls='vs-field-symbol vs-symbol-end')
+            else:
+                wrapper.add(control)
         return wrapper
+
+    def get_symbol(self, value, definition, attributes):
+        """Return the symbol and position defined for a numeric field."""
+        symbol_name = attributes.get('symbol') or definition.get('symbol')
+        if not symbol_name:
+            return '', 1
+        symbol_field = self.Model._fields.get(symbol_name)
+        if not symbol_field:
+            return stringify(symbol_name), 1
+        symbol_value = self.values.get(symbol_name)
+        if symbol_field._type not in {'many2one', 'one2one'}:
+            return stringify(symbol_value), 1
+        if isinstance(symbol_value, (list, tuple)):
+            symbol_value = symbol_value[0] if symbol_value else None
+        try:
+            symbol_id = int(symbol_value)
+        except (TypeError, ValueError):
+            return '', 1
+        if symbol_id <= 0:
+            return '', 1
+        try:
+            if value is None or value == 0:
+                sign = 0
+            elif value < 0:
+                sign = -1
+            else:
+                sign = 1
+            symbol, position = self.pool.get(
+                symbol_field.model_name)(symbol_id).get_symbol(sign)
+            return stringify(symbol), float(position)
+        except Exception:
+            return '', 1
 
     def states(self, definition, attributes):
         readonly = bool(definition.get('readonly'))
@@ -555,6 +591,7 @@ class WidgetRenderer:
                     display_value / Decimal(str(factor))
                     if isinstance(display_value, Decimal)
                     else display_value / factor)
+            common['cls'] += ' vs-numeric-input'
             return input_(
                 type='number', step=step,
                 value=stringify(display_value), **common)
@@ -1009,6 +1046,7 @@ class WidgetRenderer:
             and Model._fields[name]._type != 'binary']
         for node in root.iter('field'):
             name = node.attrib.get('name')
+            definition = view.get('fields', {}).get(name, {})
             if (
                     name in Model._fields
                     and Model._fields[name]._type == 'binary'
@@ -1019,6 +1057,9 @@ class WidgetRenderer:
                 or getattr(Model._fields.get(name), 'filename', None))
             if filename in Model._fields and filename not in names:
                 names.append(filename)
+            symbol = node.attrib.get('symbol') or definition.get('symbol')
+            if symbol in Model._fields and symbol not in names:
+                names.append(symbol)
             candidates = [node.attrib.get('name'), node.attrib.get('icon')]
             for affix in node:
                 if affix.tag not in {'prefix', 'suffix'}:
@@ -1793,6 +1834,7 @@ class WidgetRenderer:
         definition = self.view.get('fields', {}).get(name, {})
         widget = attributes.get('widget') or definition.get('type', 'char')
         value = self.values.get(name)
+        symbol_value = value
         relation_value = None
         if widget in self.relation_widgets and value:
             try:
@@ -1879,6 +1921,16 @@ class WidgetRenderer:
                 value = format(value, ',')
             except (TypeError, ValueError):
                 pass
+        symbol, position = self.get_symbol(
+            symbol_value, definition, attributes)
+        if symbol:
+            with span(cls='vs-value vs-monetary-value') as monetary:
+                if position < .5:
+                    span(symbol, cls='vs-monetary-symbol vs-symbol-start')
+                span(stringify(value), cls='vs-monetary-amount')
+                if position >= .5:
+                    span(symbol, cls='vs-monetary-symbol vs-symbol-end')
+            return monetary
         if relation_value and definition.get('relation'):
             relation = definition['relation']
             try:

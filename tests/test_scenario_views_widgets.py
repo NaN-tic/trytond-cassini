@@ -29,6 +29,7 @@ class TestViewsWidgets(WebTestCase):
             Site = pool.get('www.site')
             View = pool.get('ir.ui.view')
             Widget = pool.get('cassini.test.widget')
+            Currency = pool.get('cassini.test.widget.currency')
 
             english, = Lang.search([('code', '=', 'en')])
             Lang.write([english], {'date': '%d/%m/%Y'})
@@ -42,6 +43,10 @@ class TestViewsWidgets(WebTestCase):
                             'Very Long Widget Group Suggestion That Must '
                             'Stay on One Line'),
                         }])
+            currency, = Currency.create([{
+                        'name': 'Widget Euro',
+                        'symbol': '€',
+                        }])
             cls.today = date.today()
             cls.now = datetime.combine(cls.today, time(10, 30))
             Widget.create([
@@ -52,6 +57,7 @@ class TestViewsWidgets(WebTestCase):
                         'callto_value': '+34930000000',
                         'char_value': 'Widget Alpha',
                         'color_value': '#336699',
+                        'currency_value': currency.id,
                         'date_value': cls.today,
                         'datetime_value': cls.now,
                         'dict_value': {'key': 'value'},
@@ -65,6 +71,7 @@ class TestViewsWidgets(WebTestCase):
                         'many2many_value': [('add', [first_group.id])],
                         'many2one_value': first_group.id,
                         'multiselection_value': ('first', 'second'),
+                        'monetary_value': Decimal('12.30'),
                         'numeric_value': Decimal('12.30'),
                         'one2many_value': [
                             ('create', [{'name': 'Alpha Child'}])],
@@ -86,8 +93,10 @@ class TestViewsWidgets(WebTestCase):
                         'binary_value': b'beta',
                         'binary_filename': 'beta.txt',
                         'char_value': 'Widget Beta',
+                        'currency_value': currency.id,
                         'date_value': cls.today,
                         'many2one_value': second_group.id,
+                        'monetary_value': Decimal('4.50'),
                         'one2many_value': [
                             ('create', [
                                     {'name': 'Beta Child One'},
@@ -130,6 +139,7 @@ class TestViewsWidgets(WebTestCase):
                             '<field name="datetime_value" widget="date"/>'
                             '<field name="datetime_value" widget="time"/>'
                             '<field name="many2one_value"/>'
+                            '<field name="monetary_value"/>'
                             '<field name="selection_value"/>'
                             '<field name="integer_value" optional="1">'
                             '<suffix name="integer_value" string=" units"/>'
@@ -177,6 +187,7 @@ class TestViewsWidgets(WebTestCase):
                             '<field name="many2one_value" widget="many2one"/>'
                             '<field name="multiselection_value" '
                             'widget="multiselection"/>'
+                            '<field name="monetary_value"/>'
                             '<field name="numeric_value" widget="numeric"/>'
                             '<field name="one2many_value" widget="one2many" '
                             'colspan="6"/>'
@@ -406,6 +417,11 @@ class TestViewsWidgets(WebTestCase):
         expect(tree_binary.get_by_role(
             'link', name='Save as', exact=True)).to_have_attribute(
                 'download', 'binary.txt')
+        tree_monetary = alpha_row.locator('.vs-monetary-value')
+        expect(tree_monetary.locator(
+            '.vs-monetary-amount')).to_have_text('12.30')
+        expect(tree_monetary.locator(
+            '.vs-monetary-symbol')).to_have_text('€')
         with page.expect_download() as download_info:
             tree_binary.get_by_role(
                 'link', name='Save as', exact=True).click()
@@ -556,7 +572,7 @@ class TestViewsWidgets(WebTestCase):
             }
         for widget_name in widget_names:
             expect(page.locator(
-                    f'[data-widget="{widget_name}"]')).to_be_visible()
+                    f'[data-widget="{widget_name}"]').first).to_be_visible()
         binary = page.locator('[data-field="binary_value"]')
         expect(binary.locator('[data-binary-filename]')).to_have_value(
             'beta.txt')
@@ -567,6 +583,19 @@ class TestViewsWidgets(WebTestCase):
         expect(binary.get_by_role(
             'button', name='Clear', exact=True)).to_be_visible()
         expect(binary.locator('[data-binary-select]')).to_have_count(0)
+        numeric_input = page.locator(
+            '[data-field="numeric_value"] input[type="number"]')
+        expect(numeric_input).to_have_class('vs-input vs-numeric-input')
+        expect(numeric_input).to_have_css('text-align', 'end')
+        integer_input = page.locator(
+            '[data-field="integer_value"] input[type="number"]')
+        expect(integer_input).to_have_class('vs-input vs-numeric-input')
+        monetary = page.locator('[data-field="monetary_value"]')
+        expect(monetary.locator(
+            'input[type="number"]')).to_have_class(
+                'vs-input vs-numeric-input')
+        expect(monetary.locator(
+            '.vs-field-symbol')).to_have_text('€')
         filename = binary.locator('[data-binary-filename]')
         with page.expect_response(
                 lambda response: '/field/binary_filename' in response.url):

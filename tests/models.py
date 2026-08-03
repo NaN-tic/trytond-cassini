@@ -2,6 +2,31 @@ from trytond.model import ModelSQL, ModelView, fields
 from trytond.pool import Pool
 
 
+class Monetary(fields.Numeric):
+    """Test field with the same client definition as currency.Monetary."""
+
+    def __init__(self, string='', currency=None, **kwargs):
+        super().__init__(string, **kwargs)
+        self.currency = currency
+
+    def definition(self, model, language):
+        definition = super().definition(model, language)
+        definition['symbol'] = self.currency
+        definition['monetary'] = True
+        return definition
+
+
+class WidgetCurrency(ModelSQL, ModelView):
+    'Cassini Test Widget Currency'
+    __name__ = 'cassini.test.widget.currency'
+
+    name = fields.Char('Name', required=True)
+    symbol = fields.Char('Symbol', required=True)
+
+    def get_symbol(self, sign):
+        return self.symbol, 1
+
+
 class Widget(ModelSQL, ModelView):
     'Cassini Test Widget'
     __name__ = 'cassini.test.widget'
@@ -14,6 +39,8 @@ class Widget(ModelSQL, ModelView):
     callto_value = fields.Char('Call')
     char_value = fields.Char('Character', required=True)
     color_value = fields.Char('Color')
+    currency_value = fields.Many2One(
+        'cassini.test.widget.currency', 'Currency')
     date_value = fields.Date('Date')
     datetime_value = fields.DateTime('Date Time')
     dict_value = fields.Dict(None, 'Dictionary')
@@ -32,6 +59,7 @@ class Widget(ModelSQL, ModelView):
             ('first', 'First'),
             ('second', 'Second'),
             ], 'Multi-selection')
+    monetary_value = Monetary('Monetary', currency='currency_value')
     numeric_value = fields.Numeric('Numeric')
     one2many_value = fields.One2Many(
         'cassini.test.widget.child', 'widget', 'One to Many',

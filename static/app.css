@@ -2145,6 +2145,11 @@ textarea.vs-input {
     color: var(--vs-muted);
 }
 
+.vs-numeric-input {
+    text-align: right;
+    text-align: end;
+}
+
 .vs-relation,
 .vs-x2many {
     display: grid;
@@ -2417,6 +2422,22 @@ textarea.vs-input {
 .vs-field-symbol {
     margin-left: .4rem;
     color: var(--vs-muted);
+}
+
+.vs-monetary-widget {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+}
+
+.vs-monetary-widget .vs-input {
+    min-width: 0;
+    flex: 1;
+}
+
+.vs-monetary-widget .vs-symbol-start {
+    margin-right: .4rem;
+    margin-left: 0;
 }
 
 .vs-hidden {
@@ -2716,6 +2737,18 @@ textarea.vs-input {
 .vs-tree-content:has([data-widget="timestamp"]) {
     justify-content: flex-start;
     text-align: left;
+}
+
+.vs-tree-content:has(.vs-monetary-value) {
+    justify-content: flex-end;
+    text-align: end;
+}
+
+.vs-monetary-value {
+    display: inline-flex;
+    min-width: 0;
+    gap: .35rem;
+    align-items: center;
 }
 
 .vs-tree-relation-link {

@@ -1033,9 +1033,15 @@ class SaoEngine:
                     ]
             root = ElementTree.fromstring(view.get('arch') or '<form/>')
             for node in root.iter('field'):
-                filename = node.attrib.get('filename')
-                if filename in Model._fields and filename not in read_fields:
-                    read_fields.append(filename)
+                definition = view.get('fields', {}).get(
+                    node.attrib.get('name'), {})
+                for dependent in (
+                        node.attrib.get('filename'),
+                        definition.get('filename'),
+                        node.attrib.get('symbol'),
+                        definition.get('symbol')):
+                    if dependent in Model._fields and dependent not in read_fields:
+                        read_fields.append(dependent)
             if 'rec_name' not in read_fields:
                 read_fields.append('rec_name')
 
