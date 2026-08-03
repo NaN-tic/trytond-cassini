@@ -253,8 +253,116 @@ class SaoEngine:
             if notes:
                 Note.write(notes, {'unread': False})
                 self.load_tab(related)
+        self._set_resource_relation(related, reference, title)
         self.save()
         return related
+
+    def _set_resource_relation(self, tab, reference, title):
+        """Use the shared one2many widget for resource records.
+
+        Attachments and notes are linked through their ``resource`` reference,
+        not through a field on every possible model.  The popup therefore owns
+        a small virtual one2many field while retaining the regular resource
+        model and its access rules.
+        """
+        field = 'resource_items'
+        view = {
+            'model': tab['model'],
+            'arch': (
+                '<form col="1"><field name="%s" '
+                'mode="tree,form"/></form>' % field),
+            'fields': {
+                field: {
+                    'type': 'one2many',
+                    'string': title,
+                    'relation': tab['model'],
+                    'relation_field': 'resource',
+                    },
+                },
+            }
+        tab['resource_relation'] = {
+            'field': field,
+            'reference': reference,
+            }
+        tab.update({
+                'view': encode_value(view),
+                'view_type': 'form',
+                'view_types': ['form'],
+                'view_ids': [None],
+                'records': {
+                    'resource': {
+                        'key': 'resource',
+                        'id': None,
+                        'values': encode_value({field: []}),
+                        'baseline': encode_value({field: []}),
+                        'dirty': [],
+                        'new': False,
+                        'deleted': False,
+                        'x2many': {},
+                        },
+                    },
+                'record_order': ['resource'],
+                'current_record': 'resource',
+                'selected': ['resource'],
+                'dirty': False,
+                })
+        self.refresh_resource_relation(tab)
+
+    def refresh_resource_relation(self, tab):
+        """Refresh the virtual one2many list, preserving pending deletes."""
+        relation = tab.get('resource_relation') or {}
+        field = relation.get('field')
+        record = tab.get('records', {}).get('resource')
+        if not field or not record:
+            return tab
+        state = record.setdefault('x2many', {}).setdefault(field, {
+                'view': 'tree',
+                'current': None,
+                'deleted': [],
+                })
+        deleted_ids = {
+            item.get('id') if isinstance(item, dict) else int(item)
+            for item in state.get('deleted', [])
+            if (isinstance(item, dict) and item.get('id'))
+            or str(item).lstrip('-').isdigit()
+            }
+        Resource = self.pool.get(tab['model'])
+        resources = Resource.search([
+                ('resource', '=', relation['reference']),
+                ])
+        values = decode_value(record.get('values', {}))
+        values[field] = [
+            resource.id for resource in resources
+            if resource.id not in deleted_ids]
+        record['values'] = encode_value(values)
+        return tab
+
+    def save_resource_relation(self, tab_id):
+        """Apply pending deletes from a virtual resource one2many field."""
+        tab = self._tab(tab_id, kind='window')
+        relation = tab.get('resource_relation')
+        if not relation:
+            return tab
+        field = relation['field']
+        record = tab['records']['resource']
+        state = record.setdefault('x2many', {}).setdefault(field, {})
+        deleted_ids = {
+            item.get('id') if isinstance(item, dict) else int(item)
+            for item in state.get('deleted', [])
+            if (isinstance(item, dict) and item.get('id'))
+            or str(item).lstrip('-').isdigit()
+            }
+        if deleted_ids:
+            Resource = self.pool.get(tab['model'])
+            resources = Resource.search([
+                    ('id', 'in', list(deleted_ids)),
+                    ('resource', '=', relation['reference']),
+                    ])
+            Resource.delete(resources)
+        state['deleted'] = []
+        self.refresh_resource_relation(tab)
+        self.save()
+        return tab
 
     def open_action(self, action, data=None, extra_context=None):
         data = data or {}

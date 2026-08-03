@@ -658,6 +658,8 @@ class TestViewsWidgets(WebTestCase):
             'tab', name='Character', exact=True)
         expect(notebook_tab).to_be_visible()
         expect(notebook_tab).to_have_attribute('aria-selected', 'true')
+        expect(notebook.locator(
+            '.vs-notebook-tabs')).to_have_css('overflow-y', 'hidden')
         expect(notebook.get_by_role(
             'tabpanel')).to_have_attribute(
                 'aria-labelledby', notebook_tab.get_attribute('id'))

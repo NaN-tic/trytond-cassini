@@ -118,6 +118,23 @@ def relation_source(engine, tab_id, record_key, field_name):
         if not tab:
             raise ValueError(_('Unknown record'))
         view = decode_value(tab.get('view', {}))
+        if tab.get('resource_relation'):
+            if record_key != 'resource':
+                raise ValueError(_('Unknown record'))
+            record = tab.get('records', {}).get(record_key)
+            definition = view.get('fields', {}).get(field_name)
+            if not record or not definition:
+                raise ValueError(_('Unknown relation field'))
+            field = fields.One2Many(
+                definition['relation'], definition.get('relation_field'),
+                definition.get('string'))
+            renderer = WidgetRenderer(
+                tab, record, view,
+                editable=tab.get('access', {}).get('write', True),
+                endpoint='record')
+            return (
+                tab, record, view, renderer, Pool().get(tab['model']), field,
+                'record')
         if tab.get('kind') == 'wizard':
             if record_key != 'wizard':
                 raise ValueError(_('Unknown record'))
@@ -158,6 +175,16 @@ def relation_source(engine, tab_id, record_key, field_name):
 
 def update_relation_source(
         engine, tab_id, record_key, field_name, view, endpoint, value):
+    tab = engine.interface.get_tab(tab_id)
+    if tab and tab.get('resource_relation'):
+        record = tab.get('records', {}).get(record_key)
+        if not record:
+            raise ValueError(_('Unknown record'))
+        values = decode_value(record.get('values', {}))
+        values[field_name] = value
+        record['values'] = encode_value(values)
+        engine.save()
+        return relation_source(engine, tab_id, record_key, field_name)
     on_change_value = value
     if isinstance(value, (list, tuple)):
         on_change_value = []
@@ -3414,9 +3441,16 @@ class OpenRelationRecord(SaoEndpoint):
                         record_id = None
                     if record_id:
                         record_ids.append(record_id)
-        engine.open_relation_modal(
+        related = engine.open_relation_modal(
             self.tab, self.model, self.record,
             record_ids=record_ids)
+        if self.source_record and self.field:
+            related['relation_origin'] = {
+                'tab': self.tab,
+                'record': self.source_record,
+                'field': self.field,
+                }
+            engine.save()
         return workspace_response(engine)
 
 
@@ -4853,7 +4887,10 @@ class OpenRelationNew(SaoEndpoint):
             context['default_' + name] = value
         if self.query:
             context.setdefault('default_rec_name', self.query)
-        if relation_field and parent_id:
+        if parent.get('resource_relation'):
+            context['default_resource'] = parent['resource_relation'][
+                'reference']
+        elif relation_field and parent_id:
             relation_parent_field = Pool().get(relation)._fields.get(
                 relation_field)
             if (relation_parent_field
@@ -5122,7 +5159,10 @@ class X2ManyAction(SaoEndpoint):
                     or getattr(field, 'field', None))
                 record_values = self.engine._record_values(
                     Relation, defaults)
-                if relation_field and stored.get('id'):
+                if tab.get('resource_relation'):
+                    record_values['resource'] = tab['resource_relation'][
+                        'reference']
+                elif relation_field and stored.get('id'):
                     parent_value = _Parent(stored['id'])
                     relation_definition = Relation._fields.get(
                         relation_field)
@@ -5600,6 +5640,11 @@ class SaveRecord(SaoEndpoint):
         relation_modal = bool(tab and tab.get('relation_modal'))
         return_tab = tab.get('return_tab') if relation_modal else None
         self.engine.save_record(self.tab, self.record)
+        origin = tab.get('relation_origin') if tab else None
+        if origin:
+            parent = self.engine.interface.get_tab(origin.get('tab'))
+            if parent and parent.get('resource_relation'):
+                self.engine.refresh_resource_relation(parent)
         if relation_modal:
             self.engine.close_tab(self.tab)
             if self.engine.interface.get_tab(return_tab):
@@ -5636,7 +5681,10 @@ class SaveRecords(SaoEndpoint):
                 all_out_of_band=True)
         relation_modal = bool(tab and tab.get('relation_modal'))
         return_tab = tab.get('return_tab') if relation_modal else None
-        self.engine.save_records(self.tab)
+        if tab and tab.get('resource_relation'):
+            self.engine.save_resource_relation(self.tab)
+        else:
+            self.engine.save_records(self.tab)
         if relation_modal:
             self.engine.close_tab(self.tab)
             if self.engine.interface.get_tab(return_tab):

@@ -200,6 +200,12 @@ class TestRecordActions(WebTestCase):
             'heading', name='Attachment preview')).to_have_count(0)
         expect(preview).to_have_css('resize', 'horizontal')
         expect(preview).to_have_css('direction', 'rtl')
+        expect(preview).to_have_css('background-color', 'rgb(255, 255, 255)')
+        preview_box = preview.bounding_box()
+        panel_box = page.locator('#active-panel').bounding_box()
+        self.assertAlmostEqual(
+            preview_box['y'] + preview_box['height'],
+            panel_box['y'] + panel_box['height'], delta=1)
         preview_width = preview.bounding_box()['width']
         preview.evaluate('element => element.style.width = "28rem"')
         self.assertGreater(preview.bounding_box()['width'], preview_width)
@@ -225,6 +231,7 @@ class TestRecordActions(WebTestCase):
             'menuitem', name='Preview', exact=True).locator(
                 '.vs-attachment-preview-toggle')).to_have_css(
                     'background-color', 'rgb(31, 109, 93)')
+        attachment_popup.locator('summary').click()
         expect(preview.locator(
             '.vs-attachment-preview-count')).to_have_text('1/3')
         preview.get_by_role('button', name='Next', exact=True).click()
@@ -240,8 +247,21 @@ class TestRecordActions(WebTestCase):
         expect(attachment_dialog).to_be_visible()
         expect(attachment_dialog).to_contain_text(
             'Attachments (Cassini Action Group)')
-        expect(attachment_dialog.get_by_role(
-            'group', name='Resource actions')).to_have_count(0)
+        attachment_actions = attachment_dialog.get_by_role(
+            'toolbar', name='Relation actions')
+        for action in ('Switch', 'Previous', 'Next', 'New', 'Open',
+                'Delete', 'Undelete'):
+            expect(attachment_actions.get_by_role(
+                'button', name=action, exact=True)).to_be_visible()
+        expect(attachment_actions.get_by_role(
+            'button', name='New', exact=True)).to_be_enabled()
+        attachment_rows = attachment_dialog.locator(
+            '.vs-x2many-content .vs-row')
+        attachment_row_count = attachment_rows.count()
+        attachment_actions.get_by_role(
+            'button', name='New', exact=True).click()
+        expect(attachment_rows).to_have_count(attachment_row_count + 1)
+        expect(attachment_rows.last.get_by_role('textbox')).to_be_visible()
         attachment_dialog.get_by_role(
             'button', name='Cancel', exact=True).click()
 
@@ -252,8 +272,12 @@ class TestRecordActions(WebTestCase):
         expect(note_dialog).to_be_visible()
         expect(note_dialog).to_contain_text(
             'Notes (Cassini Action Group)')
-        expect(note_dialog.get_by_role(
-            'group', name='Resource actions')).to_have_count(0)
+        note_actions = note_dialog.get_by_role(
+            'toolbar', name='Relation actions')
+        expect(note_actions.get_by_role(
+            'button', name='New', exact=True)).to_be_enabled()
+        expect(note_actions.get_by_role(
+            'button', name='Open', exact=True)).to_be_enabled()
         note_dialog.get_by_role(
             'button', name='Cancel', exact=True).click()
 

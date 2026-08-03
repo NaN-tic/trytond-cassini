@@ -90,7 +90,9 @@ class ViewRenderer:
             screen.add(self.relation_dialog_header(tab))
         else:
             screen.add(self.toolbar(tab))
-        if tab.get('view_type') == 'tree':
+        if tab.get('resource_relation'):
+            content = self.resource_relation(tab, view)
+        elif tab.get('view_type') == 'tree':
             content = self.tree(tab, view)
         elif tab.get('view_type') == 'form':
             content = self.form(tab, view)
@@ -112,6 +114,17 @@ class ViewRenderer:
         if tab.get('relation_modal'):
             screen.add(self.relation_dialog_actions(tab))
         return screen
+
+    def resource_relation(self, tab, view):
+        """Render attachment and note management with the one2many widget."""
+        relation = tab['resource_relation']
+        record = tab['records']['resource']
+        renderer = WidgetRenderer(
+            tab, record, view,
+            editable=tab.get('access', {}).get('write', True))
+        with div(cls='vs-resource-relation') as content:
+            content.add(renderer.render(relation['field']))
+        return content
 
     def attachment_preview(self, tab):
         Attachment = self.pool.get('ir.attachment')
