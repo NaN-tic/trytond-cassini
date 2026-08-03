@@ -53,6 +53,7 @@ class TestRecordActions(WebTestCase):
                         'name': 'Cassini Empty Attachment Group',
                         }])
             group, = Group.create([{'name': 'Cassini Action Group'}])
+            cls.attachment_group_id = group.id
             Attachment.create([{
                         'name': 'cassini-action.txt',
                         'type': 'data',
@@ -300,10 +301,37 @@ class TestRecordActions(WebTestCase):
         attachment_actions.get_by_role(
             'button', name='New', exact=True).click()
         expect(attachment_rows).to_have_count(attachment_row_count + 1)
-        expect(attachment_rows.last.locator(
+        new_attachment = attachment_rows.last
+        expect(new_attachment.locator(
             'input:not([readonly])').first).to_be_visible()
-        attachment_dialog.get_by_role(
-            'button', name='Cancel', exact=True).click()
+        with page.expect_response(
+                lambda response: '/x2many/' in response.url
+                and '/field/data' in response.url):
+            new_attachment.locator('input[type="file"]').set_input_files({
+                'name': 'managed-through-dialog.txt',
+                'mimeType': 'text/plain',
+                'buffer': b'Managed attachment',
+                })
+        with page.expect_response(
+                lambda response: '/x2many/' in response.url
+                and '/field/name' in response.url):
+            name_input = new_attachment.locator(
+                'input[type="text"]:not([readonly])').first
+            name_input.fill('managed-through-dialog.txt')
+            name_input.blur()
+        with page.expect_response(
+                lambda response: response.url.endswith('/records/save')):
+            attachment_dialog.get_by_role('button', name='OK', exact=True).click()
+        expect(attachment_dialog).to_have_count(0)
+        with Transaction().start(self.database, 1):
+            Attachment = Pool().get('ir.attachment')
+            attachments = Attachment.search([
+                    ('resource', '=', 'res.group,%s' % (
+                        self.attachment_group_id,)),
+                    ('name', '=', 'managed-through-dialog.txt'),
+                    ])
+            self.assertEqual(len(attachments), 1)
+            self.assertEqual(attachments[0].data, b'Managed attachment')
 
         notes = page.locator('[data-shortcut-action="note"]')
         expect(notes.locator('.vs-resource-badge')).to_have_text('1/1')

@@ -338,13 +338,14 @@ class SaoEngine:
         return tab
 
     def save_resource_relation(self, tab_id):
-        """Apply pending deletes from a virtual resource one2many field."""
+        """Persist changes from a virtual resource one2many field."""
         tab = self._tab(tab_id, kind='window')
         relation = tab.get('resource_relation')
         if not relation:
             return tab
         field = relation['field']
         record = tab['records']['resource']
+        values = decode_value(record.get('values', {}))
         state = record.setdefault('x2many', {}).setdefault(field, {})
         deleted_ids = {
             item.get('id') if isinstance(item, dict) else int(item)
@@ -352,13 +353,33 @@ class SaoEngine:
             if (isinstance(item, dict) and item.get('id'))
             or str(item).lstrip('-').isdigit()
             }
-        if deleted_ids:
-            Resource = self.pool.get(tab['model'])
-            resources = Resource.search([
-                    ('id', 'in', list(deleted_ids)),
-                    ('resource', '=', relation['reference']),
-                    ])
-            Resource.delete(resources)
+        Resource = self.pool.get(tab['model'])
+        creates = []
+        writes = []
+        for item in values.get(field, []):
+            if not isinstance(item, dict):
+                continue
+            item_values = decode_value(item.get('values', item))
+            item_values.pop('__key__', None)
+            item_values = self._record_values(Resource, item_values)
+            if item.get('id'):
+                if item_values:
+                    writes.append((item['id'], item_values))
+            elif item_values:
+                item_values['resource'] = relation['reference']
+                creates.append(item_values)
+        context = self.context(decode_value(tab.get('context', {})))
+        with Transaction().set_context(context):
+            if creates:
+                Resource.create(creates)
+            for resource_id, write_values in writes:
+                Resource.write([Resource(resource_id)], write_values)
+            if deleted_ids:
+                resources = Resource.search([
+                        ('id', 'in', list(deleted_ids)),
+                        ('resource', '=', relation['reference']),
+                        ])
+                Resource.delete(resources)
         state['deleted'] = []
         self.refresh_resource_relation(tab)
         self.save()
@@ -2676,12 +2697,14 @@ class SaoEngine:
         record = tab['records'][record_key]
         values = decode_value(record['values'])
         content = values.get(field_name) or b''
+        Model = self.pool.get(tab['model'])
         if not isinstance(content, bytes) and record.get('id'):
-            Model = self.pool.get(tab['model'])
             content = getattr(Model(record['id']), field_name) or b''
         view = decode_value(tab.get('view', {}))
         definition = view.get('fields', {}).get(field_name, {})
-        filename_field = definition.get('filename')
+        filename_field = (
+            definition.get('filename')
+            or getattr(Model._fields.get(field_name), 'filename', None))
         if not filename_field:
             root = ElementTree.fromstring(view.get('arch') or '<form/>')
             for node in root.iter('field'):

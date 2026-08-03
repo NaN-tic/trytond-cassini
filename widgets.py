@@ -789,7 +789,8 @@ class WidgetRenderer:
             binary_htmx['hx_encoding'] = 'multipart/form-data'
             filename_field = (
                 attributes.get('filename')
-                or definition.get('filename'))
+                or definition.get('filename')
+                or getattr(self.Model._fields.get(name), 'filename', None))
             filename = self.values.get(filename_field)
             size = self.binary_size(value)
             href = self.binary_href(name, value)
@@ -1013,7 +1014,9 @@ class WidgetRenderer:
                     and Model._fields[name]._type == 'binary'
                     and name not in names):
                 names.append(name)
-            filename = node.attrib.get('filename')
+            filename = (
+                node.attrib.get('filename')
+                or getattr(Model._fields.get(name), 'filename', None))
             if filename in Model._fields and filename not in names:
                 names.append(filename)
             candidates = [node.attrib.get('name'), node.attrib.get('icon')]
@@ -1814,7 +1817,8 @@ class WidgetRenderer:
                 return span('', cls='vs-value vs-tree-binary')
             filename_field = (
                 attributes.get('filename')
-                or definition.get('filename'))
+                or definition.get('filename')
+                or getattr(self.Model._fields.get(name), 'filename', None))
             filename = self.values.get(filename_field)
             href = self.binary_href(name, value)
             with span(cls='vs-value vs-tree-binary') as binary:

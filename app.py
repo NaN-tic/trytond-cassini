@@ -5407,7 +5407,8 @@ class UpdateX2ManyField(SaoEndpoint):
         setattr(relation_instance, self.child, parsed)
         filename_field = (
             child_attributes.get('filename')
-            or relation_definition.get('filename'))
+            or relation_definition.get('filename')
+            or getattr(child_field, 'filename', None))
         if (
                 filename_field in Relation._fields
                 and (uploaded or clearing_binary)):
@@ -5423,6 +5424,9 @@ class UpdateX2ManyField(SaoEndpoint):
             relation_instance, before)
         child_changes[self.child] = getattr(
             relation_instance, self.child)
+        if filename_field in Relation._fields and (uploaded or clearing_binary):
+            child_changes[filename_field] = (
+                uploaded.filename if uploaded else None)
 
         for index, relation_value in enumerate(relation_values):
             if WidgetRenderer.x2many_item_key(
@@ -5542,7 +5546,10 @@ class UpdateField(SaoEndpoint):
         attributes = field_attributes(view, self.field)
         filename_field = (
             attributes.get('filename')
-            or definition.get('filename'))
+            or definition.get('filename')
+            or getattr(
+                self.engine.pool.get(tab['model'])._fields.get(self.field),
+                'filename', None))
         if uploaded:
             stored, changed = self.engine.update_binary(
                 self.tab, self.record, self.field, uploaded.read(),
@@ -6675,7 +6682,8 @@ class DownloadX2ManyBinary(SaoEndpoint):
         child_attributes = field_attributes(relation_view, self.child)
         filename_field = (
             child_attributes.get('filename')
-            or relation_definition.get('filename'))
+            or relation_definition.get('filename')
+            or getattr(binary_field, 'filename', None))
         filename = row['values'].get(filename_field)
         if not filename and filename_field and row.get('id'):
             filename = getattr(Relation(row['id']), filename_field, None)
