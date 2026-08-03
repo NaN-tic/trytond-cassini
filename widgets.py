@@ -1700,6 +1700,28 @@ class WidgetRenderer:
             value = json.dumps(value or {}, ensure_ascii=False, default=str)
         elif widget == 'html':
             return div(value or '', cls='vs-value vs-html')
+        elif widget in self.date_widgets and value:
+            context = dict(
+                self.pool.get('res.user').get_preferences(
+                    context_only=True))
+            context.update(Transaction().context)
+            context.update(decode_value(self.tab.get('context', {})))
+            if isinstance(value, datetime):
+                value = to_local_datetime(value, context)
+            date_format_ = date_format(context)
+            time_format_ = self.evaluate(
+                definition.get('format'), '%H:%M:%S') or '%H:%M:%S'
+            if widget == 'date' and isinstance(value, (date, datetime)):
+                value = value.strftime(date_format_)
+            elif widget == 'time' and isinstance(value, (time, datetime)):
+                value = value.strftime(time_format_)
+            elif isinstance(value, datetime):
+                value = value.strftime('%s %s' % (
+                    date_format_, time_format_))
+            elif isinstance(value, date):
+                value = value.strftime(date_format_)
+            elif isinstance(value, time):
+                value = value.strftime(time_format_)
         if (widget in self.numeric_widgets
                 and str(attributes.get('grouping', '1')).lower()
                 not in {'0', 'false', 'no'}

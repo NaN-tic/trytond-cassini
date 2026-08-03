@@ -42,8 +42,8 @@ class TestViewsWidgets(WebTestCase):
                             'Very Long Widget Group Suggestion That Must '
                             'Stay on One Line'),
                         }])
-            today = date.today()
-            now = datetime.combine(today, time(10, 30))
+            cls.today = date.today()
+            cls.now = datetime.combine(cls.today, time(10, 30))
             Widget.create([
                     {
                         'binary_value': b'binary',
@@ -52,8 +52,8 @@ class TestViewsWidgets(WebTestCase):
                         'callto_value': '+34930000000',
                         'char_value': 'Widget Alpha',
                         'color_value': '#336699',
-                        'date_value': today,
-                        'datetime_value': now,
+                        'date_value': cls.today,
+                        'datetime_value': cls.now,
                         'dict_value': {'key': 'value'},
                         'document_value': b'document',
                         'document_filename': 'document.txt',
@@ -79,12 +79,12 @@ class TestViewsWidgets(WebTestCase):
                         'text_value': 'Text Alpha',
                         'time_value': time(10, 30),
                         'timedelta_value': timedelta(hours=2),
-                        'timestamp_value': now,
+                        'timestamp_value': cls.now,
                         'url_value': 'https://example.test/alpha',
                         },
                     {
                         'char_value': 'Widget Beta',
-                        'date_value': today,
+                        'date_value': cls.today,
                         'many2one_value': second_group.id,
                         'one2many_value': [
                             ('create', [
@@ -122,6 +122,8 @@ class TestViewsWidgets(WebTestCase):
                         'data': (
                             '<tree>'
                             '<field name="char_value"/>'
+                            '<field name="datetime_value" widget="date"/>'
+                            '<field name="datetime_value" widget="time"/>'
                             '<field name="many2one_value"/>'
                             '<field name="selection_value"/>'
                             '<field name="integer_value" optional="1">'
@@ -388,6 +390,12 @@ class TestViewsWidgets(WebTestCase):
                 'Widget Alpha', exact=True)).get_by_role(
                     'link', name='Widget Group One', exact=True)
         expect(alpha_relation).to_be_visible()
+        alpha_row = page.locator(
+            '.vs-row', has=page.get_by_text('Widget Alpha', exact=True))
+        expect(alpha_row.get_by_text(
+            self.today.strftime('%d/%m/%Y'), exact=True)).to_be_visible()
+        expect(alpha_row.get_by_text(
+            self.now.strftime('%H:%M:%S'), exact=True)).to_be_visible()
         with page.expect_response(
                 lambda response: '/relation/res.group/' in response.url):
             alpha_relation.click()
@@ -469,8 +477,6 @@ class TestViewsWidgets(WebTestCase):
                 'img[src$="tryton-ok.svg"]')).to_be_visible()
         beta_row.get_by_role('button', name='Mark', exact=True).click()
         expect(beta_row.get_by_text('Marked', exact=True)).to_be_visible()
-        alpha_row = page.locator(
-            '.vs-row', has=page.get_by_text('Widget Alpha', exact=True))
         expect(alpha_row.get_by_text('Draft', exact=True)).to_be_visible()
         alpha_row.get_by_role(
             'checkbox', name='Select record').check()

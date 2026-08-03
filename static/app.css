@@ -1236,6 +1236,16 @@ button.vs-menu-group:focus-visible {
 .vs-resource-popup,
 .vs-resource-button {
     position: relative;
+    overflow: visible;
+}
+
+.vs-resource-button:not(:disabled) .vs-icon {
+    --vs-icon-filter: brightness(0) saturate(100%);
+}
+
+[data-theme="dark"] .vs-resource-button:not(:disabled) .vs-icon {
+    --vs-icon-filter: invert(88%) sepia(10%) saturate(258%)
+        hue-rotate(114deg) brightness(106%) contrast(90%);
 }
 
 .vs-resource-popup.vs-attachment-drop-active > summary {
@@ -1246,6 +1256,7 @@ button.vs-menu-group:focus-visible {
 
 .vs-resource-badge {
     position: absolute;
+    z-index: 1;
     top: -.32rem;
     right: -.32rem;
     display: inline-grid;
@@ -1263,7 +1274,8 @@ button.vs-menu-group:focus-visible {
 }
 
 .vs-resource-badge-unread {
-    background: var(--vs-danger);
+    background: var(--vs-danger-bg);
+    color: var(--vs-danger);
 }
 
 .vs-popup-separator {
@@ -1277,36 +1289,69 @@ button.vs-menu-group:focus-visible {
     display: block;
 }
 
-.vs-attachment-preview-dialog {
-    width: min(64rem, calc(100vw - 3rem));
-    max-height: min(52rem, calc(100vh - 3rem));
-}
-
-.vs-attachment-preview-list {
-    display: grid;
-    min-height: 10rem;
-    max-height: min(40rem, calc(100vh - 12rem));
-    gap: .75rem;
-    overflow: auto;
-}
-
-.vs-attachment-preview-item {
+.vs-window-content {
+    display: flex;
     min-width: 0;
-    padding: .75rem;
-    border: 1px solid var(--vs-line);
-    border-radius: .6rem;
+    min-height: 0;
 }
 
-.vs-attachment-preview-item h4 {
-    margin: 0 0 .55rem;
+.vs-window-content > :first-child {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.vs-attachment-preview {
+    display: flex;
+    width: 22rem;
+    min-width: 16rem;
+    flex: 0 1 22rem;
+    flex-direction: column;
+    gap: .65rem;
+    overflow: auto;
+    padding: .8rem;
+    border-left: 1px solid var(--vs-line);
+    background: var(--vs-panel-soft);
+}
+
+.vs-attachment-preview-toolbar {
+    display: flex;
+    gap: .35rem;
+    align-items: center;
+}
+
+.vs-attachment-preview-toolbar h3,
+.vs-attachment-preview h4 {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vs-attachment-preview-toolbar h3 {
+    margin-right: auto;
+    font-size: .9rem;
+}
+
+.vs-attachment-preview-navigation {
+    display: flex;
+    gap: .2rem;
+    align-items: center;
+}
+
+.vs-attachment-preview-count {
+    min-width: 2.7rem;
+    color: var(--vs-muted);
+    font-size: .8rem;
+    text-align: center;
 }
 
 .vs-attachment-preview-image,
 .vs-attachment-preview-frame {
     display: block;
     width: 100%;
-    min-height: 20rem;
-    max-height: 34rem;
+    min-height: 16rem;
+    max-height: 100%;
     border: 0;
     object-fit: contain;
 }
@@ -4582,6 +4627,18 @@ textarea.vs-input {
 
     .vs-welcome-title {
         font-size: 2.2em;
+    }
+
+    .vs-window-content {
+        flex-direction: column;
+    }
+
+    .vs-attachment-preview {
+        width: 100%;
+        min-width: 0;
+        max-height: 20rem;
+        border-top: 1px solid var(--vs-line);
+        border-left: 0;
     }
 
     .vs-field,

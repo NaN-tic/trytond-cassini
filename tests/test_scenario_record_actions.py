@@ -158,10 +158,17 @@ class TestRecordActions(WebTestCase):
         attachment_popup.locator('summary').click()
         attachment_popup.get_by_role(
             'menuitem', name='Preview', exact=True).click()
-        preview = page.get_by_role(
-            'dialog', name='Attachment preview')
-        expect(preview).to_contain_text('cassini-action.txt')
-        preview.get_by_role('button', name='Close').click()
+        preview = page.locator('aside.vs-attachment-preview')
+        expect(preview).to_be_visible()
+        expect(preview.get_by_role('heading', level=4)).to_be_visible()
+        expect(preview.locator(
+            '.vs-attachment-preview-count')).to_have_text('1/3')
+        preview.get_by_role('button', name='Next', exact=True).click()
+        preview = page.locator('aside.vs-attachment-preview')
+        expect(preview.locator(
+            '.vs-attachment-preview-count')).to_have_text('2/3')
+        preview.get_by_role('button', name='Close', exact=True).click()
+        expect(page.locator('aside.vs-attachment-preview')).to_have_count(0)
         attachment_popup.locator('summary').click()
         attachment_popup.get_by_role(
             'menuitem', name='Manage...', exact=True).click()

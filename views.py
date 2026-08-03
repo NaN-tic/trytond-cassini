@@ -1,12 +1,14 @@
 import base64
 import calendar as month_calendar
+import mimetypes
 import re
 from datetime import date, datetime
 from xml.etree import ElementTree
 
 from dominate.tags import (
     a, article, aside, button, col, colgroup, details, div, fieldset, form,
-    h2, h3, header, hr, img, input_, label, legend, li, nav, option, p,
+    h2, h3, h4, header, hr, iframe, img, input_, label, legend, li, nav,
+    option, p,
     section, select, span, strong, summary, table, tbody, td, th, thead,
     tfoot, tr, ul)
 from dominate.util import raw
@@ -89,20 +91,102 @@ class ViewRenderer:
         else:
             screen.add(self.toolbar(tab))
         if tab.get('view_type') == 'tree':
-            screen.add(self.tree(tab, view))
+            content = self.tree(tab, view)
         elif tab.get('view_type') == 'form':
-            screen.add(self.form(tab, view))
+            content = self.form(tab, view)
         elif tab.get('view_type') == 'list-form':
-            screen.add(self.list_form(tab, view))
+            content = self.list_form(tab, view)
         elif tab.get('view_type') == 'calendar':
-            screen.add(self.calendar(tab, view))
+            content = self.calendar(tab, view)
         else:
-            screen.add(p(
+            content = p(
                     'Unsupported view: %s' % tab.get('view_type'),
-                    cls='vs-notice vs-notice-error'))
+                    cls='vs-notice vs-notice-error')
+        if tab.get('attachment_preview'):
+            with div(cls='vs-window-content') as window_content:
+                window_content.add(content)
+                window_content.add(self.attachment_preview(tab))
+            screen.add(window_content)
+        else:
+            screen.add(content)
         if tab.get('relation_modal'):
             screen.add(self.relation_dialog_actions(tab))
         return screen
+
+    def attachment_preview(self, tab):
+        Attachment = self.pool.get('ir.attachment')
+        AttachmentData = self.pool.get('cassini.attachment.data')
+        AttachmentPreview = self.pool.get('cassini.attachment.preview')
+        AttachmentPreviewNavigate = self.pool.get(
+            'cassini.attachment.preview.navigate')
+        record = tab.get('records', {}).get(tab.get('current_record'), {})
+        attachments = Attachment.search([
+                ('resource', '=', '%s,%s' % (tab['model'], record.get('id'))),
+                ('type', '=', 'data'),
+                ]) if record.get('id') else []
+        attachment_ids = [attachment.id for attachment in attachments]
+        selected = tab.get('attachment_preview')
+        position = (
+            attachment_ids.index(selected)
+            if selected in attachment_ids else 0)
+        current = attachments[position] if attachments else None
+        with aside(
+                cls='vs-attachment-preview',
+                aria_label=_('Attachment preview')) as preview:
+            with header(cls='vs-attachment-preview-toolbar'):
+                h3(_('Attachment preview'))
+                with div(
+                        cls='vs-attachment-preview-navigation',
+                        role='group', aria_label=_('Record navigation')):
+                    with button(
+                            type='button', cls='vs-icon-button',
+                            title=_('Previous'), aria_label=_('Previous'),
+                            disabled=not attachments or position == 0 or None,
+                            hx_post=AttachmentPreviewNavigate.url(
+                                tab=tab['id'], direction='previous'),
+                            hx_target='#screen-' + tab['id'],
+                            hx_swap='outerHTML'):
+                        icon('back')
+                    span('%s/%s' % (
+                        position + 1 if attachments else 0,
+                        len(attachments)), cls='vs-attachment-preview-count')
+                    with button(
+                            type='button', cls='vs-icon-button',
+                            title=_('Next'), aria_label=_('Next'),
+                            disabled=(not attachments
+                                or position >= len(attachments) - 1) or None,
+                            hx_post=AttachmentPreviewNavigate.url(
+                                tab=tab['id'], direction='next'),
+                            hx_target='#screen-' + tab['id'],
+                            hx_swap='outerHTML'):
+                        icon('forward')
+                with button(
+                        type='button', cls='vs-icon-button',
+                        title=_('Close'), aria_label=_('Close'),
+                        hx_post=AttachmentPreview.url(tab=tab['id']),
+                        hx_target='#screen-' + tab['id'], hx_swap='outerHTML'):
+                    icon('close')
+            if not current:
+                p(_('No attachments'), cls='vs-popup-empty')
+            else:
+                h4(current.name)
+                url = AttachmentData.url(
+                    tab=tab['id'], attachment=current.id)
+                content_type = (
+                    mimetypes.guess_type(current.name or '')[0] or '')
+                if content_type.startswith('image/'):
+                    img(
+                        src=url, alt=current.name,
+                        cls='vs-attachment-preview-image')
+                elif content_type == 'application/pdf':
+                    iframe(
+                        src=url, title=current.name,
+                        cls='vs-attachment-preview-frame')
+                else:
+                    a(
+                        _('Open attachment'), href=url, target='_blank',
+                        rel='noreferrer noopener', cls='vs-button')
+        return preview
 
     def dashboard(self, tab):
         ReloadTab = self.pool.get('cassini.reload.tab')
@@ -821,10 +905,10 @@ class ViewRenderer:
                                             'vs-popup-item-icon'),
                                         role='menuitem',
                                         disabled=not attachments or None,
-                                        hx_get=AttachmentPreview.url(
+                                        hx_post=AttachmentPreview.url(
                                             tab=tab['id']),
-                                        hx_target='#modal',
-                                        hx_swap='innerHTML'):
+                                        hx_target='#screen-' + tab['id'],
+                                        hx_swap='outerHTML'):
                                     icon('open')
                                     span(_('Preview'))
                                 with button(
@@ -870,15 +954,9 @@ class ViewRenderer:
                             hx_swap='outerHTML'):
                         icon('note')
                         if note_count:
-                            note_label = (
-                                '%s/%s' % (
-                                    '99+' if note_unread > 99
-                                    else note_unread,
-                                    '99+' if note_count > 99
-                                    else note_count)
-                                if note_unread else
-                                ('99+' if note_count > 99
-                                    else str(note_count)))
+                            note_label = '%s/%s' % (
+                                '99+' if note_unread > 99 else note_unread,
+                                '99+' if note_count > 99 else note_count)
                             span(
                                 note_label,
                                 cls='vs-resource-badge%s' % (

@@ -15,7 +15,7 @@ from xml.etree import ElementTree
 import dominate
 from dominate.tags import (
     a, article, aside, br, button, details, div, form, h1, h2, h3, h4,
-    header, iframe, img, input_, label, li, link, main, meta, nav, option, p,
+    header, img, input_, label, li, link, main, meta, nav, option, p,
     script, section, select, span, strong, summary, textarea, ul)
 from dominate.util import raw
 from trytond.exceptions import (
@@ -3570,7 +3570,7 @@ class AttachmentPreview(SaoEndpoint):
 
     @handle_endpoint_errors
     def render(self):
-        tab = self.engine.interface.get_tab(self.tab)
+        tab = self.engine._tab(self.tab, kind='window')
         if not tab or tab.get('kind') != 'window':
             raise ValueError(_('Unknown tab'))
         key = tab.get('current_record')
@@ -3581,54 +3581,53 @@ class AttachmentPreview(SaoEndpoint):
         attachments = Attachment.search([
                 ('resource', '=', '%s,%s' % (
                     tab['model'], record['id'])),
+                ('type', '=', 'data'),
                 ])
-        title_id = 'attachment-preview-title-' + tab['id']
-        with div(cls='vs-modal-backdrop') as backdrop:
-            with section(
-                    role='dialog', aria_modal='true',
-                    aria_labelledby=title_id,
-                    cls='vs-modal vs-attachment-preview-dialog'):
-                h2(_('Attachment preview'), id=title_id)
-                with div(cls='vs-attachment-preview-list'):
-                    if not attachments:
-                        p(
-                            _('No attachments'),
-                            cls='vs-popup-empty')
-                    for attachment in attachments:
-                        with article(cls='vs-attachment-preview-item'):
-                            h4(attachment.name)
-                            if attachment.type == 'link':
-                                a(
-                                    attachment.link,
-                                    href=attachment.link,
-                                    target='_blank',
-                                    rel='noreferrer noopener')
-                            else:
-                                url = AttachmentData.url(
-                                    tab=tab['id'],
-                                    attachment=attachment.id)
-                                content_type = (
-                                    mimetypes.guess_type(
-                                        attachment.name or '')[0] or '')
-                                if content_type.startswith('image/'):
-                                    img(
-                                        src=url, alt=attachment.name,
-                                        cls='vs-attachment-preview-image')
-                                elif content_type == 'application/pdf':
-                                    iframe(
-                                        src=url,
-                                        title=attachment.name,
-                                        cls='vs-attachment-preview-frame')
-                                else:
-                                    a(
-                                        _('Open attachment'),
-                                        href=url, target='_blank',
-                                        rel='noreferrer noopener')
-                with div(cls='vs-dialog-actions'):
-                    button(
-                        _('Close'), type='button',
-                        cls='vs-button', data_close_modal='true')
-        return html_response(backdrop)
+        if tab.get('attachment_preview'):
+            tab.pop('attachment_preview')
+        elif attachments:
+            tab['attachment_preview'] = attachments[0].id
+        self.engine.save()
+        return screen_response(self.engine, tab)
+
+
+class AttachmentPreviewNavigate(SaoEndpoint):
+    'Navigate Cassini Attachment Preview'
+    __name__ = 'cassini.attachment.preview.navigate'
+    _url = '/tab/<string:tab>/attachments/preview/<string:direction>'
+
+    tab = fields.Char('Tab')
+    direction = fields.Selection([
+            ('previous', 'Previous'),
+            ('next', 'Next'),
+            ], 'Direction')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = self.engine._tab(self.tab, kind='window')
+        key = tab.get('current_record')
+        record = tab.get('records', {}).get(key)
+        if not record or not record.get('id'):
+            raise ValueError(_('Select a saved record first'))
+        Attachment = Pool().get('ir.attachment')
+        attachments = Attachment.search([
+                ('resource', '=', '%s,%s' % (
+                    tab['model'], record['id'])),
+                ('type', '=', 'data'),
+                ])
+        attachment_ids = [attachment.id for attachment in attachments]
+        current = tab.get('attachment_preview')
+        position = (
+            attachment_ids.index(current)
+            if current in attachment_ids else 0)
+        if self.direction == 'previous' and position:
+            position -= 1
+        elif self.direction == 'next' and position < len(attachments) - 1:
+            position += 1
+        if attachments:
+            tab['attachment_preview'] = attachments[position].id
+        self.engine.save()
+        return screen_response(self.engine, tab)
 
 
 class ActivateTab(SaoEndpoint):
