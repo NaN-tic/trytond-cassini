@@ -567,6 +567,18 @@ class TestAssistantLoading(WebTestCase):
             'answering will be charged with a')
         expect(ticket_panel.locator('strong')).to_have_text(
             'minimum of 15 minutes')
+        ticket_bubbles = ticket_panel.locator('.vs-help-ticket-schedule')
+        expect(ticket_bubbles).to_have_count(2)
+        for bubble in (ticket_bubbles.first, ticket_bubbles.last):
+            style = bubble.evaluate(
+                '''element => ({
+                    background: getComputedStyle(element).backgroundColor,
+                    borderRadius: getComputedStyle(element).borderRadius,
+                    textAlign: getComputedStyle(element).textAlign,
+                })''')
+            self.assertNotEqual(style['background'], 'rgba(0, 0, 0, 0)')
+            self.assertEqual(style['borderRadius'], '7px')
+            self.assertEqual(style['textAlign'], 'center')
         with page.expect_response(
                 lambda response:
                 '/help/resource/tickets' in response.url):

@@ -3057,7 +3057,15 @@ textarea.vs-input {
 }
 
 .vs-help-ticket-schedule {
-    margin: .55rem 0;
+    width: min(100%, 332px);
+    height: auto;
+    margin: 0 auto;
+    padding: 8px 12px;
+    border-radius: 7px;
+    background: var(--vs-panel-soft);
+    font-size: small;
+    line-height: 1.32;
+    text-align: center;
 }
 
 .vs-chat-message {
