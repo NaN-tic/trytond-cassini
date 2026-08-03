@@ -159,6 +159,7 @@ class TestAssistantLoading(WebTestCase):
         expect(page.get_by_role(
             'button', name='Assistant',
             exact=True)).to_have_attribute('aria-expanded', 'true')
+        expect(page.locator('.vs-help-accordion-arrow')).to_have_count(0)
         help_icons = page.locator(
             '#help-panel img[src^="/cassini-help-icons/"]')
         self.assertGreaterEqual(help_icons.count(), 10)
@@ -173,6 +174,9 @@ class TestAssistantLoading(WebTestCase):
         expect(page.get_by_label('Global search')).to_have_value('')
 
         help_sidebar = page.locator('#help-sidebar')
+        help_sidebar.evaluate(
+            'element => element.style.width = "100px"')
+        self.assertGreaterEqual(help_sidebar.bounding_box()['width'], 260)
         help_sidebar.evaluate(
             'element => element.style.width = "421px"')
         help_width = help_sidebar.bounding_box()['width']

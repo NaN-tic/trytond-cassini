@@ -2648,6 +2648,7 @@ textarea.vs-input {
 }
 
 .vs-help-sidebar {
+    min-width: 260px;
     overflow: hidden;
     padding: 0;
 }
@@ -2714,12 +2715,6 @@ textarea.vs-input {
     width: 1.5rem;
     height: 1.5rem;
     object-fit: contain;
-}
-
-.vs-help-accordion-arrow {
-    width: .9rem;
-    height: .9rem;
-    margin-left: auto;
 }
 
 .vs-help-heading-actions {

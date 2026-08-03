@@ -1903,9 +1903,6 @@ class HelpPanel(SaoEndpoint):
                         src=HELP_ICONS + image, alt='',
                         aria_hidden='true', cls='vs-help-section-icon')
                     span(title)
-                    icon(
-                        'arrow-down' if opened else 'arrow-right',
-                        cls='vs-icon vs-help-accordion-arrow')
                 if opened:
                     with div(cls='vs-help-heading-actions'):
                         self.section_actions(identifier, state, conversation)
