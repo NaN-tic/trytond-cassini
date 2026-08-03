@@ -134,7 +134,6 @@ class ViewRenderer:
                 cls='vs-attachment-preview',
                 aria_label=_('Attachment preview')) as preview:
             with header(cls='vs-attachment-preview-toolbar'):
-                h3(_('Attachment preview'))
                 with div(
                         cls='vs-attachment-preview-navigation',
                         role='group', aria_label=_('Record navigation')):

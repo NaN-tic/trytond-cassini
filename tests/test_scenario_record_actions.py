@@ -160,7 +160,20 @@ class TestRecordActions(WebTestCase):
             'menuitem', name='Preview', exact=True).click()
         preview = page.locator('aside.vs-attachment-preview')
         expect(preview).to_be_visible()
-        expect(preview.get_by_role('heading', level=4)).to_be_visible()
+        expect(preview.get_by_role(
+            'heading', name='Attachment preview')).to_have_count(0)
+        expect(preview).to_have_css('resize', 'horizontal')
+        expect(preview).to_have_css('direction', 'rtl')
+        preview_width = preview.bounding_box()['width']
+        preview.evaluate('element => element.style.width = "28rem"')
+        self.assertGreater(preview.bounding_box()['width'], preview_width)
+        attachment_name = preview.get_by_role('heading', level=4)
+        expect(attachment_name).to_be_visible()
+        expect(attachment_name).to_have_css('text-align', 'center')
+        expect(attachment_name).to_have_css('font-weight', '700')
+        expect(preview.locator(
+            '.vs-attachment-preview-toolbar')).to_have_css(
+                'justify-content', 'center')
         expect(preview.locator(
             '.vs-attachment-preview-count')).to_have_text('1/3')
         preview.get_by_role('button', name='Next', exact=True).click()

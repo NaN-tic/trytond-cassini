@@ -1304,33 +1304,37 @@ button.vs-menu-group:focus-visible {
     display: flex;
     width: 22rem;
     min-width: 16rem;
-    flex: 0 1 22rem;
+    max-width: 70vw;
+    flex: 0 0 auto;
     flex-direction: column;
     gap: .65rem;
     overflow: auto;
     padding: .8rem;
     border-left: 1px solid var(--vs-line);
     background: var(--vs-panel-soft);
+    direction: rtl;
+    resize: horizontal;
+}
+
+.vs-attachment-preview > * {
+    direction: ltr;
 }
 
 .vs-attachment-preview-toolbar {
     display: flex;
     gap: .35rem;
     align-items: center;
+    justify-content: center;
 }
 
-.vs-attachment-preview-toolbar h3,
 .vs-attachment-preview h4 {
     min-width: 0;
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.vs-attachment-preview-toolbar h3 {
-    margin-right: auto;
-    font-size: .9rem;
+    text-align: center;
+    font-weight: bold;
 }
 
 .vs-attachment-preview-navigation {
