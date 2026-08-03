@@ -2469,14 +2469,39 @@ textarea.vs-input {
     bottom: 0;
     width: .55rem;
     cursor: col-resize;
+    opacity: 0;
     touch-action: none;
+    transition: opacity .2s;
 }
 
-.vs-column-resizer:hover,
+.vs-column-resizer::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--vs-line);
+    content: "";
+}
+
+.vs-resizable-table thead:hover .vs-column-resizer,
 .vs-column-resizer:focus-visible,
 .vs-column-resizer.vs-column-resizing {
+    opacity: 1;
+}
+
+.vs-column-resizer:hover::after,
+.vs-column-resizer:focus-visible::after,
+.vs-column-resizer.vs-column-resizing::after {
+    background: var(--vs-focus);
+}
+
+.vs-column-resizer:focus-visible {
     outline: none;
-    border-right: 2px solid var(--vs-focus);
+}
+
+.vs-resizable-table thead th:last-child > .vs-column-resizer {
+    display: none;
 }
 
 .vs-resizable-table.vs-column-resizing {
@@ -3066,6 +3091,10 @@ textarea.vs-input {
     font-size: small;
     line-height: 1.32;
     text-align: center;
+}
+
+.vs-help-ticket-schedule + .vs-help-ticket-schedule {
+    margin-top: 4px;
 }
 
 .vs-chat-message {

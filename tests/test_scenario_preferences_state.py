@@ -139,6 +139,12 @@ class TestPreferencesState(WebTestCase):
 
         table = membership.locator('.vs-x2many-table')
         resizer = table.locator('[data-column-resizer]').first
+        expect(resizer).to_have_css('opacity', '0')
+        table.locator('thead').hover()
+        expect(resizer).to_have_css('opacity', '1')
+        self.assertEqual(resizer.evaluate(
+            '''element => getComputedStyle(element, '::after').width'''),
+            '2px')
         column = table.locator(
             'col[data-column-field]').first
         old_width = column.evaluate(

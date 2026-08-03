@@ -579,6 +579,14 @@ class TestAssistantLoading(WebTestCase):
             self.assertNotEqual(style['background'], 'rgba(0, 0, 0, 0)')
             self.assertEqual(style['borderRadius'], '7px')
             self.assertEqual(style['textAlign'], 'center')
+        first_bubble_box = ticket_bubbles.first.bounding_box()
+        second_bubble_box = ticket_bubbles.last.bounding_box()
+        self.assertEqual(
+            round(
+                second_bubble_box['y']
+                - first_bubble_box['y']
+                - first_bubble_box['height']),
+            4)
         with page.expect_response(
                 lambda response:
                 '/help/resource/tickets' in response.url):
