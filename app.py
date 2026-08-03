@@ -4060,10 +4060,18 @@ class ResizeTreeColumns(SaoEndpoint):
     model = fields.Char('Model')
     widths = fields.Text('Widths')
     screen_width = fields.Integer('Screen Width')
+    reset = fields.Boolean('Reset')
 
     @handle_endpoint_errors
     def render(self):
         Model = Pool().get(self.model)
+        screen_width = max(0, min(int(self.screen_width or 0), 10000))
+        if self.reset:
+            ViewTreeWidth = Pool().get('ir.ui.view_tree_width')
+            ViewTreeWidth.reset_width(self.model, screen_width)
+            self.engine.interface.data['screen_width'] = screen_width
+            self.engine.save()
+            return Response('', status=204)
         try:
             widths = json.loads(self.widths or '{}')
         except (TypeError, ValueError) as exception:
@@ -4087,7 +4095,6 @@ class ResizeTreeColumns(SaoEndpoint):
                         or not 24 <= width <= 4000):
                     raise ValueError(_('Invalid column width'))
                 normalized[name].append(round(width))
-        screen_width = max(0, min(int(self.screen_width or 0), 10000))
         if normalized:
             ViewTreeWidth = Pool().get('ir.ui.view_tree_width')
             ViewTreeWidth.set_width(

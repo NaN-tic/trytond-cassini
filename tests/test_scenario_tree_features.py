@@ -245,6 +245,16 @@ class TestTreeFeatures(WebTestCase):
             'button', name='Move down')).to_have_count(0)
         expect(parent.locator(
             '[data-tree-drag-handle]')).to_be_visible()
+        tree = page.locator('.vs-active-panel .vs-table').first
+        menu_column = tree.locator('thead .vs-drag-column')
+        drag_column = parent.locator('td.vs-drag-column')
+        select_column = parent.locator('td.vs-select-column')
+        self.assertLess(drag_column.bounding_box()['x'],
+            select_column.bounding_box()['x'])
+        self.assertLessEqual(
+            abs(drag_column.bounding_box()['x'] - menu_column.bounding_box()['x']),
+            1)
+        self.assertEqual(round(drag_column.bounding_box()['width']), 30)
         with page.expect_response(
                 lambda response: response.url.endswith('/tree/move')):
             parent.locator('[data-tree-drag-handle]').drag_to(

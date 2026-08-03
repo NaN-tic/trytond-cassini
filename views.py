@@ -1457,8 +1457,7 @@ class ViewRenderer:
                 data_column_model=tab['model'],
                 data_column_resize_url=ResizeTreeColumns.url()):
                 with colgroup():
-                    if reorderable:
-                        col(cls='vs-drag-column')
+                    col(cls='vs-drag-column')
                     col(cls=select_column_class)
                     for node in columns:
                         if node.tag == 'field':
@@ -1475,98 +1474,113 @@ class ViewRenderer:
                                     'width:%spx' % width
                                     if str(width).isdigit() else None),
                                 data_column_field=name,
+                                data_column_default_width=(
+                                    node.attrib.get('width')
+                                    if str(node.attrib.get(
+                                            'width', '')).isdigit()
+                                    else None),
                                 data_column_occurrence=occurrence)
                         else:
                             col()
                 with thead():
                     with tr():
-                        if reorderable:
-                            with th(
-                                    cls='vs-drag-column',
-                                    title=_('Reorder')):
-                                icon('drag')
+                        with th(cls='vs-drag-column'):
+                            with details(
+                                    cls='vs-popup vs-column-popup',
+                                    data_column_popup=tab['id']):
+                                with summary(
+                                        cls='vs-tree-menu',
+                                        title=_('Columns'),
+                                        aria_label=_('Columns')):
+                                    icon('menu')
+                                with div(
+                                        cls='vs-popup-menu',
+                                        role='menu',
+                                        aria_label=_('Optional columns')):
+                                    if optional_columns:
+                                        for node in optional_columns:
+                                            name = node.attrib['name']
+                                            definition = view.get(
+                                                'fields', {}).get(name, {})
+                                            default_visible = not (
+                                                str(node.attrib.get(
+                                                        'optional', '0'))
+                                                .lower()
+                                                in {'1', 'true', 'yes'})
+                                            visible = visibility.get(
+                                                name, default_visible)
+                                            with label(
+                                                    cls='vs-column-option'):
+                                                input_(
+                                                    type='checkbox',
+                                                    name='visible',
+                                                    value='true',
+                                                    checked=(visible or None),
+                                                    hx_post=(
+                                                        X2ManyAction.url(
+                                                            tab=tab['id'],
+                                                            record=(
+                                                                relation_origin[
+                                                                    'record']),
+                                                            field=(
+                                                                relation_origin[
+                                                                    'field']),
+                                                            action='column')
+                                                        if relation_origin
+                                                        else None
+                                                        if relation_search_origin
+                                                        else ToggleColumn.url(
+                                                            tab=tab['id'],
+                                                            field=name)),
+                                                    hx_get=(
+                                                        relation_search_origin[
+                                                            'url']
+                                                        if relation_search_origin
+                                                        else None),
+                                                    hx_vals=(
+                                                        '{"item":"%s"}' % name
+                                                        if relation_origin
+                                                        else '{"column":"%s"}'
+                                                        % name
+                                                        if relation_search_origin
+                                                        else None),
+                                                    hx_trigger='change',
+                                                    hx_target=tree_target,
+                                                    hx_swap='outerHTML',
+                                                    hx_include='this')
+                                                span(
+                                                    node.attrib.get('string')
+                                                    or definition.get('string')
+                                                    or name)
+                                    else:
+                                        span(
+                                            _('No optional columns'),
+                                            cls='vs-popup-empty')
+                                    if optional_columns:
+                                        hr(cls='vs-popup-separator')
+                                    with button(
+                                        _('Copy Selected Records'),
+                                        type='button',
+                                        cls=(
+                                            'vs-tree-menu-action '
+                                            'vs-popup-item-icon'),
+                                        role='menuitem',
+                                        disabled=(
+                                            not tab.get('selected') or None),
+                                        data_copy_selected_records='true'):
+                                        icon('copy')
+                                    with button(
+                                        _('Reset Column Widths'),
+                                        type='button',
+                                        cls=(
+                                            'vs-tree-menu-action '
+                                            'vs-popup-item-icon'),
+                                        role='menuitem',
+                                        data_reset_column_widths='true'):
+                                        icon('refresh')
                         with th(cls=select_column_class):
-                            with div(cls='vs-tree-header-controls'):
-                                with details(
-                                        cls='vs-popup vs-column-popup'):
-                                    with summary(
-                                            cls='vs-tree-menu',
-                                            title=_('Columns'),
-                                            aria_label=_('Columns')):
-                                        icon('menu')
-                                    with div(
-                                            cls='vs-popup-menu',
-                                            role='menu',
-                                            aria_label=_('Optional columns')):
-                                        if optional_columns:
-                                            for node in optional_columns:
-                                                name = node.attrib['name']
-                                                definition = view.get(
-                                                    'fields', {}).get(
-                                                        name, {})
-                                                default_visible = not (
-                                                    str(node.attrib.get(
-                                                            'optional', '0'))
-                                                    .lower()
-                                                    in {
-                                                        '1', 'true', 'yes'})
-                                                visible = visibility.get(
-                                                    name, default_visible)
-                                                with label(
-                                                        cls=(
-                                                            'vs-column-'
-                                                            'option')):
-                                                    input_(
-                                                        type='checkbox',
-                                                        name='visible',
-                                                        value='true',
-                                                        checked=(
-                                                            visible or None),
-                                                        hx_post=(
-                                                            X2ManyAction.url(
-                                                                tab=tab['id'],
-                                                                record=(
-                                                                    relation_origin[
-                                                                        'record']),
-                                                                field=(
-                                                                    relation_origin[
-                                                                        'field']),
-                                                                action='column')
-                                                            if relation_origin
-                                                            else None
-                                                            if relation_search_origin
-                                                            else ToggleColumn.url(
-                                                                tab=tab['id'],
-                                                                field=name)),
-                                                        hx_get=(
-                                                            relation_search_origin[
-                                                                'url']
-                                                            if relation_search_origin
-                                                            else None),
-                                                        hx_vals=(
-                                                            '{"item":"%s"}'
-                                                            % name
-                                                            if relation_origin
-                                                            else '{"column":"%s"}'
-                                                            % name
-                                                            if relation_search_origin
-                                                            else None),
-                                                        hx_trigger='change',
-                                                        hx_target=tree_target,
-                                                        hx_swap='outerHTML',
-                                                        hx_include='this')
-                                                    span(
-                                                        node.attrib.get(
-                                                            'string')
-                                                        or definition.get(
-                                                            'string')
-                                                        or name)
-                                        else:
-                                            span(
-                                                _('No optional columns'),
-                                                cls='vs-popup-empty')
-                                if not embedded:
-                                    input_(
+                            if not embedded:
+                                input_(
                                         type='checkbox', name='selected',
                                         value='true',
                                         checked=bool(tab.get('record_order'))
@@ -1668,8 +1682,8 @@ class ViewRenderer:
                                     if relation_search_origin else None),
                                 data_tree_depth=(
                                     depth if reorderable else None)):
-                            if reorderable:
-                                with td(cls='vs-drag-column'):
+                            with td(cls='vs-drag-column'):
+                                if reorderable:
                                     with span(
                                             cls='vs-tree-drag-handle',
                                             draggable='true',
@@ -1950,8 +1964,7 @@ class ViewRenderer:
                         for node in columns):
                     with tfoot():
                         with tr():
-                            if reorderable:
-                                td(cls='vs-drag-column')
+                            td(cls='vs-drag-column')
                             td(_('Total'), cls='vs-select-column')
                             for node in columns:
                                 if node.tag != 'field':

@@ -18,6 +18,7 @@ JAVASCRIPT_SOURCES = (
     'Delete',
     'Direct printing failed: %(error)s',
     'Duplicate',
+    'Failed to copy selected records to the clipboard.',
     'Global search',
     'Global shortcuts',
     'Keyboard shortcuts',

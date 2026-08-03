@@ -24,6 +24,7 @@
     let qzPromise = null;
     let qzConfigured = false;
     let qzPrintQueue = Promise.resolve();
+    let pendingColumnPopup = null;
 
     function easterSundayDate(year) {
         const a = year % 19;
@@ -2222,6 +2223,69 @@
         });
     }
 
+    function copySelectedTreeRecords(action) {
+        const table = action.closest(".vs-resizable-table");
+        if (!table || !navigator.clipboard) {
+            return;
+        }
+        const fields = Array.from(table.querySelectorAll(
+            ":scope > colgroup > col")).map(
+                column => Boolean(column.dataset.columnField));
+        const rows = Array.from(table.querySelectorAll("tbody > tr")).filter(
+            row => row.querySelector('input[name="selected"]:checked'));
+        const data = rows.map(function (row) {
+            return Array.from(row.children).reduce(
+                function (values, cell, index) {
+                    if (fields[index]) {
+                        values.push('"' + cell.innerText.replaceAll(
+                            '"', '""') + '"');
+                    }
+                    return values;
+                }, []).join("\t");
+        }).join("\n");
+        navigator.clipboard.writeText(data).then(function () {
+            action.closest("details")?.removeAttribute("open");
+        }).catch(function () {
+            showClientNotice(tr(
+                "Failed to copy selected records to the clipboard."), true);
+        });
+    }
+
+    function resetTableColumnWidths(action) {
+        const table = action.closest(".vs-resizable-table");
+        const url = table?.dataset.columnResizeUrl;
+        const model = table?.dataset.columnModel;
+        if (!table || !url || !model) {
+            return;
+        }
+        const data = new FormData();
+        data.set("model", model);
+        data.set("reset", "true");
+        data.set(
+            "screen_width",
+            Math.round(window.screen.width || window.innerWidth));
+        fetch(url, {
+            method: "POST",
+            body: data,
+            credentials: "same-origin",
+            headers: {"HX-Request": "true"},
+        }).then(function (response) {
+            if (!response.ok) {
+                throw new Error(tr("Could not save the column widths."));
+            }
+            for (const column of table.querySelectorAll(
+                    ":scope > colgroup > col[data-column-field]")) {
+                const width = column.dataset.columnDefaultWidth;
+                column.style.width = width ? width + "px" : "";
+            }
+            table.style.width = "";
+            action.closest("details")?.removeAttribute("open");
+        }).catch(function () {
+            showClientNotice(tr(
+                "Could not save the column widths."), true);
+        });
+    }
+
     function resizeTableColumn(resizer, delta) {
         const header = resizer.closest("th");
         const table = resizer.closest(".vs-resizable-table");
@@ -2321,6 +2385,15 @@
         welcome.value = "";
     });
 
+    document.addEventListener("change", function (event) {
+        const popup = event.target.closest(
+            ".vs-column-popup .vs-column-option");
+        if (popup) {
+            pendingColumnPopup = popup.closest(
+                ".vs-column-popup")?.dataset.columnPopup || null;
+        }
+    });
+
     document.addEventListener("focusin", function (event) {
         const search = event.target.closest("[data-search-autocomplete]");
         if (search) {
@@ -2329,6 +2402,18 @@
     });
 
     document.addEventListener("click", function (event) {
+        const copySelected = event.target.closest(
+            "[data-copy-selected-records]");
+        if (copySelected) {
+            copySelectedTreeRecords(copySelected);
+            return;
+        }
+        const resetWidths = event.target.closest(
+            "[data-reset-column-widths]");
+        if (resetWidths) {
+            resetTableColumnWidths(resetWidths);
+            return;
+        }
         const relation = event.target.closest("[data-relation-open]");
         if (!relation || (!event.ctrlKey && !event.metaKey)) {
             return;
@@ -3178,6 +3263,16 @@
         initializeSeasonalLogo();
         initializeDynamicWidgets();
         scheduleNoticeDismissal();
+        if (pendingColumnPopup) {
+            const popup = Array.from(document.querySelectorAll(
+                ".vs-column-popup")).find(
+                candidate => candidate.dataset.columnPopup
+                    === pendingColumnPopup);
+            if (popup) {
+                popup.open = true;
+            }
+            pendingColumnPopup = null;
+        }
     });
     document.addEventListener("htmx:beforeCleanupElement", function (event) {
         const root = event.detail?.elt;

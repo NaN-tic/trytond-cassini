@@ -1187,7 +1187,8 @@ button.vs-menu-group:focus-visible {
     border-top: 0;
 }
 
-.vs-popup-item.vs-popup-item-icon {
+.vs-popup-item.vs-popup-item-icon,
+.vs-tree-menu-action.vs-popup-item-icon {
     display: flex;
     flex-direction: row;
     gap: .55rem;
@@ -1208,7 +1209,8 @@ button.vs-menu-group:focus-visible {
     white-space: nowrap;
 }
 
-.vs-popup-item:disabled {
+.vs-popup-item:disabled,
+.vs-tree-menu-action:disabled {
     cursor: not-allowed;
     opacity: .42;
 }
@@ -1666,7 +1668,8 @@ button.vs-menu-group:focus-visible {
     max-height: min(36rem, calc(100vh - 7rem));
 }
 
-.vs-popup-item {
+.vs-popup-item,
+.vs-tree-menu-action {
     display: block;
     width: 100%;
     padding: .55rem .65rem;
@@ -1679,7 +1682,8 @@ button.vs-menu-group:focus-visible {
     text-decoration: none;
 }
 
-.vs-popup-item:hover {
+.vs-popup-item:hover,
+.vs-tree-menu-action:hover {
     background: var(--vs-primary-soft);
 }
 
@@ -2426,6 +2430,10 @@ textarea.vs-input {
     overflow: auto;
 }
 
+.vs-table-wrap:has(.vs-column-popup[open]) {
+    overflow: visible;
+}
+
 .vs-table {
     width: 100%;
     border-collapse: collapse;
@@ -2435,7 +2443,7 @@ textarea.vs-input {
 
 .vs-table th,
 .vs-table td {
-    min-width: 7rem;
+    min-width: 0;
     overflow: hidden;
     padding: .55rem .65rem;
     border-bottom: 1px solid var(--vs-line);
@@ -2454,6 +2462,15 @@ textarea.vs-input {
     font-size: .75rem;
     letter-spacing: .04em;
     text-transform: uppercase;
+}
+
+.vs-table thead .vs-drag-column {
+    z-index: 80;
+    overflow: visible;
+}
+
+.vs-table thead .vs-drag-column:has(.vs-column-popup[open]) {
+    z-index: 200;
 }
 
 .vs-table thead .vs-select-column {
@@ -3265,15 +3282,26 @@ textarea.vs-input {
 }
 
 .vs-table .vs-select-column {
-    width: 2.5rem;
-    min-width: 2.5rem;
+    width: 30px;
+    min-width: 30px;
+    padding-inline: 0;
+    text-align: center;
 }
 
 .vs-table .vs-drag-column {
-    width: 2rem;
-    min-width: 2rem;
-    padding-inline: .25rem;
+    width: 30px;
+    min-width: 30px;
+    padding-inline: 0;
     text-align: center;
+}
+
+.vs-table .vs-drag-column .vs-tree-menu {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    padding: .3rem;
+    border: 0;
+    background: var(--vs-panel-soft);
 }
 
 .vs-drag-column > .vs-icon {
@@ -3324,13 +3352,6 @@ textarea.vs-input {
 
 .vs-row-drop-inside > td {
     background: var(--vs-primary-soft);
-}
-
-.vs-tree-header-controls {
-    display: flex;
-    flex-direction: column;
-    gap: .3rem;
-    align-items: center;
 }
 
 .vs-column-popup {

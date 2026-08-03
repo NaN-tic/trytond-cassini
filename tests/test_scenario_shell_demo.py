@@ -642,12 +642,20 @@ class TestShellDemo(WebTestCase):
                 abs(control.bounding_box()['y'] - search_y), 2)
         expect(search_toolbar.locator(
             '.vs-page-navigation')).to_be_visible()
-        header_controls = page.locator('.vs-tree-header-controls')
-        self.assertGreater(
-            header_controls.get_by_role(
-                'checkbox', name='Select all records').bounding_box()['y'],
-            header_controls.locator(
-                'summary[aria-label="Columns"]').bounding_box()['y'])
+        tree = page.locator('.vs-active-panel .vs-table').first
+        menu = tree.locator(
+            'thead .vs-drag-column summary[aria-label="Columns"]')
+        select_all = tree.get_by_role(
+            'checkbox', name='Select all records')
+        self.assertLess(menu.bounding_box()['x'], select_all.bounding_box()['x'])
+        self.assertLessEqual(
+            abs(
+                menu.bounding_box()['y'] + menu.bounding_box()['height'] / 2
+                - select_all.bounding_box()['y']
+                - select_all.bounding_box()['height'] / 2),
+            2)
+        self.assertEqual(round(menu.bounding_box()['width']), 30)
+        expect(tree.locator('tbody .vs-drag-column').first).to_be_empty()
 
         search = toolbar.get_by_placeholder('Search', exact=True)
         old_screen = page.locator('.vs-screen').element_handle()
@@ -848,12 +856,56 @@ class TestShellDemo(WebTestCase):
             int(page.locator(
                 '.vs-table thead th').nth(1).evaluate(
                     'element => getComputedStyle(element).zIndex')))
+        self.assertTrue(page.evaluate("""
+            () => {
+                const popup = document.querySelector(
+                    '.vs-column-popup .vs-popup-menu');
+                const box = popup.getBoundingClientRect();
+                const element = document.elementFromPoint(
+                    Math.min(box.right - 1, box.left + 10),
+                    Math.min(box.bottom - 1, box.top + 10));
+                return Boolean(element && element.closest(
+                    '.vs-column-popup .vs-popup-menu'));
+            }
+        """))
+        expect(column_popup.get_by_role(
+                'menuitem', name='Copy Selected Records')).to_be_visible()
+        expect(column_popup.get_by_role(
+                'menuitem', name='Reset Column Widths')).to_be_visible()
         active = page.locator(
             '.vs-column-option',
             has_text='Active').get_by_role('checkbox')
         active.check()
+        self.assertTrue(page.locator(
+            'details.vs-column-popup').evaluate(
+                'element => element.open'))
         expect(page.get_by_role(
                 'button', name='Active', exact=True)).to_be_visible()
+        with page.expect_response(
+                lambda response:
+                response.url.endswith('/tree/columns/width')
+                and response.request.method == 'POST'):
+            page.locator('[data-reset-column-widths]').click()
+        self.assertFalse(page.locator(
+            'details.vs-column-popup').evaluate(
+                'element => element.open'))
+        selected_row = page.locator('.vs-table tbody tr').first
+        selected_name = selected_row.locator('td').nth(2).inner_text()
+        with page.expect_response(
+                lambda response:
+                '/record/' in response.url
+                and response.url.endswith('/select')
+                and response.request.method == 'POST'):
+            selected_row.get_by_role('checkbox', name='Select record').check()
+        page.context.grant_permissions([
+            'clipboard-read', 'clipboard-write'])
+        page.locator('[aria-label="Columns"]').click()
+        page.get_by_role(
+            'menuitem', name='Copy Selected Records').click()
+        expect(page.locator('details.vs-column-popup')).not_to_have_attribute(
+            'open')
+        self.assertIn(selected_name, page.evaluate(
+            'navigator.clipboard.readText()'))
         page.reload(wait_until='domcontentloaded')
         expect(page.get_by_role(
                 'button', name='Active', exact=True)).to_be_visible()
