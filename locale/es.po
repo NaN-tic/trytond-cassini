@@ -2191,10 +2191,6 @@ msgid "Open the record"
 msgstr "Abrir el registro"
 
 msgctxt "xgettext:x:"
-msgid "Open tickets"
-msgstr "Abrir los tiques"
-
-msgctxt "xgettext:x:"
 msgid "Optional columns"
 msgstr "Columnas opcionales"
 
@@ -2607,10 +2603,6 @@ msgid "Total"
 msgstr "Total"
 
 msgctxt "xgettext:x:"
-msgid "Track tickets created from the assistant and add comments without losing your current workspace."
-msgstr "Siga los tiques creados desde el asistente y añada comentarios sin perder el espacio de trabajo actual."
-
-msgctxt "xgettext:x:"
 msgid "True"
 msgstr "Verdadero"
 
@@ -2837,3 +2829,31 @@ msgstr "abrir las preferencias"
 msgctxt "xgettext:x:"
 msgid "switch view"
 msgstr "cambiar de vista"
+
+msgctxt "xgettext:x:"
+msgid "(CET/CEST time zone)"
+msgstr "(Zona horaria CET/CEST)"
+
+msgctxt "xgettext:x:"
+msgid "Monday to Thursday from 9 to 17:30 and Friday from 9 to 15"
+msgstr "De lunes a jueves de 9 a 17:30 y viernes de 9 a 15"
+
+msgctxt "xgettext:x:"
+msgid "See tickets"
+msgstr "Ver tiques"
+
+msgctxt "xgettext:x:"
+msgid "Tickets and assistance"
+msgstr "Tiques y asistencia"
+
+msgctxt "xgettext:x:"
+msgid "Track the tickets you have created via the chat, monitor their status, and add new comments as needed."
+msgstr "Haz el seguimiento de los tiques que has creado a través del chat, controla su estado y añade nuevos comentarios cuando sea necesario."
+
+msgctxt "xgettext:x:"
+msgid "You must have an active hour pack, where the time spent answering will be charged with a"
+msgstr "Debes tener una bolsa de horas activa, donde se imputará el tiempo dedicado a darte respuesta con un"
+
+msgctxt "xgettext:x:"
+msgid "minimum of 15 minutes"
+msgstr "mínimo de 15 minutos"

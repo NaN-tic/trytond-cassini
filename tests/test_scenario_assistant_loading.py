@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta
+from decimal import Decimal
 from types import SimpleNamespace
 
 from playwright.sync_api import Page, expect
@@ -279,6 +280,8 @@ class TestAssistantLoading(WebTestCase):
             'button', name='Choose a NaN')
         self.assertEqual(new_conversation.bounding_box()['width'], 40)
         self.assertEqual(nan_toggle.bounding_box()['width'], 18)
+        self.assertEqual(
+            nan_toggle.locator('img').bounding_box()['width'], 16)
         self.assertLessEqual(
             abs(
                 new_conversation.bounding_box()['x']
@@ -288,6 +291,40 @@ class TestAssistantLoading(WebTestCase):
         nan_toggle.click()
         expect(page.get_by_role(
             'menuitem', name='Default')).to_be_visible()
+        nan_toggle.click()
+
+        with Transaction().start(self.database, 1) as transaction:
+            pool = Pool()
+            Agent = pool.get('nantic.agent')
+            Company = pool.get('company.company')
+            Currency = pool.get('currency.currency')
+            Party = pool.get('party.party')
+            currency, = Currency.create([{
+                        'name': 'NaN Test Currency',
+                        'symbol': 'N',
+                        'code': 'QNN',
+                        'rounding': Decimal('0.01'),
+                        }])
+            company_party, = Party.create([{
+                        'name': 'NaN Test Company',
+                        }])
+            company, = Company.create([{
+                        'party': company_party.id,
+                        'currency': currency.id,
+                        }])
+            Agent.create([{
+                        'name': 'Freshly saved NaN',
+                        'mission': 'Test refreshing the available NaNs.',
+                        'owner': 1,
+                        'company': company.id,
+                        'available_as_nan': True,
+                        }])
+            transaction.commit()
+        with page.expect_response(
+                lambda response: '/help/nans' in response.url):
+            nan_toggle.click()
+        expect(page.get_by_role(
+            'menuitem', name='Freshly saved NaN')).to_be_visible()
         nan_toggle.click()
 
         conversations = page.get_by_role(
@@ -385,6 +422,11 @@ class TestAssistantLoading(WebTestCase):
             'src', '/cassini-help-icons/target-documentation.svg')
         expect(search_words.locator('img')).to_have_attribute(
             'src', '/cassini-icons/tryton-search.svg')
+        expect(contextual).to_have_class(
+            'vs-help-heading-button vs-button-active')
+        expect(contextual).to_have_attribute('aria-pressed', 'true')
+        expect(search_words).to_have_class('vs-help-heading-button')
+        expect(search_words).to_have_attribute('aria-pressed', 'false')
         toolbar_button = page.locator(
             '.vs-active-panel .vs-toolbar .vs-icon-button').first
         toolbar_colors = toolbar_button.evaluate(
@@ -392,12 +434,23 @@ class TestAssistantLoading(WebTestCase):
                 background: getComputedStyle(element).backgroundColor,
                 color: getComputedStyle(element).color,
             })''')
-        for help_button in (contextual, search_words):
-            self.assertEqual(help_button.evaluate(
-                '''element => ({
-                    background: getComputedStyle(element).backgroundColor,
-                    color: getComputedStyle(element).color,
-                })'''), toolbar_colors)
+        active_panel_button = page.locator(
+            '.vs-shell-controls .vs-button-active')
+        active_colors = active_panel_button.evaluate(
+            '''element => ({
+                background: getComputedStyle(element).backgroundColor,
+                color: getComputedStyle(element).color,
+            })''')
+        self.assertEqual(contextual.evaluate(
+            '''element => ({
+                background: getComputedStyle(element).backgroundColor,
+                color: getComputedStyle(element).color,
+            })'''), active_colors)
+        self.assertEqual(search_words.evaluate(
+            '''element => ({
+                background: getComputedStyle(element).backgroundColor,
+                color: getComputedStyle(element).color,
+            })'''), toolbar_colors)
         self.assertLessEqual(
             abs(
                 contextual.bounding_box()['x']
@@ -409,6 +462,14 @@ class TestAssistantLoading(WebTestCase):
                 '/help/documentation/search-mode' in response.url):
             search_words.click()
         expect(page.get_by_label('Search documentation')).to_be_visible()
+        contextual = page.get_by_role(
+            'button', name='Contextual documentation', exact=True)
+        search_words = page.get_by_role(
+            'button', name='Search words', exact=True)
+        expect(contextual).to_have_attribute('aria-pressed', 'false')
+        expect(search_words).to_have_class(
+            'vs-help-heading-button vs-button-active')
+        expect(search_words).to_have_attribute('aria-pressed', 'true')
         with page.expect_response(
                 lambda response:
                 '/help/documentation/target' in response.url):
@@ -417,6 +478,12 @@ class TestAssistantLoading(WebTestCase):
                 exact=True).click()
         expect(page.get_by_label(
             'Search documentation')).to_have_count(0)
+        contextual = page.get_by_role(
+            'button', name='Contextual documentation', exact=True)
+        search_words = page.get_by_role(
+            'button', name='Search words', exact=True)
+        expect(contextual).to_have_attribute('aria-pressed', 'true')
+        expect(search_words).to_have_attribute('aria-pressed', 'false')
 
         with page.expect_response(
                 lambda response: '/help/section/updates' in response.url):
@@ -452,13 +519,21 @@ class TestAssistantLoading(WebTestCase):
                 - update_groups.first.bounding_box()['width']),
             6)
         expect(pending).to_have_class(
-            'vs-help-heading-button vs-help-heading-button-active')
+            'vs-help-heading-button vs-button-active')
+        expect(pending).to_have_attribute('aria-pressed', 'true')
+        expect(latest).to_have_attribute('aria-pressed', 'false')
         with page.expect_response(
                 lambda response: '/help/updates?filter=latest' in response.url):
             latest.click()
         expect(page.get_by_role(
             'button', name='Latest', exact=True)).to_have_class(
-                'vs-help-heading-button vs-help-heading-button-active')
+                'vs-help-heading-button vs-button-active')
+        expect(page.get_by_role(
+            'button', name='Pending', exact=True)).to_have_attribute(
+                'aria-pressed', 'false')
+        expect(page.get_by_role(
+            'button', name='Latest', exact=True)).to_have_attribute(
+                'aria-pressed', 'true')
         with page.expect_response(
                 lambda response:
                 '/help/resource/updates' in response.url):
@@ -470,7 +545,7 @@ class TestAssistantLoading(WebTestCase):
         with page.expect_response(
                 lambda response: '/help/section/tickets' in response.url):
             page.get_by_role(
-                'button', name='Support', exact=True).click()
+                'button', name='Tickets and assistance', exact=True).click()
         support_actions = page.locator(
             '[data-help-section="tickets"] .vs-help-heading-actions')
         expect(support_actions.get_by_role('button')).to_have_count(1)
@@ -479,11 +554,24 @@ class TestAssistantLoading(WebTestCase):
         expect(assistance.locator('img')).to_have_attribute(
             'src', '/cassini-help-icons/support_agent-24px.svg')
         expect(assistance).to_have_attribute('data-help-cobrowse', 'true')
+        ticket_panel = page.locator(
+            '[data-help-section="tickets"] .vs-help-accordion-body')
+        expect(ticket_panel).to_contain_text(
+            'Track the tickets you have created via the chat, monitor '
+            'their status, and add new comments as needed.')
+        expect(ticket_panel).to_contain_text(
+            'Monday to Thursday from 9 to 17:30 and Friday from 9 to 15')
+        expect(ticket_panel).to_contain_text('(CET/CEST time zone)')
+        expect(ticket_panel).to_contain_text(
+            'You must have an active hour pack, where the time spent '
+            'answering will be charged with a')
+        expect(ticket_panel.locator('strong')).to_have_text(
+            'minimum of 15 minutes')
         with page.expect_response(
                 lambda response:
                 '/help/resource/tickets' in response.url):
             page.get_by_role(
-                'button', name='Open tickets', exact=True).click()
+                'button', name='See tickets', exact=True).click()
         expect(page.locator(
             '.vs-tab', has_text='NaN-tic Tickets')).to_be_visible()
 

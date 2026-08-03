@@ -2191,10 +2191,6 @@ msgid "Open the record"
 msgstr "Obre el registre"
 
 msgctxt "xgettext:x:"
-msgid "Open tickets"
-msgstr "Obre els tiquets"
-
-msgctxt "xgettext:x:"
 msgid "Optional columns"
 msgstr "Columnes opcionals"
 
@@ -2607,10 +2603,6 @@ msgid "Total"
 msgstr "Total"
 
 msgctxt "xgettext:x:"
-msgid "Track tickets created from the assistant and add comments without losing your current workspace."
-msgstr "Seguiu els tiquets creats des de l'assistent i afegiu comentaris sense perdre l'espai de treball actual."
-
-msgctxt "xgettext:x:"
 msgid "True"
 msgstr "Cert"
 
@@ -2837,3 +2829,31 @@ msgstr "obrir les preferències"
 msgctxt "xgettext:x:"
 msgid "switch view"
 msgstr "canviar de vista"
+
+msgctxt "xgettext:x:"
+msgid "(CET/CEST time zone)"
+msgstr "(Zona horària CET/CEST)"
+
+msgctxt "xgettext:x:"
+msgid "Monday to Thursday from 9 to 17:30 and Friday from 9 to 15"
+msgstr "De dilluns a dijous de 9 a 17:30 i divendres de 9 a 15"
+
+msgctxt "xgettext:x:"
+msgid "See tickets"
+msgstr "Veure tiquets"
+
+msgctxt "xgettext:x:"
+msgid "Tickets and assistance"
+msgstr "Tiquets i assistència"
+
+msgctxt "xgettext:x:"
+msgid "Track the tickets you have created via the chat, monitor their status, and add new comments as needed."
+msgstr "Fes el seguiment dels tiquets que has creat a través del xat, controla el seu estat i afegeix nous comentaris quan sigui necessari."
+
+msgctxt "xgettext:x:"
+msgid "You must have an active hour pack, where the time spent answering will be charged with a"
+msgstr "Haureu de tenir una bossa d'hores activa on s'imputarà el temps dedicat a donar-te resposta amb un"
+
+msgctxt "xgettext:x:"
+msgid "minimum of 15 minutes"
+msgstr "mínim de 15 minuts"

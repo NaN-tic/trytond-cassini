@@ -27,6 +27,7 @@ def register():
         app.OpenNotification,
         app.OpenNotifications,
         app.HelpPanel,
+        app.HelpNanOptions,
         app.HelpSection,
         app.ChatRequest,
         app.ChatRefresh,

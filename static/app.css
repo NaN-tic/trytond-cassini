@@ -2760,6 +2760,14 @@ textarea.vs-input {
     color: var(--vs-primary);
 }
 
+.vs-help-heading-button.vs-button-active,
+.vs-help-heading-button.vs-button-active:hover:not(:disabled),
+.vs-help-heading-button.vs-button-active:focus-visible {
+    border-color: var(--vs-primary);
+    background: var(--vs-primary);
+    color: var(--vs-primary-contrast);
+}
+
 .vs-help-heading-button:disabled {
     cursor: not-allowed;
     opacity: .4;
@@ -2773,6 +2781,11 @@ textarea.vs-input {
 .vs-help-heading-group > .vs-help-heading-button:not(:first-child) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+}
+
+.vs-help-heading-group > .vs-help-heading-button
+        + .vs-help-heading-button {
+    border-left: 0;
 }
 
 .vs-help-heading-group > .vs-help-heading-button:not(:last-child) {
@@ -2791,14 +2804,15 @@ textarea.vs-input {
 .vs-nan-toggle {
     width: 18px;
     min-width: 18px;
+    padding: 2px 0;
     border-left: 1px solid var(--vs-line);
     border-radius: 0 .35rem .35rem 0;
     cursor: pointer;
 }
 
 .vs-nan-toggle .vs-icon {
-    width: .75rem;
-    height: .75rem;
+    width: 1rem;
+    height: 1rem;
 }
 
 .vs-nan-popup-menu {
@@ -3040,6 +3054,10 @@ textarea.vs-input {
 .vs-help-ticket-list {
     overflow: auto;
     padding-left: 1.2rem;
+}
+
+.vs-help-ticket-schedule {
+    margin: .55rem 0;
 }
 
 .vs-chat-message {

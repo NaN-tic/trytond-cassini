@@ -14,7 +14,7 @@ from xml.etree import ElementTree
 
 import dominate
 from dominate.tags import (
-    a, article, aside, button, details, div, form, h1, h2, h3, h4,
+    a, article, aside, br, button, details, div, form, h1, h2, h3, h4,
     header, iframe, img, input_, label, li, link, main, meta, nav, option, p,
     script, section, select, span, strong, summary, textarea, ul)
 from dominate.util import raw
@@ -1823,6 +1823,33 @@ class OpenNotifications(SaoEndpoint):
                     'cassini.activate.tab').url(tab=tab['id'])})
 
 
+def nan_popup_menu():
+    ChatNew = Pool().get('cassini.chat.new')
+    Agent = optional_model('nantic.agent')
+    agents = []
+    if Agent:
+        agents = Agent.search([
+                ('available_as_nan', '=', True),
+                ('visible', '=', True),
+                ], order=[('name', 'ASC')])
+    with div(
+            cls='vs-popup-menu vs-nan-popup-menu',
+            role='menu', aria_label=_('NaNs')) as menu:
+        with button(
+                _('Default'), type='button', role='menuitem',
+                cls='vs-popup-item', hx_post=ChatNew.url(),
+                hx_target='#help-panel', hx_swap='outerHTML'):
+            pass
+        for agent in agents:
+            with button(
+                    agent.name, type='button', role='menuitem',
+                    cls='vs-popup-item', hx_post=ChatNew.url(),
+                    hx_vals=json.dumps({'nan': agent.id}),
+                    hx_target='#help-panel', hx_swap='outerHTML'):
+                pass
+    return menu
+
+
 class HelpPanel(SaoEndpoint):
     'Cassini Help and Assistant Panel'
     __name__ = 'cassini.help.panel'
@@ -1882,7 +1909,9 @@ class HelpPanel(SaoEndpoint):
                             'documentation', _('Documentation'),
                             'documentation-24px.svg'),
                         ('updates', _('Updates'), 'update.svg'),
-                        ('tickets', _('Support'), 'form.svg')):
+                        (
+                            'tickets', _('Tickets and assistance'),
+                            'form.svg')):
                     self.accordion_section(
                         identifier, title, image, state, conversation)
         return panel
@@ -1930,6 +1959,7 @@ class HelpPanel(SaoEndpoint):
     def section_actions(self, identifier, state, conversation):
         if identifier == 'assistant':
             ChatNew = Pool().get('cassini.chat.new')
+            HelpNanOptions = Pool().get('cassini.help.nan.options')
             HelpResource = Pool().get('cassini.help.resource')
             Conversation = optional_model('nantic.chat.conversation')
             Agent = optional_model('nantic.agent')
@@ -1950,11 +1980,6 @@ class HelpPanel(SaoEndpoint):
                         disabled=not Conversation or None):
                     icon('create')
                 if Agent:
-                    agents = Agent.search([
-                            ('available_as_nan', '=', True),
-                            ('visible', '=', True),
-                            ], order=[('name', 'ASC')])
-                    default_label = _('Default')
                     with details(
                             cls='vs-popup vs-nan-popup'):
                         with summary(
@@ -1963,35 +1988,12 @@ class HelpPanel(SaoEndpoint):
                                     'vs-nan-toggle'),
                                 role='button',
                                 title=_('Start with a NaN'),
-                                aria_label=_('Choose a NaN')):
+                                aria_label=_('Choose a NaN'),
+                                hx_post=HelpNanOptions.url(),
+                                hx_target='next .vs-nan-popup-menu',
+                                hx_swap='outerHTML'):
                             icon('arrow-down')
-                        with div(
-                                cls=(
-                                    'vs-popup-menu '
-                                    'vs-nan-popup-menu'),
-                                role='menu',
-                                aria_label=_('NaNs')):
-                            with button(
-                                    default_label,
-                                    type='button',
-                                    role='menuitem',
-                                    cls='vs-popup-item',
-                                    hx_post=ChatNew.url(),
-                                    hx_target='#help-panel',
-                                    hx_swap='outerHTML'):
-                                pass
-                            for agent in agents:
-                                with button(
-                                        agent.name,
-                                        type='button',
-                                        role='menuitem',
-                                        cls='vs-popup-item',
-                                        hx_post=ChatNew.url(),
-                                        hx_vals=json.dumps({
-                                            'nan': agent.id}),
-                                        hx_target='#help-panel',
-                                        hx_swap='outerHTML'):
-                                    pass
+                        nan_popup_menu()
             with button(
                     type='button',
                     cls=(
@@ -2032,9 +2034,12 @@ class HelpPanel(SaoEndpoint):
                     with button(
                             type='button',
                             cls='vs-help-heading-button%s' % (
-                                ' vs-help-heading-button-active'
+                                ' vs-button-active'
                                 if state.get('documentation_mode') == mode
                                 else ''),
+                            aria_pressed=str(
+                                state.get('documentation_mode')
+                                == mode).lower(),
                             title=title, aria_label=title,
                             hx_post=HelpDocumentation.url(action=action),
                             hx_target='#help-panel',
@@ -2057,9 +2062,12 @@ class HelpPanel(SaoEndpoint):
                     with button(
                             type='button',
                             cls='vs-help-heading-button%s' % (
-                                ' vs-help-heading-button-active'
+                                ' vs-button-active'
                                 if state.get('updates_filter') == filter_
                                 else ''),
+                            aria_pressed=str(
+                                state.get('updates_filter')
+                                == filter_).lower(),
                             title=title, aria_label=title,
                             hx_post=HelpUpdates.url(filter=filter_),
                             hx_target='#help-panel',
@@ -2423,28 +2431,38 @@ class HelpPanel(SaoEndpoint):
                 'installed.'),
                 cls='vs-notice')
             return
-        try:
-            tickets = Ticket.search([
-                    ('users', 'in', [Transaction().user]),
-                    ], order=[('id', 'DESC')], limit=20)
-        except Exception:
-            tickets = []
         p(
-            _('Track tickets created from the assistant and add comments '
-            'without losing your current workspace.'),
-            cls='vs-muted')
-        if tickets:
-            with ul(cls='vs-help-ticket-list'):
-                for ticket in tickets:
-                    li(ticket.rec_name)
+            _('Track the tickets you have created via the chat, monitor '
+                'their status, and add new comments as needed.'))
+        with div(cls='vs-help-ticket-schedule'):
+            span(_(
+                'Monday to Thursday from 9 to 17:30 and Friday from 9 to 15'))
+            br()
+            span(_('(CET/CEST time zone)'))
+        with div(cls='vs-help-ticket-schedule'):
+            span(_(
+                'You must have an active hour pack, where the time spent '
+                'answering will be charged with a'))
+            span(' ')
+            strong(_('minimum of 15 minutes'))
+            span('.')
         with button(
-                _('Open tickets'), type='button',
+                _('See tickets'), type='button',
                 cls='vs-button vs-button-primary',
                 hx_post=HelpResource.url(resource='tickets'),
                 hx_target='#workspace',
                 hx_swap='outerHTML',
                 hx_push_url='true'):
             pass
+
+
+class HelpNanOptions(SaoEndpoint):
+    'Refresh the NaN Options'
+    __name__ = 'cassini.help.nan.options'
+    _url = '/help/nans'
+
+    def render(self):
+        return nan_popup_menu()
 
 
 class HelpSection(SaoEndpoint):
@@ -4967,17 +4985,30 @@ class X2ManyAction(SaoEndpoint):
                 state['view'] = modes[
                     (modes.index(current_view) + 1) % len(modes)]
         elif self.action in {'delete', 'remove'}:
-            match = next((
-                    (index, value)
+            selected_keys = set(selected)
+            matches = [
+                (index, key, value)
+                for index, (key, value) in enumerate(active)
+                if key in selected_keys]
+            if not matches:
+                matches = [
+                    (index, key, value)
                     for index, (key, value) in enumerate(active)
-                    if key == current), None)
-            if match:
-                index, value = match
-                relation_values.pop(index)
-                if isinstance(value, dict) and not value.get('id'):
-                    current = None
-                else:
+                    if key == current]
+            if matches:
+                first_index = matches[0][0]
+                for index, _key, _value in reversed(matches):
+                    relation_values.pop(index)
+                for _index, _key, value in matches:
+                    if isinstance(value, dict) and not value.get('id'):
+                        continue
                     deleted.append(value)
+                remaining_keys = [
+                    WidgetRenderer.x2many_item_key(value, index)
+                    for index, value in enumerate(relation_values)]
+                current = (
+                    remaining_keys[min(first_index, len(remaining_keys) - 1)]
+                    if remaining_keys else None)
                 update_value = True
         elif self.action == 'undelete':
             match = next((

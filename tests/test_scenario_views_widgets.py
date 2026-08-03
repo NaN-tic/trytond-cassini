@@ -872,15 +872,34 @@ class TestViewsWidgets(WebTestCase):
                 'Created Child in Popup')
 
         one2many = page.locator('[data-field="one2many_value"]')
+        with page.expect_response(
+                lambda response: response.url.endswith('/x2many/select')):
+            one2many.get_by_text(
+                'Beta Child One', exact=True).click()
+        one2many = page.locator('[data-field="one2many_value"]')
+        with page.expect_response(
+                lambda response: response.url.endswith('/x2many/select')):
+            one2many.get_by_text(
+                'Beta Child Two', exact=True).click(modifiers=['Control'])
+        one2many = page.locator('[data-field="one2many_value"]')
+        expect(one2many.locator('.vs-row-selected')).to_have_count(2)
         relation_actions = one2many.get_by_role(
             'toolbar', name='Relation actions')
         relation_actions.get_by_role(
             'button', name='Delete', exact=True).click()
-        expect(one2many.locator(
-                '.vs-x2many-row-deleted')).to_contain_text('Beta Child One')
+        one2many = page.locator('[data-field="one2many_value"]')
+        deleted_rows = one2many.locator('.vs-x2many-row-deleted')
+        expect(deleted_rows).to_have_count(2)
+        expect(deleted_rows).to_contain_text([
+                'Beta Child One', 'Beta Child Two'])
+        relation_actions = one2many.get_by_role(
+            'toolbar', name='Relation actions')
         expect(relation_actions.get_by_role(
                 'button', name='Undelete', exact=True)).to_be_enabled()
         relation_actions.get_by_role(
+            'button', name='Undelete', exact=True).click()
+        one2many = page.locator('[data-field="one2many_value"]')
+        one2many.get_by_role(
             'button', name='Undelete', exact=True).click()
         expect(one2many.locator(
                 '.vs-x2many-row-deleted')).to_have_count(0)
@@ -928,14 +947,33 @@ class TestViewsWidgets(WebTestCase):
             'alertdialog', name='Unsaved changes').get_by_role(
                 'button', name='Close without saving', exact=True).click()
         expect(relation_record_dialog).not_to_be_visible()
-        many2many_input.fill('Widget Group Two')
+        many2many = page.locator('[data-field="many2many_value"]')
+        many2many_input = many2many.locator('[data-many2many-input]')
+        with page.expect_response(
+                lambda response: response.url.endswith('/autocomplete')):
+            many2many_input.fill('Widget Group Two')
         many2many_option = many2many.locator(
             '.vs-relation-option', has_text='Widget Group Two')
         expect(many2many_option).to_be_visible()
-        many2many_option.click()
+        with page.expect_response(
+                lambda response: response.url.endswith('/x2many/add')):
+            many2many_option.click()
         many2many = page.locator('[data-field="many2many_value"]')
         expect(many2many.get_by_text(
             'Widget Group Two', exact=True)).to_be_visible()
+        many2many_input = many2many.locator('[data-many2many-input]')
+        with page.expect_response(
+                lambda response: response.url.endswith('/autocomplete')):
+            many2many_input.fill('Widget Group One')
+        many2many_option = many2many.locator(
+            '.vs-relation-option', has_text='Widget Group One')
+        expect(many2many_option).to_be_visible()
+        with page.expect_response(
+                lambda response: response.url.endswith('/x2many/add')):
+            many2many_option.click()
+        many2many = page.locator('[data-field="many2many_value"]')
+        expect(many2many.get_by_text(
+            'Widget Group One', exact=True)).to_be_visible()
         many2many_actions = many2many.get_by_role(
             'toolbar', name='Relation actions')
         many2many_actions.get_by_role(
@@ -943,12 +981,29 @@ class TestViewsWidgets(WebTestCase):
         expect(page.get_by_role(
             'dialog', name='Search Many to Many')).to_be_visible()
         page.get_by_role('button', name='Cancel', exact=True).click()
+        many2many = page.locator('[data-field="many2many_value"]')
+        with page.expect_response(
+                lambda response: response.url.endswith('/x2many/select')):
+            many2many.get_by_text(
+                'Widget Group One', exact=True).click()
+        many2many = page.locator('[data-field="many2many_value"]')
+        with page.expect_response(
+                lambda response: response.url.endswith('/x2many/select')):
+            many2many.get_by_text(
+                'Widget Group Two', exact=True).click(
+                    modifiers=['Control'])
+        many2many = page.locator('[data-field="many2many_value"]')
+        expect(many2many.locator('.vs-row-selected')).to_have_count(2)
+        many2many_actions = many2many.get_by_role(
+            'toolbar', name='Relation actions')
         many2many_actions.get_by_role(
             'button', name='Remove', exact=True).click()
         many2many = page.locator('[data-field="many2many_value"]')
         expect(many2many.locator(
-            '.vs-x2many-row-deleted')).to_contain_text(
-                'Widget Group Two')
+            '.vs-x2many-row-deleted')).to_have_count(2)
+        many2many.get_by_role(
+            'button', name='Undelete', exact=True).click()
+        many2many = page.locator('[data-field="many2many_value"]')
         many2many.get_by_role(
             'button', name='Undelete', exact=True).click()
         expect(page.locator(
