@@ -1003,10 +1003,18 @@ class SaoEngine:
             tab['view'] = encode_value(view)
             tab['toolbar'] = encode_value(Model.view_toolbar_get())
             fields_names = list(view.get('fields', {}).keys())
-            read_fields = [
-                name for name in fields_names
-                if name in Model._fields and name != 'id'
-                ]
+            if tab['view_type'] == 'tree':
+                read_fields = WidgetRenderer.tree_read_fields(view, Model)
+            else:
+                read_fields = [
+                    name for name in fields_names
+                    if name in Model._fields and name != 'id'
+                    ]
+            root = ElementTree.fromstring(view.get('arch') or '<form/>')
+            for node in root.iter('field'):
+                filename = node.attrib.get('filename')
+                if filename in Model._fields and filename not in read_fields:
+                    read_fields.append(filename)
             if 'rec_name' not in read_fields:
                 read_fields.append('rec_name')
 
@@ -1924,17 +1932,24 @@ class SaoEngine:
         self.save()
         return stored, set(changed_values) | {field_name}
 
-    def update_binary(self, tab_id, record_key, field_name, data):
+    def update_binary(
+            self, tab_id, record_key, field_name, data,
+            filename_field=None, filename=None):
         tab = self._tab(tab_id, kind='window')
         stored = tab['records'][record_key]
         values = decode_value(stored['values'])
         values[field_name] = data
+        changed = {field_name}
+        if filename_field:
+            values[filename_field] = filename if data is not None else None
+            changed.add(filename_field)
         stored['values'] = encode_value(values)
         stored['dirty'] = sorted(
-            set(stored.get('dirty', [])) | {field_name})
+            set(stored.get('dirty', [])) | changed)
         tab['dirty'] = True
+        tab['current_record'] = record_key
         self.save()
-        return stored, {field_name}
+        return stored, changed
 
     def scan_code(self, tab_id, record_key, code):
         tab = self._tab(tab_id, kind='window')
@@ -2652,7 +2667,15 @@ class SaoEngine:
             content = getattr(Model(record['id']), field_name) or b''
         view = decode_value(tab.get('view', {}))
         definition = view.get('fields', {}).get(field_name, {})
-        filename = values.get(definition.get('filename')) or field_name
+        filename_field = definition.get('filename')
+        if not filename_field:
+            root = ElementTree.fromstring(view.get('arch') or '<form/>')
+            for node in root.iter('field'):
+                if node.attrib.get('name') == field_name:
+                    filename_field = node.attrib.get('filename')
+                    if filename_field:
+                        break
+        filename = values.get(filename_field) or field_name
         filename = secure_filename(str(filename)) or field_name
         mimetype = mimetypes.guess_type(filename)[0]
         response = Response(

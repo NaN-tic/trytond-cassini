@@ -5522,13 +5522,21 @@ class UpdateField(SaoEndpoint):
     def render(self):
         request = current_request()
         uploaded = request.files.get('value') if request else None
+        tab = self.engine.interface.get_tab(self.tab)
+        view = decode_value(tab['view'])
+        definition = view.get('fields', {}).get(self.field, {})
+        attributes = field_attributes(view, self.field)
+        filename_field = (
+            attributes.get('filename')
+            or definition.get('filename'))
         if uploaded:
             stored, changed = self.engine.update_binary(
-                self.tab, self.record, self.field, uploaded.read())
+                self.tab, self.record, self.field, uploaded.read(),
+                filename_field, uploaded.filename)
+        elif definition.get('type') == 'binary' and self.value == '':
+            stored, changed = self.engine.update_binary(
+                self.tab, self.record, self.field, None, filename_field)
         else:
-            tab = self.engine.interface.get_tab(self.tab)
-            view = decode_value(tab['view'])
-            definition = view.get('fields', {}).get(self.field, {})
             raw_values = request.form.getlist('value')
             raw_value = (
                 raw_values
@@ -5537,7 +5545,7 @@ class UpdateField(SaoEndpoint):
                 else self.value)
             stored, changed = self.engine.update_field(
                 self.tab, self.record, self.field, raw_value,
-                field_attributes(view, self.field))
+                attributes)
         tab = self.engine.interface.get_tab(self.tab)
         view_definition = self.engine.interface.get_tab(self.tab)['view']
         view_definition = decode_value(view_definition)
@@ -5546,6 +5554,14 @@ class UpdateField(SaoEndpoint):
             name for name in changed
             if name in view_definition.get('fields', {})
             ]
+        root = parse_architecture(view_definition)
+        for node in root.iter('field'):
+            binary_name = node.attrib.get('name')
+            if (
+                    node.attrib.get('filename') == self.field
+                    and binary_name in view_definition.get('fields', {})
+                    and binary_name not in visible_changed):
+                visible_changed.append(binary_name)
         attributes = field_attributes(view_definition, self.field)
         widget = (
             attributes.get('widget')

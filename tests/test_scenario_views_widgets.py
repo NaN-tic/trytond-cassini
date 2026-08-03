@@ -83,6 +83,8 @@ class TestViewsWidgets(WebTestCase):
                         'url_value': 'https://example.test/alpha',
                         },
                     {
+                        'binary_value': b'beta',
+                        'binary_filename': 'beta.txt',
                         'char_value': 'Widget Beta',
                         'date_value': cls.today,
                         'many2one_value': second_group.id,
@@ -123,6 +125,8 @@ class TestViewsWidgets(WebTestCase):
                         'data': (
                             '<tree>'
                             '<field name="char_value"/>'
+                            '<field name="binary_value" '
+                            'filename="binary_filename"/>'
                             '<field name="datetime_value" widget="date"/>'
                             '<field name="datetime_value" widget="time"/>'
                             '<field name="many2one_value"/>'
@@ -146,7 +150,7 @@ class TestViewsWidgets(WebTestCase):
                             'expandable="1" col="4">'
                             '<field name="binary_value" widget="binary" '
                             'filename="binary_filename" '
-                            'filename_visible="1"/>'
+                            'filename_visible="1" colspan="4"/>'
                             '<field name="boolean_value" widget="boolean"/>'
                             '</group>'
                             '<group id="unlimited" string="Unlimited" '
@@ -397,6 +401,15 @@ class TestViewsWidgets(WebTestCase):
             self.today.strftime('%d/%m/%Y'), exact=True)).to_be_visible()
         expect(alpha_row.get_by_text(
             self.now.strftime('%H:%M:%S'), exact=True)).to_be_visible()
+        tree_binary = alpha_row.locator('.vs-tree-binary')
+        expect(tree_binary.get_by_text('6B', exact=True)).to_be_visible()
+        expect(tree_binary.get_by_role(
+            'link', name='Save as', exact=True)).to_have_attribute(
+                'download', 'binary.txt')
+        with page.expect_download() as download_info:
+            tree_binary.get_by_role(
+                'link', name='Save as', exact=True).click()
+        self.assertEqual(download_info.value.suggested_filename, 'binary.txt')
         with page.expect_response(
                 lambda response: '/relation/res.group/' in response.url):
             alpha_relation.click()
@@ -544,6 +557,51 @@ class TestViewsWidgets(WebTestCase):
         for widget_name in widget_names:
             expect(page.locator(
                     f'[data-widget="{widget_name}"]')).to_be_visible()
+        binary = page.locator('[data-field="binary_value"]')
+        expect(binary.locator('[data-binary-filename]')).to_have_value(
+            'beta.txt')
+        expect(binary.locator('[data-binary-size]')).to_have_value('4B')
+        expect(binary.get_by_role(
+            'link', name='Save as', exact=True)).to_have_attribute(
+                'download', 'beta.txt')
+        expect(binary.get_by_role(
+            'button', name='Clear', exact=True)).to_be_visible()
+        expect(binary.locator('[data-binary-select]')).to_be_hidden()
+        filename = binary.locator('[data-binary-filename]')
+        with page.expect_response(
+                lambda response: '/field/binary_filename' in response.url):
+            filename.fill('renamed.txt')
+            filename.blur()
+        expect(binary.locator('[data-binary-filename]')).to_have_value(
+            'renamed.txt')
+        expect(binary.get_by_role(
+            'link', name='Save as', exact=True)).to_have_attribute(
+                'download', 'renamed.txt')
+        with page.expect_response(
+                lambda response: '/field/binary_value' in response.url):
+            binary.get_by_role('button', name='Clear', exact=True).click()
+        expect(binary.locator('[data-binary-filename]')).to_have_value('')
+        expect(binary.locator('[data-binary-size]')).to_have_value('')
+        expect(binary.get_by_role(
+            'link', name='Save as', exact=True)).to_have_count(0)
+        expect(binary.get_by_role(
+            'button', name='Clear', exact=True)).to_have_count(0)
+        expect(binary.locator('[data-binary-select]')).to_be_visible()
+        with page.expect_response(
+                lambda response: '/field/binary_value' in response.url):
+            binary.locator('input[type="file"]').set_input_files({
+                'name': 'updated.txt',
+                'mimeType': 'text/plain',
+                'buffer': b'Updated binary',
+                })
+        expect(binary.locator('[data-binary-filename]')).to_have_value(
+            'updated.txt')
+        expect(binary.locator('[data-binary-size]')).to_have_value('14B')
+        expect(binary.get_by_role(
+            'link', name='Save as', exact=True)).to_have_attribute(
+                'download', 'updated.txt')
+        expect(binary.get_by_role(
+            'button', name='Clear', exact=True)).to_be_visible()
         reference = page.locator('[data-field="reference_value"]')
         expect(reference.locator('[data-reference-model]')).to_have_value(
             'res.group')

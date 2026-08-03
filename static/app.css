@@ -3907,6 +3907,10 @@ textarea.vs-input {
     cursor: pointer;
 }
 
+.vs-file-select[hidden] {
+    display: none;
+}
+
 .vs-file-input {
     position: absolute;
     width: 1px;
@@ -3914,6 +3918,90 @@ textarea.vs-input {
     overflow: hidden;
     opacity: 0;
     inset: auto;
+}
+
+.vs-binary-widget,
+.vs-binary-input-group,
+.vs-binary-actions,
+.vs-tree-binary {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+}
+
+.vs-binary-widget,
+.vs-binary-input-group {
+    min-width: 0;
+}
+
+.vs-binary-widget {
+    width: 100%;
+    max-width: 100%;
+}
+
+.vs-binary-input-group {
+    flex: 1 1 0;
+}
+
+.vs-binary-actions {
+    flex: 0 0 auto;
+    min-width: auto;
+}
+
+.vs-binary-size,
+.vs-binary-filename {
+    min-width: 0;
+    border-radius: 0;
+}
+
+.vs-binary-size {
+    flex: 1;
+    text-align: end;
+}
+
+.vs-binary-widget[data-binary-filename-visible] .vs-binary-size,
+.vs-binary-widget[data-binary-filename-visible] .vs-binary-filename {
+    flex: 1 1 50%;
+}
+
+.vs-binary-actions .vs-icon-button {
+    width: 1.9rem;
+    min-width: 1.9rem;
+    height: 1.9rem;
+    padding: .3rem;
+    border-radius: 0;
+}
+
+.vs-binary-actions .vs-icon-button + .vs-icon-button {
+    border-left: 0;
+}
+
+.vs-binary-actions .vs-icon-button:last-child {
+    border-radius: 0 .5rem .5rem 0;
+}
+
+.vs-tree-content:has(.vs-tree-binary) {
+    justify-content: flex-end;
+    text-align: end;
+}
+
+.vs-tree-binary {
+    justify-content: flex-end;
+    gap: .35rem;
+    overflow: hidden;
+}
+
+.vs-tree-binary-size {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vs-tree-binary .vs-icon-button {
+    width: 1.8rem;
+    min-width: 1.8rem;
+    height: 1.8rem;
+    padding: .3rem;
 }
 
 .vs-progress {

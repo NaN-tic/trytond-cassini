@@ -3032,6 +3032,22 @@
         }
     });
     document.addEventListener("keydown", function (event) {
+        const filename = event.target.closest?.("[data-binary-filename]");
+        if (!filename) {
+            return;
+        }
+        const widget = filename.closest(".vs-binary-widget");
+        if (event.key === "F3" && !filename.disabled && !filename.readOnly) {
+            event.preventDefault();
+            widget?.querySelector("[data-binary-select] input")?.click();
+            return;
+        }
+        if (event.key === "F2") {
+            event.preventDefault();
+            widget?.querySelector(".vs-binary-actions a")?.click();
+        }
+    });
+    document.addEventListener("keydown", function (event) {
         if (event.key !== "Enter" || event.defaultPrevented ||
                 event.isComposing || event.shiftKey || event.ctrlKey ||
                 event.altKey || event.metaKey) {

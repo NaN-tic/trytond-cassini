@@ -350,6 +350,41 @@ class WidgetRenderer:
             }
         return values
 
+    @staticmethod
+    def binary_size(value):
+        """Return the byte size represented by a binary field value."""
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            return len(value)
+        try:
+            return max(0, int(value or 0))
+        except (TypeError, ValueError):
+            return 0
+
+    @classmethod
+    def humanize_binary_size(cls, value):
+        """Format a byte size with the same SI units as Sao."""
+        size = cls.binary_size(value)
+        units = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q']
+        unit = ''
+        for unit in units:
+            if size <= 1000:
+                break
+            size /= 1000
+        return '%s%sB' % (
+            format(size, '.2f').rstrip('0').rstrip('.'), unit) if size else ''
+
+    def binary_href(self, name, value):
+        if not self.binary_size(value):
+            return None
+        if self.endpoint == 'record':
+            Download = self.pool.get('cassini.download.binary')
+            return Download.url(
+                tab=self.tab['id'], record=self.record['key'], field=name)
+        if self.endpoint == 'preferences':
+            PreferenceBinary = self.pool.get('cassini.preference.binary')
+            return PreferenceBinary.url(field=name)
+        return None
+
     def common_attributes(
             self, name, field_id, widget, readonly, required):
         values = {
@@ -750,16 +785,8 @@ class WidgetRenderer:
                 attributes.get('filename')
                 or definition.get('filename'))
             filename = self.values.get(filename_field)
-            href = None
-            if value and self.endpoint == 'record':
-                Download = self.pool.get('cassini.download.binary')
-                href = Download.url(
-                    tab=self.tab['id'], record=self.record['key'],
-                    field=name)
-            elif value and self.endpoint == 'preferences':
-                PreferenceBinary = self.pool.get(
-                    'cassini.preference.binary')
-                href = PreferenceBinary.url(field=name)
+            size = self.binary_size(value)
+            href = self.binary_href(name, value)
             binary_name = (
                 'value' if self.endpoint in {'record', 'wizard'} else name)
             if widget == 'image':
@@ -826,6 +853,7 @@ class WidgetRenderer:
                             if value and not readonly:
                                 clear_values = self.htmx(
                                     name, field_id, widget)
+                                clear_values['hx_trigger'] = 'click'
                                 clear_values['hx_vals'] = json.dumps({
                                         binary_name: ''})
                                 with button(
@@ -836,31 +864,72 @@ class WidgetRenderer:
                                         **clear_values):
                                     icon('clear')
                 return control
-            with div(cls='vs-binary') as control:
-                if value and href:
-                    a(
-                        (
-                            filename
-                            if (filename
-                                and str(attributes.get(
-                                        'filename_visible', '0')).lower()
-                                not in {'0', 'false', 'no'})
-                            else _('Download')),
-                        href=href, cls='vs-link')
-                if not readonly:
+            filename_visible = (
+                filename_field
+                and str(attributes.get(
+                    'filename_visible', '0')).lower()
+                not in {'0', 'false', 'no'})
+            with div(
+                    cls='vs-binary-widget',
+                    data_binary_filename_visible=(
+                        'true' if filename_visible else None)) as control:
+                with div(cls='vs-binary-input-group'):
+                    if filename_visible:
+                        filename_id = field_id + '-filename'
+                        filename_attributes = self.common_attributes(
+                            filename_field, filename_id, 'char',
+                            readonly, False)
+                        filename_attributes.update({
+                                'id': filename_id + '-input',
+                                'value': stringify(filename),
+                                'cls': 'vs-input vs-binary-filename',
+                                'data_binary_filename': 'true',
+                                'hx_target': '#' + field_id,
+                                'hx_swap': 'none',
+                                'hx_trigger': 'change',
+                                })
+                        input_(type='text', **filename_attributes)
                     input_(
-                        id=field_id + '-input',
-                        name=binary_name,
-                        type='file',
-                        cls='vs-input', **binary_htmx)
-                    if value:
-                        clear_values = self.htmx(
-                            name, field_id, widget)
-                        clear_values['hx_vals'] = json.dumps({
-                                binary_name: ''})
-                        button(
-                            _('Clear'), type='button',
-                            cls='vs-link-button', **clear_values)
+                        type='text', readonly=True,
+                        value=self.humanize_binary_size(size),
+                        cls='vs-input vs-binary-size',
+                        aria_label=_('Size'), data_binary_size='true')
+                    with div(
+                            cls='vs-binary-actions', role='group',
+                            aria_label=_('Binary actions')):
+                        if href:
+                            with a(
+                                    href=href,
+                                    cls='vs-icon-button',
+                                    title=_('Save as'),
+                                    aria_label=_('Save as'),
+                                    download=filename or None):
+                                icon('download')
+                        if not readonly:
+                            with label(
+                                    cls=(
+                                        'vs-icon-button '
+                                        'vs-file-select'),
+                                    title=_('Select'),
+                                    aria_label=_('Select'),
+                                    hidden=bool(href) or None,
+                                    data_binary_select='true'):
+                                input_(
+                                    id=field_id + '-input',
+                                    name=binary_name,
+                                    type='file', cls='vs-file-input',
+                                    **binary_htmx)
+                                icon('search')
+                        if size and not readonly:
+                            clear_values = self.htmx(name, field_id, widget)
+                            clear_values['hx_trigger'] = 'click'
+                            clear_values['hx_vals'] = json.dumps({
+                                    binary_name: ''})
+                            with button(
+                                    type='button', cls='vs-icon-button',
+                                    title=_('Clear'), aria_label=_('Clear'),
+                                    **clear_values):
+                                icon('clear')
             return control
 
         if widget == 'progressbar':
@@ -932,6 +1001,15 @@ class WidgetRenderer:
             if name in Model._fields
             and Model._fields[name]._type != 'binary']
         for node in root.iter('field'):
+            name = node.attrib.get('name')
+            if (
+                    name in Model._fields
+                    and Model._fields[name]._type == 'binary'
+                    and name not in names):
+                names.append(name)
+            filename = node.attrib.get('filename')
+            if filename in Model._fields and filename not in names:
+                names.append(filename)
             candidates = [node.attrib.get('name'), node.attrib.get('icon')]
             for affix in node:
                 if affix.tag not in {'prefix', 'suffix'}:
@@ -975,10 +1053,17 @@ class WidgetRenderer:
         Relation = self.pool.get(definition['relation'])
         read_fields = self.tree_read_fields(relation_view, Relation)
         ids = [entry['id'] for entry in entries if entry['id']]
-        records = {
-            record['id']: record
-            for record in Relation.read(ids, read_fields)
-            } if ids else {}
+        binary_context = {
+            '%s.%s' % (Relation.__name__, name): 'size'
+            for name in read_fields
+            if (name in Relation._fields
+                and Relation._fields[name]._type == 'binary')
+            }
+        with Transaction().set_context(binary_context):
+            records = {
+                record['id']: record
+                for record in Relation.read(ids, read_fields)
+                } if ids else {}
         for entry in entries:
             item = entry['item']
             if entry['id']:
@@ -1717,6 +1802,26 @@ class WidgetRenderer:
                 pass
         elif widget in self.x2many_widgets:
             value = '(%d)' % len(value or [])
+        elif widget in self.binary_widgets:
+            size = self.binary_size(value)
+            if not size:
+                return span('', cls='vs-value vs-tree-binary')
+            filename_field = (
+                attributes.get('filename')
+                or definition.get('filename'))
+            filename = self.values.get(filename_field)
+            href = self.binary_href(name, value)
+            with span(cls='vs-value vs-tree-binary') as binary:
+                span(
+                    self.humanize_binary_size(size),
+                    cls='vs-tree-binary-size')
+                if href:
+                    with a(
+                            href=href, cls='vs-icon-button',
+                            title=_('Save as'), aria_label=_('Save as'),
+                            download=filename or None):
+                        icon('download')
+            return binary
         elif widget in {'selection', 'multiselection'}:
             choices = {
                 str(key): title
