@@ -10,11 +10,12 @@ from decimal import Decimal
 from dominate.tags import div
 from trytond.cache import Cache
 from trytond.model import ModelSQL, ModelView, Unique, fields
+from trytond.modules.xgettext import _
 from trytond.modules.voyager.voyager import Component
 from trytond.transaction import Transaction
 from werkzeug.wrappers import Response
 
-from .i18n import message_id, translate
+from .i18n import message_id
 
 STATE_VERSION = 1
 WORKSPACE_SESSION_UNIQUE = (
@@ -166,7 +167,7 @@ class InterfaceState:
 
     def activate(self, tab_id):
         if not self.get_tab(tab_id):
-            raise KeyError(translate('Unknown tab %s') % tab_id)
+            raise KeyError(_('Unknown tab %s') % tab_id)
         self.data['active_tab'] = tab_id
 
     def close(self, tab_id):
@@ -305,7 +306,7 @@ _STATE_COMPONENTS = {}
 def register_state_component(name, renderer):
     """Register a reusable renderer for a custom, non-XML UI component."""
     if not name or not callable(renderer):
-        raise ValueError(translate('A component name and callable renderer are required'))
+        raise ValueError(_('A component name and callable renderer are required'))
     _STATE_COMPONENTS[name] = renderer
 
 
@@ -313,7 +314,7 @@ def render_state_component(name, component_state, context=None):
     try:
         renderer = _STATE_COMPONENTS[name]
     except KeyError:
-        raise ValueError(translate('Unknown state component %s') % name)
+        raise ValueError(_('Unknown state component %s') % name)
     return renderer(component_state, context or {})
 
 

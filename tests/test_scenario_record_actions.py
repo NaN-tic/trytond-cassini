@@ -205,7 +205,7 @@ class TestRecordActions(WebTestCase):
 
         window_menu.locator('.vs-window-title').click()
         window_menu.get_by_role(
-            'menuitem', name='Export selected fields',
+            'menuitem', name='Export',
             exact=True).click()
         export_dialog = page.get_by_role(
             'dialog', name='CSV Export: Cassini Record Actions')

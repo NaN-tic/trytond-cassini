@@ -21,6 +21,7 @@ from dominate.util import raw
 from trytond.exceptions import (
     LoginException, RateLimitException, TrytonException, UserWarning)
 from trytond.model import fields
+from trytond.modules.xgettext import _
 from trytond.modules.voyager.voyager import Component, Endpoint
 from trytond.pool import Pool
 from trytond.protocols.wrappers import (
@@ -31,7 +32,7 @@ from werkzeug.wrappers import Response
 
 from .engine import SaoEngine
 from .icons import fullscreen_icon, icon, theme_icon
-from .i18n import javascript_translations, translate
+from .i18n import javascript_translations
 from .state import (
     Fragment, FragmentResponse, current_request, decode_value, encode_value,
     normalize_htmx_markup, render_state_component)
@@ -91,9 +92,9 @@ def field_attributes(view, name):
 def relation_source(engine, tab_id, record_key, field_name):
     if tab_id == 'preferences':
         if not engine.interface.data.get('preferences_open'):
-            raise ValueError(translate('Preferences are not open'))
+            raise ValueError(_('Preferences are not open'))
         if record_key != str(Transaction().user):
-            raise ValueError(translate('Unknown preference record'))
+            raise ValueError(_('Unknown preference record'))
         User = Pool().get('res.user')
         view = User.get_preferences_fields_view()
         state = engine.interface.component('preferences')
@@ -115,11 +116,11 @@ def relation_source(engine, tab_id, record_key, field_name):
     else:
         tab = engine.interface.get_tab(tab_id)
         if not tab:
-            raise ValueError(translate('Unknown record'))
+            raise ValueError(_('Unknown record'))
         view = decode_value(tab.get('view', {}))
         if tab.get('kind') == 'wizard':
             if record_key != 'wizard':
-                raise ValueError(translate('Unknown record'))
+                raise ValueError(_('Unknown record'))
             tab['model'] = view.get('model')
             record = {
                 'key': 'wizard',
@@ -139,7 +140,7 @@ def relation_source(engine, tab_id, record_key, field_name):
                 access.get('create', True)
                 if record.get('new') else access.get('write', True))
         else:
-            raise ValueError(translate('Unknown record'))
+            raise ValueError(_('Unknown record'))
     definition = view.get('fields', {}).get(field_name)
     Parent = Pool().get(tab['model'])
     field = Parent._fields.get(field_name)
@@ -149,7 +150,7 @@ def relation_source(engine, tab_id, record_key, field_name):
             or not field
             or field._type not in {
                 'many2one', 'one2one', 'one2many', 'many2many'}):
-        raise ValueError(translate('Unknown relation field'))
+        raise ValueError(_('Unknown relation field'))
     renderer = WidgetRenderer(
         tab, record, view, editable=editable, endpoint=endpoint)
     return tab, record, view, renderer, Parent, field, endpoint
@@ -247,11 +248,11 @@ def revision_dialog(tab):
                 role='dialog', aria_modal='true',
                 aria_labelledby='revisions-title',
                 cls='vs-modal'):
-            h2(translate('Revisions'), id='revisions-title')
+            h2(_('Revisions'), id='revisions-title')
             with ul(cls='vs-revision-list'):
                 with li():
                     button(
-                        translate('Current values'), type='button',
+                        _('Current values'), type='button',
                         cls='vs-link-button',
                         hx_post=SetRevision.url(
                             tab=tab['id'], revision='current'),
@@ -268,7 +269,7 @@ def revision_dialog(tab):
                             hx_target='#workspace',
                             hx_swap='outerHTML')
             button(
-                translate('Close'), type='button', cls='vs-button',
+                _('Close'), type='button', cls='vs-button',
                 hx_post=CloseRevisions.url(tab=tab['id']),
                 hx_target='#modal',
                 hx_swap='innerHTML')
@@ -278,7 +279,7 @@ def revision_dialog(tab):
 def csv_tab(engine, tab_id):
     tab = engine.interface.get_tab(tab_id)
     if not tab or tab.get('kind') != 'window':
-        raise ValueError(translate('Unknown tab'))
+        raise ValueError(_('Unknown tab'))
     return tab
 
 
@@ -298,10 +299,10 @@ def csv_resolve_model(Model, path, import_=False):
             name = name[:-len('.translated')]
         field = Model._fields.get(name)
         if not field or not hasattr(field, 'get_target'):
-            raise ValueError(translate('Unknown CSV field "%(field)s"',
-                    field=path))
+            raise ValueError(
+                _('Unknown CSV field "%(field)s"') % {'field': path})
         if import_ and field._type != 'one2many':
-            raise ValueError(translate(
+            raise ValueError(_(
                     'Only one-to-many fields can be expanded for import'))
         Model = field.get_target()
     return Model
@@ -351,7 +352,7 @@ def csv_field_nodes(engine, tab, kind, Model=None, prefix=''):
                     expand = button(
                         '›', type='button',
                         cls='vs-csv-field-expander',
-                        aria_label=translate('Expand field'),
+                        aria_label=_('Expand field'),
                         data_csv_expand='true')
                     if expandable:
                         expand['hx-get'] = CSVRelationFields.url(
@@ -401,8 +402,8 @@ def csv_field_nodes(engine, tab, kind, Model=None, prefix=''):
                 with div(cls='vs-csv-field-row'):
                     span('', cls='vs-csv-field-expander-spacer')
                     button(
-                        translate('%(field)s (string)',
-                            field=definition.get('string') or name),
+                        _('%(field)s (string)') % {
+                            'field': definition.get('string') or name},
                         type='button', cls='vs-csv-field-choice',
                         data_csv_field_choice='true',
                         data_csv_field=translated_path,
@@ -411,12 +412,10 @@ def csv_field_nodes(engine, tab, kind, Model=None, prefix=''):
             result.append(translated_item)
         elif kind == 'export' and field_type == 'reference':
             for suffix, label_ in (
-                    ('.translated', translate(
-                        '%(field)s (model name)',
-                        field=definition.get('string') or name)),
-                    ('/rec_name', translate(
-                        '%(field)s/Record Name',
-                        field=definition.get('string') or name))):
+                    ('.translated', _('%(field)s (model name)') % {
+                            'field': definition.get('string') or name}),
+                    ('/rec_name', _('%(field)s/Record Name') % {
+                            'field': definition.get('string') or name})):
                 reference_path = path + suffix
                 with li(cls='vs-csv-field') as reference_item:
                     with div(cls='vs-csv-field-row'):
@@ -503,11 +502,11 @@ def csv_dialog(engine, tab, kind):
     CloseDialog = Pool().get('cassini.csv.dialog.close')
     form_id = 'csv-%s-form-%s' % (kind, tab['id'])
     if kind == 'export':
-        title = translate('CSV Export: %(name)s', name=tab['title'])
+        title = _('CSV Export: %(name)s') % {'name': tab['title']}
         fields_names = csv_export_initial_fields(tab)
         action = ExportRecords.url(tab=tab['id'])
     else:
-        title = translate('CSV Import: %(name)s', name=tab['title'])
+        title = _('CSV Import: %(name)s') % {'name': tab['title']}
         fields_names = []
         action = ImportRecords.url(tab=tab['id'])
     with div(
@@ -532,7 +531,7 @@ def csv_dialog(engine, tab, kind):
                 h2(title, id='csv-dialog-title-' + tab['id'])
                 with div(cls='vs-csv-fields-layout'):
                     with section(cls='vs-csv-fields-panel'):
-                        h3(translate('All Fields'))
+                        h3(_('All Fields'))
                         with ul(cls='vs-csv-all-fields'):
                             csv_field_nodes(engine, tab, kind)
                     with div(cls='vs-csv-field-actions'):
@@ -540,17 +539,17 @@ def csv_dialog(engine, tab, kind):
                                 type='button', cls='vs-button',
                                 data_csv_add='true'):
                             icon('add')
-                            span(translate('Add'))
+                            span(_('Add'))
                         with button(
                                 type='button', cls='vs-button',
                                 data_csv_remove='true'):
                             icon('remove')
-                            span(translate('Remove'))
+                            span(_('Remove'))
                         with button(
                                 type='button', cls='vs-button',
                                 data_csv_clear='true'):
                             icon('clear')
-                            span(translate('Clear'))
+                            span(_('Clear'))
                         if kind == 'import':
                             with button(
                                     type='button', cls='vs-button',
@@ -562,7 +561,7 @@ def csv_dialog(engine, tab, kind):
                                         + tab['id']),
                                     hx_swap='outerHTML'):
                                 icon('search')
-                                span(translate('Auto-Detect'))
+                                span(_('Auto-Detect'))
                         else:
                             with button(
                                     type='button', cls='vs-button',
@@ -571,12 +570,12 @@ def csv_dialog(engine, tab, kind):
                                     hx_target='#modal',
                                     hx_swap='innerHTML'):
                                 icon('save')
-                                span(translate('Save Export'))
+                                span(_('Save Export'))
                             with button(
                                     type='submit', cls='vs-button',
                                     formtarget='_blank'):
                                 icon('public')
-                                span(translate('URL Export'))
+                                span(_('URL Export'))
                             with button(
                                     type='button', cls='vs-button',
                                     hx_post=DeleteExport.url(tab=tab['id']),
@@ -584,36 +583,36 @@ def csv_dialog(engine, tab, kind):
                                     hx_target='#modal',
                                     hx_swap='innerHTML'):
                                 icon('delete')
-                                span(translate('Delete Export'))
+                                span(_('Delete Export'))
                     with section(cls='vs-csv-fields-panel'):
-                        h3(translate('Fields Selected'))
+                        h3(_('Fields Selected'))
                         csv_selected_fields(tab, fields_names)
                 if kind == 'export':
                     profiles = csv_export_definitions(tab)
                     with div(cls='vs-csv-chooser'):
                         with label(cls='vs-field'):
-                            span(translate('Export Name'), cls='vs-label')
+                            span(_('Export Name'), cls='vs-label')
                             input_(
                                 type='text', name='export_name',
                                 cls='vs-input', autocomplete='off')
                         input_(type='hidden', name='profile_id', value='')
                         with label(cls='vs-field'):
-                            span(translate('Export'), cls='vs-label')
+                            span(_('Export'), cls='vs-label')
                             with select(name='records', cls='vs-input'):
                                 option(
-                                    translate('Selected Records'),
+                                    _('Selected Records'),
                                     value='selected', selected=(
                                         bool(tab.get('selected')) or None))
                                 option(
-                                    translate('Listed Records'),
+                                    _('Listed Records'),
                                     value='listed', selected=(
                                         not tab.get('selected') or None))
                         with label(cls='vs-check-label'):
                             input_(
                                 type='checkbox', name='ignore_search_limit')
-                            span(translate('Ignore search limit'))
+                            span(_('Ignore search limit'))
                     with section(cls='vs-csv-profiles'):
-                        h3(translate('Predefined Exports'))
+                        h3(_('Predefined Exports'))
                         with ul(cls='vs-csv-profile-list'):
                             for definition in profiles:
                                 profile = csv_export_profile_data(
@@ -626,16 +625,16 @@ def csv_dialog(engine, tab, kind):
                 else:
                     with div(cls='vs-csv-chooser'):
                         with label(cls='vs-field'):
-                            span(translate('File to Import'), cls='vs-label')
+                            span(_('File to Import'), cls='vs-label')
                             input_(
                                 type='file', name='file', required=True,
                                 accept='.csv,text/csv', cls='vs-input')
                 with details(cls='vs-csv-parameters'):
-                    summary(translate('CSV Parameters'))
+                    summary(_('CSV Parameters'))
                     with div(cls='vs-csv-parameter-fields'):
                         if kind == 'import':
                             with label(cls='vs-field'):
-                                span(translate('Encoding'), cls='vs-label')
+                                span(_('Encoding'), cls='vs-label')
                                 with select(name='encoding', cls='vs-input'):
                                     for encoding in CSV_ENCODINGS:
                                         option(
@@ -645,7 +644,7 @@ def csv_dialog(engine, tab, kind):
                                                 or None))
                             with label(cls='vs-field'):
                                 span(
-                                    translate('Lines to Skip'),
+                                    _('Lines to Skip'),
                                     cls='vs-label')
                                 input_(
                                     type='number', min='0', value='0',
@@ -655,32 +654,32 @@ def csv_dialog(engine, tab, kind):
                                 input_(
                                     type='checkbox', name='locale',
                                     checked=True)
-                                span(translate('Use locale format'))
+                                span(_('Use locale format'))
                             with label(cls='vs-check-label'):
                                 input_(
                                     type='checkbox', name='header',
                                     checked=True)
-                                span(translate('Add Field Names'))
+                                span(_('Add Field Names'))
                         with label(cls='vs-field vs-csv-character'):
-                            span(translate('Delimiter'), cls='vs-label')
+                            span(_('Delimiter'), cls='vs-label')
                             input_(
                                 type='text', maxlength='1', required=True,
                                 value=',', name='delimiter', cls='vs-input')
                         with label(cls='vs-field vs-csv-character'):
-                            span(translate('Quote Char'), cls='vs-label')
+                            span(_('Quote Char'), cls='vs-label')
                             input_(
                                 type='text', maxlength='1', required=True,
                                 value='"', name='quotechar', cls='vs-input')
                 with div(cls='vs-dialog-actions'):
                     button(
-                        (translate('Close')
-                            if kind == 'export' else translate('Cancel')),
+                        (_('Close')
+                            if kind == 'export' else _('Cancel')),
                         type='button', cls='vs-button',
                         hx_post=CloseDialog.url(tab=tab['id']),
                         hx_target='#modal', hx_swap='innerHTML')
                     button(
-                        (translate('Save As...')
-                            if kind == 'export' else translate('Import')),
+                        (_('Save As...')
+                            if kind == 'export' else _('Import')),
                         type='submit', cls='vs-button vs-button-primary')
     return backdrop
 
@@ -713,26 +712,26 @@ def csv_import_path(engine, tab, header):
                     if match:
                         break
             if not match:
-                raise ValueError(translate(
-                        'Unknown column header "%(header)s"',
-                        header=header))
+                raise ValueError(
+                    _('Unknown column header "%(header)s"') % {
+                        'header': header})
             name, language = match
             definition = definitions[name]
         if definition.get('readonly') and name != 'id':
-            raise ValueError(translate(
-                    'The field "%(field)s" is read-only',
-                    field=definition.get('string') or name))
+            raise ValueError(
+                _('The field "%(field)s" is read-only') % {
+                    'field': definition.get('string') or name})
         value = name
         if language:
             if not definition.get('translate'):
-                raise ValueError(translate(
-                        'Unknown column header "%(header)s"',
-                        header=header))
+                raise ValueError(
+                    _('Unknown column header "%(header)s"') % {
+                        'header': header})
             value += ':lang=' + language
         path.append(value)
         if index < len(parts) - 1:
             if definition.get('type') != 'one2many':
-                raise ValueError(translate(
+                raise ValueError(_(
                         'Only one-to-many fields can be expanded for import'))
             Model = Model._fields[name].get_target()
     return '/'.join(path)
@@ -774,21 +773,21 @@ def unsaved_changes_response(engine, tab, action, parameters=None):
     record_count = len(dirty_records)
     if field_count == 1:
         if record_count == 1:
-            count_label = translate(
-                '%(fields)d modified field in %(records)d record',
-                fields=field_count, records=record_count)
+            count_label = _(
+                '%(fields)d modified field in %(records)d record') % {
+                    'fields': field_count, 'records': record_count}
         else:
-            count_label = translate(
-                '%(fields)d modified field in %(records)d records',
-                fields=field_count, records=record_count)
+            count_label = _(
+                '%(fields)d modified field in %(records)d records') % {
+                    'fields': field_count, 'records': record_count}
     elif record_count == 1:
-        count_label = translate(
-            '%(fields)d modified fields in %(records)d record',
-            fields=field_count, records=record_count)
+        count_label = _(
+            '%(fields)d modified fields in %(records)d record') % {
+                'fields': field_count, 'records': record_count}
     else:
-        count_label = translate(
-            '%(fields)d modified fields in %(records)d records',
-            fields=field_count, records=record_count)
+        count_label = _(
+            '%(fields)d modified fields in %(records)d records') % {
+                'fields': field_count, 'records': record_count}
     current = tab.get('records', {}).get(tab.get('current_record'))
     if not current or not current.get('dirty'):
         current = dirty_records[0]
@@ -797,29 +796,29 @@ def unsaved_changes_response(engine, tab, action, parameters=None):
     record_name = (
         values.get(getattr(Model, '_rec_name', None))
         or values.get('rec_name')
-        or (translate('New record')
+        or (_('New record')
             if current.get('new') else tab['title']))
     action_labels = {
         'close-tab': (
-            translate('close this tab'),
-            translate('Close without saving'),
-            translate('Save and close')),
+            _('close this tab'),
+            _('Close without saving'),
+            _('Save and close')),
         'new-record': (
-            translate('create another record'),
-            translate('Continue without saving'),
-            translate('Save and continue')),
+            _('create another record'),
+            _('Continue without saving'),
+            _('Save and continue')),
         'select-neighbor': (
-            translate('open another record'),
-            translate('Continue without saving'),
-            translate('Save and continue')),
+            _('open another record'),
+            _('Continue without saving'),
+            _('Save and continue')),
         'switch-view': (
-            translate('switch view'),
-            translate('Switch without saving'),
-            translate('Save and switch')),
+            _('switch view'),
+            _('Switch without saving'),
+            _('Save and switch')),
         'open-preferences': (
-            translate('open preferences'),
-            translate('Close without saving'),
-            translate('Save and continue')),
+            _('open preferences'),
+            _('Close without saving'),
+            _('Save and continue')),
         }
     description, discard_label, save_label = action_labels[action]
     values = dict(parameters or {})
@@ -836,27 +835,27 @@ def unsaved_changes_response(engine, tab, action, parameters=None):
                     with div(cls='vs-unsaved-icon'):
                         icon('warning')
                     with div():
-                        h2(translate('Unsaved changes'), id='unsaved-title')
+                        h2(_('Unsaved changes'), id='unsaved-title')
                         p(
-                            translate(
-                                'Choose what to do before you %(action)s.',
-                                action=description),
+                            _(
+                                'Choose what to do before you %(action)s.') % {
+                                    'action': description},
                             id='unsaved-description',
                             cls='vs-muted')
                 with div(cls='vs-unsaved-record'):
-                    span(translate('Current record'), cls='vs-unsaved-label')
+                    span(_('Current record'), cls='vs-unsaved-label')
                     strong(str(record_name))
                     span(count_label, cls='vs-unsaved-count')
                 with div(cls='vs-unsaved-explanation'):
                     p(
-                        translate('Save validates the record and writes the changes '
+                        _('Save validates the record and writes the changes '
                         'to Tryton.'))
                     p(
-                        translate('Continuing without saving permanently discards '
+                        _('Continuing without saving permanently discards '
                         'the current draft.'))
                 with div(cls='vs-dialog-actions vs-unsaved-actions'):
                     button(
-                        translate('Cancel'), type='button',
+                        _('Cancel'), type='button',
                         cls='vs-button',
                         data_close_modal='true',
                         autofocus=True)
@@ -925,10 +924,10 @@ def warning_response(exception):
                         type='hidden', name='_warning',
                         value=exception.name)
                     button(
-                        translate('Cancel'), type='button', cls='vs-button',
+                        _('Cancel'), type='button', cls='vs-button',
                         data_close_modal='true')
                     button(
-                        translate('Continue'), type='submit',
+                        _('Continue'), type='submit',
                         cls='vs-button vs-button-primary')
     return html_response(host)
 
@@ -1119,9 +1118,9 @@ class LoginForm(SaoComponent):
         with main(cls='vs-login-page') as page:
             with section(cls='vs-login-card'):
                 div('VS', cls='vs-login-mark', aria_hidden='true')
-                h1(translate('Sign in'))
+                h1(_('Sign in'))
                 p(
-                    translate('Sign in with your Tryton account.'),
+                    _('Sign in with your Tryton account.'),
                     cls='vs-muted')
                 if self.error:
                     p(self.error, role='alert',
@@ -1151,7 +1150,7 @@ class LoginForm(SaoComponent):
                             cls='vs-input')
                     else:
                         label(
-                            translate('User'), html_for='username',
+                            _('User'), html_for='username',
                             cls='vs-label')
                         input_(
                             id='username', name='username', type='text',
@@ -1159,14 +1158,14 @@ class LoginForm(SaoComponent):
                             autocomplete='username', required=True,
                             autofocus=True, cls='vs-input')
                         label(
-                            translate('Password'), html_for='password',
+                            _('Password'), html_for='password',
                             cls='vs-label')
                         input_(
                             id='password', name='password', type='password',
                             autocomplete='current-password', required=True,
                             cls='vs-input')
                     button(
-                        translate('Sign in'), type='submit',
+                        _('Sign in'), type='submit',
                         cls='vs-button vs-button-primary vs-button-wide')
         return page
 
@@ -1314,14 +1313,14 @@ class Shell(SaoEndpoint):
                         aria_labelledby='version-changes-title',
                         cls='vs-modal vs-version-changes-dialog'):
                     h2(
-                        update.get('subject') or translate('Version changes'),
+                        update.get('subject') or _('Version changes'),
                         id='version-changes-title')
                     div(
                         raw(content or ''),
                         cls='vs-version-changes-content')
                     with div(cls='vs-dialog-actions'):
                         button(
-                            translate('Accept'),
+                            _('Accept'),
                             type='button',
                             cls='vs-button vs-button-primary',
                             hx_post=VersionChanges.url(
@@ -1329,7 +1328,7 @@ class Shell(SaoEndpoint):
                             hx_target='#version-changes-host',
                             hx_swap='outerHTML')
                         button(
-                            translate("Don't show again"),
+                            _("Don't show again"),
                             type='button',
                             cls='vs-button',
                             hx_post=VersionChanges.url(
@@ -1411,14 +1410,14 @@ class Shell(SaoEndpoint):
                 with div(cls='vs-header-primary') as header_primary:
                     with nav(
                             cls='vs-shell-controls',
-                            aria_label=translate('Side panel')):
+                            aria_label=_('Side panel')):
                         panel_options = (
                             (
-                                ('none', translate('No side panel')),
-                                ('menu', translate('Menu')),
-                                ('help', translate('Help')))
+                                ('none', _('No side panel')),
+                                ('menu', _('Menu')),
+                                ('help', _('Help')))
                             if assistant_available
-                            else (('menu', translate('Menu')),))
+                            else (('menu', _('Menu')),))
                         for state, title in panel_options:
                             with button(
                                     type='button',
@@ -1457,7 +1456,7 @@ class Shell(SaoEndpoint):
                         data_seasonal_logo='true')
                     header_primary.add(GlobalSearch().tag())
                 WorkspaceRenderer(self.engine.interface).tabs()
-                with nav(cls='vs-user-nav', aria_label=translate('User')):
+                with nav(cls='vs-user-nav', aria_label=_('User')):
                     with div(
                             id='user-menu-host',
                             cls='vs-user-menu-host',
@@ -1465,7 +1464,7 @@ class Shell(SaoEndpoint):
                         with button(
                                 type='button',
                                 cls='vs-user-menu-trigger',
-                                aria_label=translate('User menu'),
+                                aria_label=_('User menu'),
                                 aria_expanded=str(bool(shell_state.get(
                                         'user_menu'))).lower(),
                                 hx_post=ShellControl.url(action='user'),
@@ -1486,7 +1485,7 @@ class Shell(SaoEndpoint):
                             with ul(
                                     cls='vs-user-menu',
                                     role='menu',
-                                    aria_label=translate('User and notifications'),
+                                    aria_label=_('User and notifications'),
                                     data_dismissible_popup='remove'):
                                 notifications = Pool().get(
                                     'res.notification').get()
@@ -1525,7 +1524,7 @@ class Shell(SaoEndpoint):
                                                     span(
                                                         notification.get(
                                                             'label') or
-                                                        translate(
+                                                        _(
                                                             'Notification'),
                                                         cls=(
                                                             'vs-notification-'
@@ -1539,7 +1538,7 @@ class Shell(SaoEndpoint):
                                                             'description'))
                                 else:
                                     li(
-                                        translate('No notifications at this time'),
+                                        _('No notifications at this time'),
                                         cls='vs-user-menu-empty',
                                         role='none')
                                 with li(
@@ -1547,8 +1546,8 @@ class Shell(SaoEndpoint):
                                         role='none'):
                                     with button(
                                             type='button',
-                                            title=translate('All notifications'),
-                                            aria_label=translate('All notifications'),
+                                            title=_('All notifications'),
+                                            aria_label=_('All notifications'),
                                             role='menuitem',
                                             hx_post=Pool().get(
                                                 'cassini.open.'
@@ -1559,14 +1558,14 @@ class Shell(SaoEndpoint):
                                         icon('notification')
                                     with a(
                                             href=Demo.url(),
-                                            title=translate('Demo'),
-                                            aria_label=translate('Demo'),
+                                            title=_('Demo'),
+                                            aria_label=_('Demo'),
                                             role='menuitem'):
                                         icon('public')
                                     with button(
                                             type='button',
-                                            title=translate('Preferences'),
-                                            aria_label=translate('Preferences'),
+                                            title=_('Preferences'),
+                                            aria_label=_('Preferences'),
                                             role='menuitem',
                                             data_dismiss_popup_client='true',
                                             hx_get=Preferences.url(),
@@ -1575,9 +1574,9 @@ class Shell(SaoEndpoint):
                                         icon('launch')
                                     with button(
                                             type='button',
-                                            title=translate('Switch light/dark mode'),
+                                            title=_('Switch light/dark mode'),
                                             aria_label=(
-                                                translate('Switch light/dark mode')),
+                                                _('Switch light/dark mode')),
                                             role='menuitem',
                                             hx_post=ShellControl.url(
                                                 action='theme'),
@@ -1588,8 +1587,8 @@ class Shell(SaoEndpoint):
                                                 'theme') != 'dark')
                                     with a(
                                             href=Logout.url(),
-                                            title=translate('Logout'),
-                                            aria_label=translate('Logout'),
+                                            title=_('Logout'),
+                                            aria_label=_('Logout'),
                                             role='menuitem',
                                             cls='vs-logout-action'):
                                         icon('exit')
@@ -1653,14 +1652,14 @@ class VersionChanges(SaoEndpoint):
     def render(self):
         Notification = optional_model('nantic_connection.notification')
         if not Notification:
-            raise ValueError(translate(
+            raise ValueError(_(
                 'Version changes require nantic_connection.'))
         if self.action not in {'accept', 'never'}:
-            raise ValueError(translate('Unknown version change action'))
+            raise ValueError(_('Unknown version change action'))
         updates = Notification.get_notifications([], [], 'version')
         update_ids = {int(update['id']) for update in updates}
         if int(self.update) not in update_ids:
-            raise ValueError(translate('Unknown version change'))
+            raise ValueError(_('Unknown version change'))
         if self.action == 'never':
             Notification.set_has_read(
                 Notification.browse([int(self.update)]), None, True)
@@ -1729,7 +1728,7 @@ class ShellControl(SaoEndpoint):
         elif self.action == 'width':
             pass
         else:
-            raise ValueError(translate('Unknown shell action'))
+            raise ValueError(_('Unknown shell action'))
         self.engine.save()
         if self.action in {'user-close', 'width'}:
             return Response('', status=204)
@@ -1752,7 +1751,7 @@ class OpenNotification(SaoEndpoint):
                 ('user', '=', Transaction().user),
                 ], limit=1)
         if not records:
-            raise ValueError(translate('Unknown notification'))
+            raise ValueError(_('Unknown notification'))
         notification, = records
         if notification.unread:
             Notification.mark_read([notification])
@@ -1836,9 +1835,10 @@ class HelpPanel(SaoEndpoint):
                 'section': 'assistant',
                 'conversation': None,
                 'nan': None,
+                'documentation_mode': 'target',
                 'documentation_query': '',
                 'documentation': None,
-                'updates_filter': 'all',
+                'updates_filter': 'unread',
                 'update': None,
                 })
         migrated_state = False
@@ -1848,13 +1848,20 @@ class HelpPanel(SaoEndpoint):
             migrated_state = True
         for key, value in (
                 ('nan', None),
+                ('documentation_mode', 'target'),
                 ('documentation_query', ''),
                 ('documentation', None),
-                ('updates_filter', 'all'),
+                ('updates_filter', 'unread'),
                 ('update', None)):
             if key not in state:
                 state[key] = value
                 migrated_state = True
+        if state.get('documentation_mode') not in {'target', 'search'}:
+            state['documentation_mode'] = 'target'
+            migrated_state = True
+        if state.get('updates_filter') not in {'unread', 'latest'}:
+            state['updates_filter'] = 'unread'
+            migrated_state = True
         if new_state or migrated_state:
             self.engine.save()
         conversation = self.conversation(state.get('conversation'))
@@ -1870,12 +1877,12 @@ class HelpPanel(SaoEndpoint):
                     role='tablist',
                     aria_multiselectable='false'):
                 for identifier, title, image in (
-                        ('assistant', translate('Assistant'), 'ai.svg'),
+                        ('assistant', _('Assistant'), 'ai.svg'),
                         (
-                            'documentation', translate('Documentation'),
+                            'documentation', _('Documentation'),
                             'documentation-24px.svg'),
-                        ('updates', translate('Updates'), 'update.svg'),
-                        ('tickets', translate('Support'), 'form.svg')):
+                        ('updates', _('Updates'), 'update.svg'),
+                        ('tickets', _('Support'), 'form.svg')):
                     self.accordion_section(
                         identifier, title, image, state, conversation)
         return panel
@@ -1923,7 +1930,6 @@ class HelpPanel(SaoEndpoint):
     def section_actions(self, identifier, state, conversation):
         if identifier == 'assistant':
             ChatNew = Pool().get('cassini.chat.new')
-            ChatSelect = Pool().get('cassini.chat.select')
             HelpResource = Pool().get('cassini.help.resource')
             Conversation = optional_model('nantic.chat.conversation')
             Agent = optional_model('nantic.agent')
@@ -1939,8 +1945,8 @@ class HelpPanel(SaoEndpoint):
                         cls=(
                             'vs-help-heading-button '
                             'vs-new-conversation-button'),
-                        title=translate('New conversation'),
-                        aria_label=translate('New conversation'),
+                        title=_('New conversation'),
+                        aria_label=_('New conversation'),
                         disabled=not Conversation or None):
                     icon('create')
                 if Agent:
@@ -1948,7 +1954,7 @@ class HelpPanel(SaoEndpoint):
                             ('available_as_nan', '=', True),
                             ('visible', '=', True),
                             ], order=[('name', 'ASC')])
-                    default_label = translate('Default')
+                    default_label = _('Default')
                     with details(
                             cls='vs-popup vs-nan-popup'):
                         with summary(
@@ -1956,15 +1962,15 @@ class HelpPanel(SaoEndpoint):
                                     'vs-help-heading-button '
                                     'vs-nan-toggle'),
                                 role='button',
-                                title=translate('Start with a NaN'),
-                                aria_label=translate('Choose a NaN')):
+                                title=_('Start with a NaN'),
+                                aria_label=_('Choose a NaN')):
                             icon('arrow-down')
                         with div(
                                 cls=(
                                     'vs-popup-menu '
                                     'vs-nan-popup-menu'),
                                 role='menu',
-                                aria_label=translate('NaNs')):
+                                aria_label=_('NaNs')):
                             with button(
                                     default_label,
                                     type='button',
@@ -1986,92 +1992,106 @@ class HelpPanel(SaoEndpoint):
                                         hx_target='#help-panel',
                                         hx_swap='outerHTML'):
                                     pass
-            if Conversation:
-                conversations = Conversation.search([
-                        ('create_uid', '=', Transaction().user),
-                        ], order=[('write_date', 'DESC')], limit=20)
-                with select(
-                        name='conversation',
-                        title=translate('Conversations'),
-                        aria_label=translate('Conversations'),
-                        cls='vs-conversation-select',
-                        hx_post=ChatSelect.url(),
-                        hx_trigger='change',
-                        hx_target='#help-panel',
-                        hx_swap='outerHTML',
-                        hx_include='this'):
-                    option(translate('Conversations'), value='')
-                    for item in conversations:
-                        option(
-                            item.title or item.identifier,
-                            value=item.identifier,
-                            selected=(
-                                item.identifier
-                                == state.get('conversation')) or None)
-                with button(
-                        type='button',
-                        cls='vs-help-heading-button',
-                        title=translate('NaNs and goblins'),
-                        aria_label=translate('NaNs and goblins'),
-                        hx_post=HelpResource.url(resource='agents'),
-                        hx_target='#workspace',
-                        hx_swap='outerHTML',
-                        hx_push_url='true'):
-                    img(
-                        src=HELP_ICONS + 'goblin.svg',
-                        alt='', aria_hidden='true', cls='vs-icon')
-        elif identifier == 'documentation':
-            with a(
-                    href=(
-                        '/%s/documentation'
-                        % Transaction().database.name),
-                    target='_blank', rel='noopener',
-                    cls='vs-help-heading-button',
-                    title=translate('Open full documentation'),
-                    aria_label=translate('Open full documentation')):
-                icon('open')
-        elif identifier == 'updates':
-            HelpUpdates = Pool().get('cassini.help.updates')
-            for filter_, image, title in (
-                    ('unread', 'email-24px.svg',
-                        translate('Unread updates')),
-                    (
-                        'all', 'hourglass_arrow_down-24px.svg',
-                        translate('All updates'))):
-                with button(
-                        type='button',
-                        cls='vs-help-heading-button%s' % (
-                            ' vs-button-active'
-                            if state.get('updates_filter') == filter_
-                            else ''),
-                        title=title, aria_label=title,
-                        hx_post=HelpUpdates.url(filter=filter_),
-                        hx_target='#help-panel',
-                        hx_swap='outerHTML'):
-                    img(
-                        src=HELP_ICONS + image,
-                        alt='', aria_hidden='true', cls='vs-icon')
-        else:
-            HelpResource = Pool().get('cassini.help.resource')
             with button(
                     type='button',
-                    cls='vs-help-heading-button',
-                    title=translate('Remote assistance'),
-                    aria_label=translate('Remote assistance'),
-                    data_help_cobrowse='true'):
-                img(
-                    src=HELP_ICONS + 'support_agent-24px.svg',
-                    alt='', aria_hidden='true', cls='vs-icon')
-            with button(
-                    type='button',
-                    cls='vs-help-heading-button',
-                    title=translate('Open tickets'),
-                    aria_label=translate('Open tickets'),
-                    hx_post=HelpResource.url(resource='tickets'),
+                    cls=(
+                        'vs-help-heading-button '
+                        'vs-help-heading-separated'),
+                    title=_('Conversations'),
+                    aria_label=_('Conversations'),
+                    hx_post=HelpResource.url(resource='conversations'),
                     hx_target='#workspace',
                     hx_swap='outerHTML',
                     hx_push_url='true'):
-                icon('open')
+                icon('history')
+            with button(
+                    type='button',
+                    cls=(
+                        'vs-help-heading-button '
+                        'vs-help-heading-separated'),
+                    title=_('NaNs and goblins'),
+                    aria_label=_('NaNs and goblins'),
+                    hx_post=HelpResource.url(resource='agents'),
+                    hx_target='#workspace',
+                    hx_swap='outerHTML',
+                    hx_push_url='true'):
+                img(
+                    src=HELP_ICONS + 'goblin.svg',
+                    alt='', aria_hidden='true', cls='vs-icon')
+        elif identifier == 'documentation':
+            HelpDocumentation = Pool().get(
+                'cassini.help.documentation')
+            with div(cls='vs-help-heading-group'):
+                for action, image, title in (
+                        (
+                            'target', 'target-documentation.svg',
+                            _('Contextual documentation')),
+                        ('search-mode', None, _('Search words'))):
+                    mode = (
+                        'search' if action == 'search-mode' else action)
+                    with button(
+                            type='button',
+                            cls='vs-help-heading-button%s' % (
+                                ' vs-help-heading-button-active'
+                                if state.get('documentation_mode') == mode
+                                else ''),
+                            title=title, aria_label=title,
+                            hx_post=HelpDocumentation.url(action=action),
+                            hx_target='#help-panel',
+                            hx_swap='outerHTML'):
+                        if image:
+                            img(
+                                src=HELP_ICONS + image,
+                                alt='', aria_hidden='true', cls='vs-icon')
+                        else:
+                            icon('search')
+        elif identifier == 'updates':
+            HelpUpdates = Pool().get('cassini.help.updates')
+            HelpResource = Pool().get('cassini.help.resource')
+            with div(cls='vs-help-heading-group'):
+                for filter_, image, title in (
+                        ('unread', 'email-24px.svg', _('Pending')),
+                        (
+                            'latest', 'hourglass_arrow_down-24px.svg',
+                            _('Latest'))):
+                    with button(
+                            type='button',
+                            cls='vs-help-heading-button%s' % (
+                                ' vs-help-heading-button-active'
+                                if state.get('updates_filter') == filter_
+                                else ''),
+                            title=title, aria_label=title,
+                            hx_post=HelpUpdates.url(filter=filter_),
+                            hx_target='#help-panel',
+                            hx_swap='outerHTML'):
+                        img(
+                            src=HELP_ICONS + image,
+                            alt='', aria_hidden='true', cls='vs-icon')
+            with div(
+                    cls=(
+                        'vs-help-heading-group '
+                        'vs-help-heading-separated')):
+                with button(
+                        type='button',
+                        cls='vs-help-heading-button',
+                        title=_('All updates'),
+                        aria_label=_('All updates'),
+                        hx_post=HelpResource.url(resource='updates'),
+                        hx_target='#workspace',
+                        hx_swap='outerHTML',
+                        hx_push_url='true'):
+                    icon('history')
+        else:
+            with div(cls='vs-help-heading-group'):
+                with button(
+                        type='button',
+                        cls='vs-help-heading-button',
+                        title=_('Remote assistance'),
+                        aria_label=_('Remote assistance'),
+                        data_help_cobrowse='true'):
+                    img(
+                        src=HELP_ICONS + 'support_agent-24px.svg',
+                        alt='', aria_hidden='true', cls='vs-icon')
 
     def conversation(self, identifier):
         Conversation = optional_model('nantic.chat.conversation')
@@ -2087,7 +2107,7 @@ class HelpPanel(SaoEndpoint):
         Conversation = optional_model('nantic.chat.conversation')
         if not Conversation:
             p(
-                translate('Install nantic_connection to enable the integrated '
+                _('Install nantic_connection to enable the integrated '
                 'assistant.'),
                 cls='vs-notice')
         self.chat(conversation, state, bool(Conversation))
@@ -2126,9 +2146,9 @@ class HelpPanel(SaoEndpoint):
                                 cls='vs-chat-message vs-chat-'
                                 + message.type,
                                 aria_label=(
-                                    translate('You')
+                                    _('You')
                                     if message.type == 'user'
-                                    else translate('Assistant'))):
+                                    else _('Assistant'))):
                             div(
                                 message.content or '',
                                 cls='vs-chat-content',
@@ -2139,21 +2159,21 @@ class HelpPanel(SaoEndpoint):
                                         li(attachment.name)
                 else:
                     p(
-                        translate('Start a conversation. The active model, record, '
+                        _('Start a conversation. The active model, record, '
                         'selection, domain and language are sent as context.'),
                         cls='vs-muted')
                 if conversation and conversation.execution_state:
                     div(
                         cls='vs-chat-working',
                         role='status',
-                        aria_label=translate('Assistant is working'))
+                        aria_label=_('Assistant is working'))
             if (conversation
                     and conversation.execution_state == 'wait_confirmation'):
                 with div(cls='vs-chat-confirmation'):
-                    p(translate('The assistant needs confirmation to continue.'))
+                    p(_('The assistant needs confirmation to continue.'))
                     for response, title in (
-                            ('denied', translate('Deny')),
-                            ('accepted', translate('Allow'))):
+                            ('denied', _('Deny')),
+                            ('accepted', _('Allow'))):
                         button(
                             title, type='button',
                             cls='vs-button%s' % (
@@ -2180,8 +2200,8 @@ class HelpPanel(SaoEndpoint):
                     aria_live='polite')
                 textarea(
                     id='message', name='content', rows=3,
-                    placeholder=translate('Ask the assistant…'),
-                    aria_label=translate('Message'),
+                    placeholder=_('Ask the assistant…'),
+                    aria_label=_('Message'),
                     disabled=not enabled or None,
                     cls='vs-chat-message-input')
                 with div(cls='vs-chat-composer-actions'):
@@ -2189,13 +2209,13 @@ class HelpPanel(SaoEndpoint):
                         for action, image, title in (
                                 (
                                     'upload', 'upload-file.svg',
-                                    translate('Attach files')),
+                                    _('Attach files')),
                                 (
                                     'capture', 'upload-screenshot.svg',
-                                    translate('Attach screenshot')),
+                                    _('Attach screenshot')),
                                 (
                                     'record', 'upload-record.svg',
-                                    translate('Attach recording'))):
+                                    _('Attach recording'))):
                             with button(
                                     type='button',
                                     cls='vs-chat-action',
@@ -2208,8 +2228,8 @@ class HelpPanel(SaoEndpoint):
                         with button(
                                 type='button',
                                 cls='vs-chat-action',
-                                title=translate('Toggle assistant voice'),
-                                aria_label=translate('Toggle assistant voice'),
+                                title=_('Toggle assistant voice'),
+                                aria_label=_('Toggle assistant voice'),
                                 disabled=not enabled or None,
                                 data_help_speech='true'):
                             img(
@@ -2221,8 +2241,8 @@ class HelpPanel(SaoEndpoint):
                         with button(
                                 type='button',
                                 cls='vs-chat-action',
-                                title=translate('Conversation artifacts'),
-                                aria_label=translate('Conversation artifacts'),
+                                title=_('Conversation artifacts'),
+                                aria_label=_('Conversation artifacts'),
                                 disabled=(
                                     not enabled or not conversation or None),
                                 hx_post=HelpResource.url(
@@ -2237,8 +2257,8 @@ class HelpPanel(SaoEndpoint):
                         with button(
                                 type='button',
                                 cls='vs-chat-action',
-                                title=translate('Speech to text'),
-                                aria_label=translate('Speech to text'),
+                                title=_('Speech to text'),
+                                aria_label=_('Speech to text'),
                                 disabled=not enabled or None,
                                 data_help_voice='true'):
                             img(
@@ -2247,7 +2267,7 @@ class HelpPanel(SaoEndpoint):
                         with button(
                                 type='submit',
                                 cls='vs-chat-action vs-chat-send',
-                                title=translate('Send'), aria_label=translate('Send'),
+                                title=_('Send'), aria_label=_('Send'),
                                 data_chat_send='true',
                                 disabled=not enabled or None):
                             img(
@@ -2258,28 +2278,30 @@ class HelpPanel(SaoEndpoint):
         Documentation = optional_model('nantic_connection.documentation')
         HelpDocumentation = Pool().get(
             'cassini.help.documentation')
-        with form(
-                cls='vs-help-documentation-search',
-                hx_post=HelpDocumentation.url(action='search'),
-                hx_target='#help-panel',
-                hx_swap='outerHTML'):
-            input_(
-                type='search', name='query',
-                id='help-documentation-search-input',
-                value=state.get('documentation_query') or '',
-                placeholder=translate('Search documentation…'),
-                aria_label=translate('Search documentation'),
-                cls='vs-input',
-                hx_trigger='input changed delay:350ms',
-                hx_post=HelpDocumentation.url(action='search'),
-                hx_target='#help-panel',
-                hx_swap='outerHTML',
-                hx_sync='this:replace',
-                hx_preserve='true',
-                hx_include='this')
+        search_mode = state.get('documentation_mode') == 'search'
+        if search_mode:
+            with form(
+                    cls='vs-help-documentation-search',
+                    hx_post=HelpDocumentation.url(action='search'),
+                    hx_target='#help-panel',
+                    hx_swap='outerHTML'):
+                input_(
+                    type='search', name='query',
+                    id='help-documentation-search-input',
+                    value=state.get('documentation_query') or '',
+                    placeholder=_('Search documentation…'),
+                    aria_label=_('Search documentation'),
+                    cls='vs-input',
+                    hx_trigger='input changed delay:350ms',
+                    hx_post=HelpDocumentation.url(action='search'),
+                    hx_target='#help-panel',
+                    hx_swap='outerHTML',
+                    hx_sync='this:replace',
+                    hx_preserve='true',
+                    hx_include='this')
         if not Documentation:
             p(
-                translate('Documentation is available when nantic_connection is '
+                _('Documentation is available when nantic_connection is '
                 'installed.'),
                 cls='vs-notice')
             return
@@ -2290,7 +2312,9 @@ class HelpPanel(SaoEndpoint):
         documents = (
             Documentation.search_help_documents(
                 query, model=model, limit=20)
-            if query else Documentation.get_help_documents(model)[:20])
+            if search_mode and query
+            else [] if search_mode
+            else Documentation.get_help_documents(model)[:20])
         selected = state.get('documentation')
         document = next((
                 item for item in documents
@@ -2298,13 +2322,13 @@ class HelpPanel(SaoEndpoint):
         if document:
             with article(cls='vs-help-document'):
                 with button(
-                        translate('Back'), type='button',
+                        _('Back'), type='button',
                         cls='vs-help-document-back',
                         hx_post=HelpDocumentation.url(action='back'),
                         hx_target='#help-panel',
                         hx_swap='outerHTML'):
                     pass
-                h4(document.get('title') or translate('Documentation'))
+                h4(document.get('title') or _('Documentation'))
                 content = document.get('content_html')
                 if isinstance(content, (bytes, bytearray)):
                     content = bytes(content).decode('utf-8')
@@ -2317,8 +2341,10 @@ class HelpPanel(SaoEndpoint):
                 else:
                     p(document.get('content') or document.get('excerpt') or '')
             return
+        if search_mode and not query:
+            return
         if not documents:
-            p(translate('No documentation found.'), cls='vs-muted')
+            p(_('No documentation found.'), cls='vs-muted')
             return
         with div(cls='vs-help-document-list'):
             for document in documents:
@@ -2332,7 +2358,7 @@ class HelpPanel(SaoEndpoint):
                         hx_swap='outerHTML'):
                     strong(
                         document.get('title')
-                        or translate('Documentation'))
+                        or _('Documentation'))
                     span(
                         document.get('excerpt') or '',
                         cls='vs-muted')
@@ -2342,18 +2368,21 @@ class HelpPanel(SaoEndpoint):
         HelpUpdates = Pool().get('cassini.help.updates')
         if not Notification:
             p(
-                translate('Application updates are available when '
+                _('Application updates are available when '
                 'nantic_connection is installed.'),
                 cls='vs-notice')
             return
+        tab = self.engine.interface.active_tab
+        view = decode_value(tab.get('view', {})) if tab else {}
+        view_ids = [view['view_id']] if view.get('view_id') else []
         notifications = Notification.get_notifications(
-            [], [], state.get('updates_filter') or 'all')
+            view_ids, [], state.get('updates_filter') or 'unread')
         selected = next((
                 update for update in notifications
                 if str(update.get('id')) == str(state.get('update'))), None)
         if selected:
             with button(
-                    translate('Back'), type='button',
+                    _('Back'), type='button',
                     cls='vs-help-document-back',
                     hx_post=HelpUpdates.url(update=''),
                     hx_target='#help-panel',
@@ -2367,7 +2396,7 @@ class HelpPanel(SaoEndpoint):
             div(raw(content or ''), cls='vs-help-update-content')
             return
         if not notifications:
-            p(translate('No updates available.'), cls='vs-muted')
+            p(_('No updates available.'), cls='vs-muted')
             return
         with div(cls='vs-help-update-list'):
             for update in notifications:
@@ -2380,7 +2409,7 @@ class HelpPanel(SaoEndpoint):
                             update=update['id']),
                         hx_target='#help-panel',
                         hx_swap='outerHTML'):
-                    strong(update.get('subject') or translate('Update'))
+                    strong(update.get('subject') or _('Update'))
                     span(
                         str(update.get('datetime') or ''),
                         cls='vs-muted')
@@ -2390,7 +2419,7 @@ class HelpPanel(SaoEndpoint):
         HelpResource = Pool().get('cassini.help.resource')
         if not Ticket:
             p(
-                translate('Support tickets are available when nantic_connection is '
+                _('Support tickets are available when nantic_connection is '
                 'installed.'),
                 cls='vs-notice')
             return
@@ -2401,7 +2430,7 @@ class HelpPanel(SaoEndpoint):
         except Exception:
             tickets = []
         p(
-            translate('Track tickets created from the assistant and add comments '
+            _('Track tickets created from the assistant and add comments '
             'without losing your current workspace.'),
             cls='vs-muted')
         if tickets:
@@ -2409,7 +2438,7 @@ class HelpPanel(SaoEndpoint):
                 for ticket in tickets:
                     li(ticket.rec_name)
         with button(
-                translate('Open tickets'), type='button',
+                _('Open tickets'), type='button',
                 cls='vs-button vs-button-primary',
                 hx_post=HelpResource.url(resource='tickets'),
                 hx_target='#workspace',
@@ -2429,7 +2458,7 @@ class HelpSection(SaoEndpoint):
     def render(self):
         if self.section not in {
                 'assistant', 'documentation', 'updates', 'tickets'}:
-            raise ValueError(translate('Unknown help section'))
+            raise ValueError(_('Unknown help section'))
         state = self.engine.interface.component('assistant', {})
         state['section'] = self.section
         self.engine.save()
@@ -2553,7 +2582,7 @@ class ChatSelect(SaoEndpoint):
                 ('create_uid', '=', Transaction().user),
                 ], limit=1)
         if self.conversation and not records:
-            raise ValueError(translate('Unknown conversation'))
+            raise ValueError(_('Unknown conversation'))
         state = self.engine.interface.component('assistant', {})
         if records:
             state['conversation'] = records[0].identifier
@@ -2577,7 +2606,7 @@ class ChatTranscribe(SaoEndpoint):
         request = current_request()
         uploaded = request.files.get('audio') if request else None
         if not Token or not uploaded:
-            raise ValueError(translate('Speech recognition is not available'))
+            raise ValueError(_('Speech recognition is not available'))
         text = Token.speech_to_text(uploaded.read()) or ''
         return Response(
             json.dumps({'text': text}),
@@ -2595,10 +2624,10 @@ class ChatSpeech(SaoEndpoint):
     def render(self):
         Token = optional_model('nantic_connection.token')
         if not Token:
-            raise ValueError(translate('Text to speech is not available'))
+            raise ValueError(_('Text to speech is not available'))
         audio = Token.text_to_speech(self.text or '')
         if not audio:
-            raise ValueError(translate('Text to speech did not return audio'))
+            raise ValueError(_('Text to speech did not return audio'))
         return Response(audio, content_type='audio/wav')
 
 
@@ -2615,7 +2644,15 @@ class HelpDocumentation(SaoEndpoint):
     def render(self):
         state = self.engine.interface.component('assistant', {})
         state['section'] = 'documentation'
-        if self.action == 'search':
+        if self.action == 'target':
+            state['documentation_mode'] = 'target'
+            state['documentation_query'] = ''
+            state['documentation'] = None
+        elif self.action == 'search-mode':
+            state['documentation_mode'] = 'search'
+            state['documentation'] = None
+        elif self.action == 'search':
+            state['documentation_mode'] = 'search'
             state['documentation_query'] = self.query or ''
             state['documentation'] = None
         elif self.action == 'open':
@@ -2623,7 +2660,7 @@ class HelpDocumentation(SaoEndpoint):
         elif self.action == 'back':
             state['documentation'] = None
         else:
-            raise ValueError(translate('Unknown documentation action'))
+            raise ValueError(_('Unknown documentation action'))
         self.engine.save()
         return Pool().get('cassini.help.panel')().tag()
 
@@ -2640,7 +2677,7 @@ class HelpUpdates(SaoEndpoint):
     def render(self):
         state = self.engine.interface.component('assistant', {})
         state['section'] = 'updates'
-        if self.filter in {'all', 'unread'}:
+        if self.filter in {'latest', 'unread'}:
             state['updates_filter'] = self.filter
             state['update'] = None
         if self.update is not None:
@@ -2671,18 +2708,18 @@ class WizardHelp(SaoEndpoint):
         engine = self.engine
         tab = engine.interface.get_tab(self.tab)
         if not tab or tab.get('kind') != 'wizard':
-            raise ValueError(translate('Unknown tab'))
+            raise ValueError(_('Unknown tab'))
         if self.action == 'toggle':
             tab['wizard_help_open'] = not tab.get('wizard_help_open', False)
         elif self.action == 'filter':
             if self.filter not in {'all', 'unread'}:
-                raise ValueError(translate('Unknown help section'))
+                raise ValueError(_('Unknown help section'))
             tab['wizard_help_filter'] = self.filter
             tab['wizard_help_update'] = None
         elif self.action == 'update':
             Notification = optional_model('nantic_connection.notification')
             if not Notification or not self.update:
-                raise ValueError(translate('Unknown notification'))
+                raise ValueError(_('Unknown notification'))
             view = decode_value(tab.get('view', {}))
             view_ids = [view['view_id']] if view.get('view_id') else []
             notifications = Notification.get_notifications(
@@ -2690,18 +2727,18 @@ class WizardHelp(SaoEndpoint):
             if str(self.update) not in {
                     str(notification.get('id'))
                     for notification in notifications}:
-                raise ValueError(translate('Unknown notification'))
+                raise ValueError(_('Unknown notification'))
             records = Notification.search([
                     ('id', '=', int(self.update)),
                     ], limit=1)
             if not records:
-                raise ValueError(translate('Unknown notification'))
+                raise ValueError(_('Unknown notification'))
             Notification.set_has_read(records, None, True)
             tab['wizard_help_update'] = self.update
         elif self.action == 'back':
             tab['wizard_help_update'] = None
         else:
-            raise ValueError(translate('Unknown help section'))
+            raise ValueError(_('Unknown help section'))
         engine.save()
         return workspace_response(engine)
 
@@ -2716,41 +2753,40 @@ class HelpResource(SaoEndpoint):
     @handle_endpoint_errors
     def render(self):
         resources = {
-            'agents': (
-                'nantic.agent', translate('NaNs and goblins'), []),
-            'tickets': (
-                'nantic.ticket', translate('Support tickets'),
-                [['users', 'in', [Transaction().user]]]),
-            'artifacts': (
-                'nantic.chat.artifact',
-                translate('Conversation artifacts'), None),
+            'conversations': 'nantic.chat.conversation',
+            'agents': 'nantic.agent',
+            'tickets': 'nantic.ticket',
+            'artifacts': 'nantic.chat.artifact',
+            'updates': 'nantic_connection.notification',
             }
         if self.resource not in resources:
-            raise ValueError(translate('Unknown help resource'))
-        model, title, domain = resources[self.resource]
+            raise ValueError(_('Unknown help resource'))
+        model = resources[self.resource]
         if not optional_model(model):
-            raise ValueError(translate('This help resource is not installed'))
-        if self.resource == 'artifacts':
+            raise ValueError(_('This help resource is not installed'))
+        domain = None
+        if self.resource == 'conversations':
+            domain = [['create_uid.id', '=', Transaction().user]]
+        elif self.resource == 'artifacts':
             state = self.engine.interface.component('assistant', {})
             conversation = Pool().get(
                 'cassini.help.panel')(render=False).conversation(
                     state.get('conversation'))
             if not conversation:
-                raise ValueError(translate('Start or select a conversation first'))
+                raise ValueError(_('Start or select a conversation first'))
             domain = [['conversation', '=', conversation.id]]
-        action = {
-            'id': None,
-            'name': title,
-            'type': 'ir.action.act_window',
-            'res_model': model,
-            'views': [],
-            'domains': [],
-            'pyson_domain': json.dumps(domain or []),
-            'pyson_context': '{}',
-            'pyson_order': 'null',
-            'pyson_search_value': '[]',
-            'limit': 100,
-            }
+        ActionWindow = Pool().get('ir.action.act_window')
+        action_windows = ActionWindow.search([
+                ('usage', '=', 'sao')
+                if self.resource == 'updates'
+                else ('res_model', '=', model),
+                ], order=[('id', 'ASC')], limit=1)
+        if not action_windows:
+            raise ValueError(
+                _('This help resource is not installed'))
+        action = action_windows[0].action.get_action_value()
+        if domain is not None:
+            action['pyson_domain'] = json.dumps(domain)
         tab = self.engine.open_action(action)
         return workspace_response(self.engine, {
                     'HX-Push-Url': Pool().get(
@@ -2785,8 +2821,8 @@ class Menu(SaoEndpoint):
             self.engine.save()
         with nav(
                 id='menu-tree', cls='vs-menu vs-hierarchy',
-                aria_label=translate('Tryton menu')) as menu:
-            h2(translate('Menu'), cls='vs-menu-title')
+                aria_label=_('Tryton menu')) as menu:
+            h2(_('Menu'), cls='vs-menu-title')
             with ul(cls='vs-menu-list'):
                 for root in roots:
                     self.menu_item(
@@ -2843,17 +2879,15 @@ class Menu(SaoEndpoint):
                                 type='button',
                                 cls='vs-menu-favorite',
                                 title=(
-                                    translate('Remove from favorites')
+                                    _('Remove from favorites')
                                     if favorite
-                                    else translate('Add to favorites')),
+                                    else _('Add to favorites')),
                                 aria_label=(
-                                    translate(
-                                        'Remove %(menu)s from favorites',
-                                        menu=menu.name)
+                                    _('Remove %(menu)s from favorites') % {
+                                        'menu': menu.name}
                                     if favorite
-                                    else translate(
-                                        'Add %(menu)s to favorites',
-                                        menu=menu.name)),
+                                    else _('Add %(menu)s to favorites') % {
+                                        'menu': menu.name}),
                                 hx_post=ToggleMenuFavorite.url(
                                     menu=menu.id,
                                     action='unset' if favorite else 'set'),
@@ -2910,7 +2944,7 @@ class ToggleMenuItem(SaoEndpoint):
     def render(self):
         MenuModel = Pool().get('ir.ui.menu')
         if not MenuModel.search([('id', '=', self.menu)], limit=1):
-            raise ValueError(translate('Unknown menu item'))
+            raise ValueError(_('Unknown menu item'))
         state = self.engine.interface.component('menu', {
                 'expanded': [],
                 })
@@ -2939,7 +2973,7 @@ class ToggleMenuFavorite(SaoEndpoint):
                 ('id', '=', self.menu),
                 ], limit=1)
         if not records or not records[0].action_keywords:
-            raise ValueError(translate('Unknown menu action'))
+            raise ValueError(_('Unknown menu action'))
         favorite_ids = {
             favorite[0] for favorite in Favorite.get()
             }
@@ -2948,7 +2982,7 @@ class ToggleMenuFavorite(SaoEndpoint):
         elif self.action == 'unset' and self.menu in favorite_ids:
             Favorite.unset(self.menu)
         elif self.action not in {'set', 'unset'}:
-            raise ValueError(translate('Unknown favorite action'))
+            raise ValueError(_('Unknown favorite action'))
         return FragmentResponse.response([
                 Fragment(
                     'menu-tree',
@@ -2988,19 +3022,19 @@ class Demo(SaoEndpoint):
                     'dark:bg-slate-950 dark:text-slate-100')) as demo:
             with header(cls='vs-demo-header'):
                 with div():
-                    p(translate('Cassini state infrastructure'), cls='vs-eyebrow')
+                    p(_('Cassini state infrastructure'), cls='vs-eyebrow')
                     h1(state.get('title'))
                     p(
-                        translate('This page uses no Tryton XML view. Dominate renders '
+                        _('This page uses no Tryton XML view. Dominate renders '
                         'its custom components, HTMX updates fragments and '
                         'the same workspace stores every draft.'),
                         cls='vs-muted')
-                a(translate('Back to Sao'), href=Shell.url(), cls='vs-button')
+                a(_('Back to Sao'), href=Shell.url(), cls='vs-button')
             with section(cls='vs-demo-grid'):
                 with article(cls='vs-demo-card'):
-                    h2(translate('Persistent draft'))
+                    h2(_('Persistent draft'))
                     label(
-                        translate('Page title'), html_for='demo-title',
+                        _('Page title'), html_for='demo-title',
                         cls='vs-label')
                     input_(
                         id='demo-title', type='text', name='text',
@@ -3014,10 +3048,10 @@ class Demo(SaoEndpoint):
                         hx_target='#demo-app',
                         hx_swap='none')
                     p(
-                        translate('Reload now: the unfinished value stays here.'),
+                        _('Reload now: the unfinished value stays here.'),
                         cls='vs-muted')
                 with article(cls='vs-demo-card'):
-                    h2(translate('Counter component'))
+                    h2(_('Counter component'))
                     p(str(state.get('counter', 0)), cls='vs-demo-counter')
                     with div(cls='vs-dialog-actions'):
                         for action, title in (
@@ -3027,14 +3061,14 @@ class Demo(SaoEndpoint):
                                 title, type='button',
                                 cls='vs-button',
                                 aria_label=(
-                                    translate('Decrement')
+                                    _('Decrement')
                                     if action == 'decrement'
-                                    else translate('Increment')),
+                                    else _('Increment')),
                                 hx_post=DemoUpdate.url(action=action),
                                 hx_target='#demo-app',
                                 hx_swap='outerHTML')
                 with article(cls='vs-demo-card vs-demo-tasks'):
-                    h2(translate('Task component'))
+                    h2(_('Task component'))
                     with form(
                             cls='vs-demo-task-form',
                             hx_post=DemoUpdate.url(action='add'),
@@ -3044,7 +3078,7 @@ class Demo(SaoEndpoint):
                             id='demo-task-input',
                             type='text', name='text',
                             value=state.get('task_draft', ''),
-                            placeholder=translate('A new task'),
+                            placeholder=_('A new task'),
                             required=True, cls='vs-input',
                             hx_post=DemoUpdate.url(action='task-draft'),
                             hx_trigger='input changed delay:400ms',
@@ -3054,7 +3088,7 @@ class Demo(SaoEndpoint):
                             hx_target='#demo-app',
                             hx_swap='none')
                         button(
-                            translate('Add'), type='button',
+                            _('Add'), type='button',
                             cls='vs-button vs-button-primary',
                             hx_post=DemoUpdate.url(action='add'),
                             hx_target='#demo-app',
@@ -3069,7 +3103,7 @@ class Demo(SaoEndpoint):
                                     '✓' if task.get('done') else '○',
                                     type='button',
                                     cls='vs-link-button',
-                                    aria_label=translate('Toggle task'),
+                                    aria_label=_('Toggle task'),
                                     hx_post=DemoUpdate.url(
                                         action='toggle',
                                         task=task['id']),
@@ -3077,7 +3111,7 @@ class Demo(SaoEndpoint):
                                     hx_swap='outerHTML')
                                 span(task.get('title', ''))
                                 button(
-                                    translate('Remove'), type='button',
+                                    _('Remove'), type='button',
                                     cls='vs-link-button',
                                     hx_post=DemoUpdate.url(
                                         action='remove',
@@ -3085,7 +3119,7 @@ class Demo(SaoEndpoint):
                                     hx_target='#demo-app',
                                     hx_swap='outerHTML')
                         if not state.get('tasks'):
-                            li(translate('No tasks yet'), cls='vs-empty')
+                            li(_('No tasks yet'), cls='vs-empty')
         return demo
 
     def render(self):
@@ -3144,13 +3178,13 @@ class DemoUpdate(SaoEndpoint):
                     item for item in tasks
                     if item.get('id') == self.task), None)
             if not matching:
-                raise ValueError(translate('Unknown demo task'))
+                raise ValueError(_('Unknown demo task'))
             if self.action == 'toggle':
                 matching['done'] = not matching.get('done', False)
             else:
                 tasks.remove(matching)
         else:
-            raise ValueError(translate('Unknown demo action'))
+            raise ValueError(_('Unknown demo action'))
         self.engine.save()
         if self.action in {'title', 'task-draft'}:
             return Response('', status=204)
@@ -3199,16 +3233,16 @@ class GlobalSearch(SaoEndpoint):
                                     model_name,
                                     cls='vs-search-result-model')
                     if not results:
-                        li(translate('No results'), cls='vs-empty')
+                        li(_('No results'), cls='vs-empty')
         return host
 
     def render(self):
         Favorite = Pool().get('ir.ui.menu.favorite')
         if optional_model('nantic.chat.conversation'):
-            placeholder = translate(
+            placeholder = _(
                 'Search 🔍︎ or chat with the assistant✦')
         else:
-            placeholder = translate('Search 🔍︎')
+            placeholder = _('Search 🔍︎')
         GlobalSearchResults = Pool().get(
             'cassini.global.search.results')
         with div(
@@ -3218,13 +3252,13 @@ class GlobalSearch(SaoEndpoint):
                     cls='vs-popup vs-global-favorites-popup'):
                 with summary(
                         cls='vs-global-favorites-toggle',
-                        title=translate('Favorites'),
-                        aria_label=translate('Favorites')):
+                        title=_('Favorites'),
+                        aria_label=_('Favorites')):
                     icon('bookmarks')
                 with div(
                         cls='vs-popup-menu',
                         role='menu',
-                        aria_label=translate('Favorites')):
+                        aria_label=_('Favorites')):
                     favorites = sorted(
                         Favorite.get(), key=lambda item: item[1])
                     if favorites:
@@ -3241,7 +3275,7 @@ class GlobalSearch(SaoEndpoint):
                                 span(name)
                     else:
                         span(
-                            translate('No favorites yet'),
+                            _('No favorites yet'),
                             cls='vs-popup-empty')
             with div(cls='vs-global-search-entry') as entry:
                 input_(
@@ -3249,7 +3283,7 @@ class GlobalSearch(SaoEndpoint):
                     id='global-search-input',
                     value=self.query or '',
                     placeholder=placeholder,
-                    aria_label=translate('Global search'),
+                    aria_label=_('Global search'),
                     autocomplete='off',
                     cls='vs-global-search-input',
                     hx_post=GlobalSearchResults.url(),
@@ -3439,14 +3473,14 @@ class AttachmentUpload(SaoEndpoint):
     def render(self):
         tab = self.engine.interface.get_tab(self.tab)
         if not tab or tab.get('kind') != 'window':
-            raise ValueError(translate('Unknown tab'))
+            raise ValueError(_('Unknown tab'))
         key = tab.get('current_record')
         record = tab.get('records', {}).get(key)
         if not record or not record.get('id'):
-            raise ValueError(translate('Select a saved record first'))
+            raise ValueError(_('Select a saved record first'))
         if (not tab.get('access', {}).get('write', True)
                 or decode_value(tab.get('context', {})).get('_datetime')):
-            raise ValueError(translate('This record is read-only'))
+            raise ValueError(_('This record is read-only'))
         request = current_request()
         uploads = (
             request.files.getlist('attachments') if request else [])
@@ -3520,11 +3554,11 @@ class AttachmentPreview(SaoEndpoint):
     def render(self):
         tab = self.engine.interface.get_tab(self.tab)
         if not tab or tab.get('kind') != 'window':
-            raise ValueError(translate('Unknown tab'))
+            raise ValueError(_('Unknown tab'))
         key = tab.get('current_record')
         record = tab.get('records', {}).get(key)
         if not record or not record.get('id'):
-            raise ValueError(translate('Select a saved record first'))
+            raise ValueError(_('Select a saved record first'))
         Attachment = Pool().get('ir.attachment')
         attachments = Attachment.search([
                 ('resource', '=', '%s,%s' % (
@@ -3536,11 +3570,11 @@ class AttachmentPreview(SaoEndpoint):
                     role='dialog', aria_modal='true',
                     aria_labelledby=title_id,
                     cls='vs-modal vs-attachment-preview-dialog'):
-                h2(translate('Attachment preview'), id=title_id)
+                h2(_('Attachment preview'), id=title_id)
                 with div(cls='vs-attachment-preview-list'):
                     if not attachments:
                         p(
-                            translate('No attachments'),
+                            _('No attachments'),
                             cls='vs-popup-empty')
                     for attachment in attachments:
                         with article(cls='vs-attachment-preview-item'):
@@ -3569,12 +3603,12 @@ class AttachmentPreview(SaoEndpoint):
                                         cls='vs-attachment-preview-frame')
                                 else:
                                     a(
-                                        translate('Open attachment'),
+                                        _('Open attachment'),
                                         href=url, target='_blank',
                                         rel='noreferrer noopener')
                 with div(cls='vs-dialog-actions'):
                     button(
-                        translate('Close'), type='button',
+                        _('Close'), type='button',
                         cls='vs-button', data_close_modal='true')
         return html_response(backdrop)
 
@@ -3639,13 +3673,13 @@ class ResolveUnsavedChanges(SaoEndpoint):
         if self.action not in {
                 'close-tab', 'new-record',
                 'select-neighbor', 'switch-view', 'open-preferences'}:
-            raise ValueError(translate('Unknown leave action'))
+            raise ValueError(_('Unknown leave action'))
         if self.decision not in {'discard', 'save'}:
-            raise ValueError(translate('Choose whether to save the changes'))
+            raise ValueError(_('Choose whether to save the changes'))
         engine = self.engine
         tab = engine.interface.get_tab(self.tab)
         if not tab:
-            raise ValueError(translate('Unknown tab'))
+            raise ValueError(_('Unknown tab'))
         if self.decision == 'save':
             engine.save_records(self.tab)
         elif self.action not in {'close-tab', 'open-preferences'}:
@@ -3788,7 +3822,7 @@ class SearchBookmarkDialog(SaoEndpoint):
     def render(self):
         tab = self.engine.interface.get_tab(self.tab)
         if not tab or not decode_value(tab.get('search_domain', [])):
-            raise ValueError(translate('Search for records before adding a bookmark'))
+            raise ValueError(_('Search for records before adding a bookmark'))
         SaveSearchBookmark = Pool().get(
             'cassini.save.search.bookmark')
         with div(cls='vs-modal-backdrop') as backdrop:
@@ -3796,24 +3830,24 @@ class SearchBookmarkDialog(SaoEndpoint):
                     role='dialog', aria_modal='true',
                     aria_labelledby='search-bookmark-title',
                     cls='vs-modal vs-bookmark-dialog'):
-                h2(translate('Bookmark this filter'), id='search-bookmark-title')
+                h2(_('Bookmark this filter'), id='search-bookmark-title')
                 p(tab.get('search') or '', cls='vs-muted')
                 with form(
                         hx_post=SaveSearchBookmark.url(tab=self.tab),
                         hx_target='#screen-' + self.tab,
                         hx_swap='outerHTML'):
                     with label(cls='vs-field'):
-                        span(translate('Bookmark Name'))
+                        span(_('Bookmark Name'))
                         input_(
                             type='text', name='name',
                             required=True, autofocus=True,
                             autocomplete='off', cls='vs-input')
                     with div(cls='vs-dialog-actions'):
                         button(
-                            translate('Cancel'), type='button', cls='vs-button',
+                            _('Cancel'), type='button', cls='vs-button',
                             data_close_modal='true')
                         button(
-                            translate('Save'), type='submit',
+                            _('Save'), type='submit',
                             cls='vs-button vs-button-primary')
         return backdrop
 
@@ -4015,15 +4049,15 @@ class ResizeTreeColumns(SaoEndpoint):
         try:
             widths = json.loads(self.widths or '{}')
         except (TypeError, ValueError) as exception:
-            raise ValueError(translate('Invalid column widths')) from exception
+            raise ValueError(_('Invalid column widths')) from exception
         if not isinstance(widths, dict) or len(widths) > 100:
-            raise ValueError(translate('Invalid column widths'))
+            raise ValueError(_('Invalid column widths'))
         normalized = {}
         for name, values in widths.items():
             if name not in Model._fields or not isinstance(values, list):
-                raise ValueError(translate('Invalid column field'))
+                raise ValueError(_('Invalid column field'))
             if len(values) > 20:
-                raise ValueError(translate('Invalid column occurrences'))
+                raise ValueError(_('Invalid column occurrences'))
             normalized[name] = []
             for width in values:
                 if width is None:
@@ -4033,7 +4067,7 @@ class ResizeTreeColumns(SaoEndpoint):
                         isinstance(width, bool)
                         or not isinstance(width, (int, float))
                         or not 24 <= width <= 4000):
-                    raise ValueError(translate('Invalid column width'))
+                    raise ValueError(_('Invalid column width'))
                 normalized[name].append(round(width))
         screen_width = max(0, min(int(self.screen_width or 0), 10000))
         if normalized:
@@ -4117,9 +4151,9 @@ class SelectRecord(SaoEndpoint):
             try:
                 selection = json.loads(self.selection)
             except (TypeError, ValueError):
-                raise ValueError(translate('Unknown record'))
+                raise ValueError(_('Unknown record'))
             if not isinstance(selection, list):
-                raise ValueError(translate('Unknown record'))
+                raise ValueError(_('Unknown record'))
             selection = [str(key) for key in selection]
         self.engine.select_record(
             self.tab, self.record,
@@ -4223,7 +4257,7 @@ class RelationAutocomplete(SaoEndpoint):
         relation_access = ModelAccess.get_access(
             [definition['relation']])[definition['relation']]
         if not relation_access['read']:
-            raise ValueError(translate('This relation is not readable'))
+            raise ValueError(_('This relation is not readable'))
         choices = (
             renderer.relation_choices(
                 definition,
@@ -4320,12 +4354,12 @@ class RelationSearch(SaoEndpoint):
         selected_ids = []
         for value in selected_values:
             if not str(value).lstrip('-').isdigit():
-                raise ValueError(translate('Choose a related record'))
+                raise ValueError(_('Choose a related record'))
             selected_ids.append(int(value))
 
         if selected_ids:
             if readonly or not relation_access['read']:
-                raise ValueError(translate('This relation field is read-only'))
+                raise ValueError(_('This relation field is read-only'))
             if field._type in {'many2one', 'one2one'}:
                 relation_value = selected_ids[-1]
             else:
@@ -4496,13 +4530,13 @@ class RelationSearch(SaoEndpoint):
                 })
         if self.column:
             if self.column not in Relation._fields:
-                raise ValueError(translate('Unknown relation column'))
+                raise ValueError(_('Unknown relation column'))
             search_state.setdefault(
                 'column_visibility', {})[self.column] = bool(self.visible)
             self.engine.save()
         if self.item:
             if self.item not in tree_records:
-                raise ValueError(translate('Unknown related record'))
+                raise ValueError(_('Unknown related record'))
             expanded = search_state.setdefault('expanded', [])
             if self.item in expanded:
                 expanded.remove(self.item)
@@ -4536,11 +4570,10 @@ class RelationSearch(SaoEndpoint):
                     aria_labelledby='relation-search-title',
                     cls='vs-modal vs-relation-search-dialog'):
                 h2(
-                    translate(
-                        'Search %(model)s',
-                        model=(
+                    _('Search %(model)s') % {
+                        'model': (
                             definition.get('string')
-                            or definition['relation'])),
+                            or definition['relation'])},
                     id='relation-search-title')
                 with div(cls='vs-search-toolbar'):
                     with form(
@@ -4555,11 +4588,11 @@ class RelationSearch(SaoEndpoint):
                             type='search', name='query',
                             value=query, autofocus=True,
                             autocomplete='off', cls='vs-search-input',
-                            placeholder=translate('Search records'))
+                            placeholder=_('Search records'))
                         with button(
                                 type='submit',
                                 cls='vs-icon-button',
-                                title=translate('Search'), aria_label=translate('Search')):
+                                title=_('Search'), aria_label=_('Search')):
                             icon('search')
                 with form(
                         cls='vs-relation-selection-form',
@@ -4582,7 +4615,7 @@ class RelationSearch(SaoEndpoint):
                         'access': relation_access,
                         'context': tab.get('context', {}),
                         'screen_width': screen_width,
-                        'empty_message': translate('No matching records'),
+                        'empty_message': _('No matching records'),
                         'relation_search_origin': {
                             'multiple': multiple,
                             'target': modal_target,
@@ -4597,7 +4630,7 @@ class RelationSearch(SaoEndpoint):
                         ViewRenderer(None).tree(tree_tab, tree_view))
                     with div(cls='vs-dialog-actions'):
                         button(
-                            translate('Cancel'), type='button', cls='vs-button',
+                            _('Cancel'), type='button', cls='vs-button',
                             data_close_relation_modal=(
                                 'true'
                                 if endpoint == 'preferences' else None),
@@ -4606,7 +4639,7 @@ class RelationSearch(SaoEndpoint):
                                 if endpoint != 'preferences' else None))
                         if create_allowed:
                             button(
-                                translate('Create'), type='button',
+                                _('Create'), type='button',
                                 cls='vs-button',
                                 hx_post=OpenRelationNew.url(
                                     tab=self.tab,
@@ -4615,7 +4648,7 @@ class RelationSearch(SaoEndpoint):
                                 hx_target='#workspace',
                                 hx_swap='outerHTML')
                         button(
-                            translate('OK'), type='submit',
+                            _('OK'), type='submit',
                             cls='vs-button vs-button-primary',
                             disabled=True,
                             data_relation_search_confirm='true')
@@ -4643,7 +4676,7 @@ class OpenRelationNew(SaoEndpoint):
                 self.engine, self.tab, self.record, self.field)
         if endpoint not in {'record', 'wizard'}:
             raise ValueError(
-                translate('Create the related record from its own window'))
+                _('Create the related record from its own window'))
         definition = view['fields'][self.field]
         attributes = field_attributes(view, self.field)
         relation = definition.get('relation')
@@ -4657,7 +4690,7 @@ class OpenRelationNew(SaoEndpoint):
                 or str(attributes.get(
                         'create', '1')).lower()
                 in {'0', 'false', 'no'}):
-            raise ValueError(translate('Creating related records is not allowed'))
+            raise ValueError(_('Creating related records is not allowed'))
         draft_values = None
         if self.item:
             parent_values = (
@@ -4670,11 +4703,11 @@ class OpenRelationNew(SaoEndpoint):
                     continue
                 if not isinstance(item, dict) or item.get('id'):
                     raise ValueError(
-                        translate('The related record is already saved'))
+                        _('The related record is already saved'))
                 draft_values = decode_value(item.get('values', item))
                 break
             else:
-                raise ValueError(translate('Unknown related record'))
+                raise ValueError(_('Unknown related record'))
         view_ids = []
         for reference in attributes.get('view_ids', '').split(','):
             reference = reference.strip()
@@ -4814,22 +4847,22 @@ class X2ManyAction(SaoEndpoint):
                 'delete', 'remove', 'undelete', 'add', 'new',
                 'move'}:
             if readonly:
-                raise ValueError(translate('This relation field is read-only'))
+                raise ValueError(_('This relation field is read-only'))
             if (
                     self.action in {'delete', 'remove', 'undelete'}
                     and str(attributes.get(
                             'delete', '1')).lower()
                     in {'0', 'false', 'no'}):
-                raise ValueError(translate('Removing related records is not allowed'))
+                raise ValueError(_('Removing related records is not allowed'))
             if self.action == 'delete' and field._type == 'one2many':
                 if not relation_access['delete']:
                     raise ValueError(
-                        translate('Deleting related records is not allowed'))
+                        _('Deleting related records is not allowed'))
             if self.action == 'add' and not relation_access['read']:
-                raise ValueError(translate('This relation is not readable'))
+                raise ValueError(_('This relation is not readable'))
             if self.action == 'move' and not relation_access['write']:
                 raise ValueError(
-                    translate('Reordering related records is not allowed'))
+                    _('Reordering related records is not allowed'))
             if (
                     self.action == 'new'
                     and (
@@ -4838,7 +4871,7 @@ class X2ManyAction(SaoEndpoint):
                                 'create', '1')).lower()
                         in {'0', 'false', 'no'})):
                 raise ValueError(
-                    translate('Creating related records is not allowed'))
+                    _('Creating related records is not allowed'))
         values = decode_value(stored.get('values', {}))
         relation_values = list(values.get(self.field) or [])
         modes = (
@@ -4882,16 +4915,16 @@ class X2ManyAction(SaoEndpoint):
         update_value = False
         if self.action == 'select':
             if self.item not in keys:
-                raise ValueError(translate('Unknown related record'))
+                raise ValueError(_('Unknown related record'))
             if self.selection is not None:
                 try:
                     selected = json.loads(self.selection)
                 except (TypeError, ValueError):
-                    raise ValueError(translate('Unknown related record'))
+                    raise ValueError(_('Unknown related record'))
                 if (
                         not isinstance(selected, list)
                         or any(str(key) not in keys for key in selected)):
-                    raise ValueError(translate('Unknown related record'))
+                    raise ValueError(_('Unknown related record'))
                 selected = list(dict.fromkeys(
                         str(key) for key in selected))
                 current = (
@@ -4911,12 +4944,12 @@ class X2ManyAction(SaoEndpoint):
         elif self.action == 'column':
             Relation = Pool().get(definition['relation'])
             if self.item not in Relation._fields:
-                raise ValueError(translate('Unknown relation column'))
+                raise ValueError(_('Unknown relation column'))
             visibility = state.setdefault('column_visibility', {})
             visibility[self.item] = not visibility.get(self.item, False)
         elif self.action == 'toggle':
             if self.item not in keys:
-                raise ValueError(translate('Unknown related record'))
+                raise ValueError(_('Unknown related record'))
             expanded = state.setdefault('expanded', [])
             if self.item in expanded:
                 expanded.remove(self.item)
@@ -4962,7 +4995,7 @@ class X2ManyAction(SaoEndpoint):
                 update_value = True
         elif self.action == 'add':
             if not self.value or not str(self.value).lstrip('-').isdigit():
-                raise ValueError(translate('Choose a related record to add'))
+                raise ValueError(_('Choose a related record to add'))
             record_id = int(self.value)
             existing_ids = {
                 item.get('id') if isinstance(item, dict) else int(item)
@@ -5025,9 +5058,9 @@ class X2ManyAction(SaoEndpoint):
         elif self.action == 'move':
             active_keys = [key for key, _value in active]
             if self.item not in active_keys or self.target not in active_keys:
-                raise ValueError(translate('Unknown related record'))
+                raise ValueError(_('Unknown related record'))
             if self.position not in {'before', 'after'}:
-                raise ValueError(translate('Unknown tree drop position'))
+                raise ValueError(_('Unknown tree drop position'))
             source_index = active_keys.index(self.item)
             target_index = active_keys.index(self.target)
             item = relation_values.pop(source_index)
@@ -5044,7 +5077,7 @@ class X2ManyAction(SaoEndpoint):
             Relation = Pool().get(definition['relation'])
             if not sequence or sequence not in Relation._fields:
                 raise ValueError(
-                    translate('This tree can not be reordered'))
+                    _('This tree can not be reordered'))
             for index, item in enumerate(relation_values, 1):
                 sequence_value = index * 10
                 if isinstance(item, dict) and item.get('id'):
@@ -5062,7 +5095,7 @@ class X2ManyAction(SaoEndpoint):
             update_value = True
             current = self.item
         else:
-            raise ValueError(translate('Unknown x2many action'))
+            raise ValueError(_('Unknown x2many action'))
 
         state['current'] = current
         if self.action not in {'select', 'column', 'toggle'}:
@@ -5157,7 +5190,7 @@ class UpdateX2ManyField(SaoEndpoint):
             not renderer.editable
             or renderer.states(definition, attributes)[0])
         if parent_readonly:
-            raise ValueError(translate('This relation field is read-only'))
+            raise ValueError(_('This relation field is read-only'))
 
         ModelAccess = Pool().get('ir.model.access')
         relation = definition.get('relation')
@@ -5180,18 +5213,18 @@ class UpdateX2ManyField(SaoEndpoint):
             definition, attributes, relation_values, state, view_type)
         row = next((row for row in rows if row['key'] == self.item), None)
         if not row or row.get('deleted'):
-            raise ValueError(translate('Unknown related record'))
+            raise ValueError(_('Unknown related record'))
         if not (
                 relation_access['write']
                 if row.get('id') else relation_access['create']):
-            raise ValueError(translate('This relation field is read-only'))
+            raise ValueError(_('This relation field is read-only'))
 
         Relation = Pool().get(relation)
         relation_definition = relation_view.get(
             'fields', {}).get(self.child)
         child_field = Relation._fields.get(self.child)
         if not relation_definition or not child_field:
-            raise ValueError(translate('Unknown relation field'))
+            raise ValueError(_('Unknown relation field'))
         relation_record = {
             'key': row['key'],
             'dom_key': '%s-%s-%s' % (
@@ -5217,7 +5250,7 @@ class UpdateX2ManyField(SaoEndpoint):
         child_attributes = field_attributes(relation_view, self.child)
         if child_renderer.states(
                 relation_definition, child_attributes)[0]:
-            raise ValueError(translate('This relation field is read-only'))
+            raise ValueError(_('This relation field is read-only'))
 
         request = current_request()
         raw_values = request.form.getlist('value') if request else []
@@ -5264,7 +5297,7 @@ class UpdateX2ManyField(SaoEndpoint):
                 relation_values[index] = draft
             break
         else:
-            raise ValueError(translate('Unknown related record'))
+            raise ValueError(_('Unknown related record'))
 
         (
             tab, stored, view, renderer,
@@ -5670,7 +5703,7 @@ class ShowCSVImport(SaoEndpoint):
     def render(self):
         tab = csv_tab(self.engine, self.tab)
         if not tab.get('access', {}).get('create', True):
-            raise ValueError(translate('You are not allowed to import records'))
+            raise ValueError(_('You are not allowed to import records'))
         return html_response(csv_dialog(self.engine, tab, 'import'))
 
 
@@ -5687,7 +5720,7 @@ class CSVRelationFields(SaoEndpoint):
     def render(self):
         tab = csv_tab(self.engine, self.tab)
         if self.kind not in {'export', 'import'}:
-            raise ValueError(translate('Unknown CSV operation'))
+            raise ValueError(_('Unknown CSV operation'))
         Root = Pool().get(tab['model'])
         Model = csv_resolve_model(
             Root, self.path, import_=self.kind == 'import')
@@ -5713,7 +5746,7 @@ class AutodetectCSVImport(SaoEndpoint):
         request = current_request()
         uploaded = request.files.get('file') if request else None
         if not uploaded or not uploaded.filename:
-            raise ValueError(translate('You must select an import file first.'))
+            raise ValueError(_('You must select an import file first.'))
         encoding = request.form.get('encoding') or 'utf-8'
         delimiter, quotechar = SaoEngine._csv_parameters(
             request.form.get('delimiter'), request.form.get('quotechar'))
@@ -5721,9 +5754,9 @@ class AutodetectCSVImport(SaoEndpoint):
             codecs.lookup(encoding)
             text = uploaded.read().decode(encoding)
         except (LookupError, UnicodeDecodeError) as exception:
-            raise ValueError(translate(
-                    'The CSV file could not be decoded with %(encoding)s',
-                    encoding=encoding)) from exception
+            raise ValueError(_(
+                    'The CSV file could not be decoded with %(encoding)s') % {
+                        'encoding': encoding}) from exception
         if text.startswith('\ufeff'):
             text = text[1:]
         reader = csv.reader(
@@ -5731,9 +5764,9 @@ class AutodetectCSVImport(SaoEndpoint):
         try:
             headers = next(reader)
         except StopIteration:
-            raise ValueError(translate('The CSV file is empty'))
+            raise ValueError(_('The CSV file is empty'))
         if not headers or any(not header for header in headers):
-            raise ValueError(translate(
+            raise ValueError(_(
                     'The first CSV row must contain field names'))
         fields_names = [
             csv_import_path(self.engine, tab, header)
@@ -5756,7 +5789,7 @@ class SaveCSVExport(SaoEndpoint):
         request = current_request()
         fields_names = request.form.getlist('fields')
         if not fields_names:
-            raise ValueError(translate('Select at least one field'))
+            raise ValueError(_('Select at least one field'))
         export_id = request.form.get('profile_id')
         name = (request.form.get('export_name') or '').strip()
         Export = Pool().get('ir.export')
@@ -5771,7 +5804,7 @@ class SaveCSVExport(SaoEndpoint):
             Export.update(int(export_id), values, fields_names)
         else:
             if not name:
-                raise ValueError(translate(
+                raise ValueError(_(
                         'Enter a name for the export'))
             values.update({
                     'resource': tab['model'],
@@ -5799,7 +5832,7 @@ class DeleteCSVExport(SaoEndpoint):
         request = current_request()
         export_id = request.form.get('profile_id') if request else None
         if not export_id:
-            raise ValueError(translate('Select a predefined export'))
+            raise ValueError(_('Select a predefined export'))
         Export = Pool().get('ir.export')
         Export.unset(int(export_id))
         Model = Pool().get(tab['model'])
@@ -5858,7 +5891,7 @@ class ImportRecords(SaoEndpoint):
         request = current_request()
         uploaded = request.files.get('file') if request else None
         if not uploaded or not uploaded.filename:
-            raise ValueError(translate('Choose a CSV file to import'))
+            raise ValueError(_('Choose a CSV file to import'))
         self.engine.import_csv(
             self.tab, uploaded.read(),
             fields_names=request.form.getlist('fields'),
@@ -5933,20 +5966,20 @@ class Preferences(SaoEndpoint):
                         icon('warning')
                     with div():
                         h2(
-                            translate('Close all tabs?'),
+                            _('Close all tabs?'),
                             id='close-tabs-title')
                         p(
-                            translate(
+                            _(
                                 'Preferences require all open tabs to be '
                                 'closed.'),
                             id='close-tabs-description', cls='vs-muted')
                 with div(cls='vs-unsaved-explanation'):
-                    p(translate(
+                    p(_(
                             'Any unsaved changes will be reviewed before '
                             'each tab is closed.'))
                 with div(cls='vs-dialog-actions vs-unsaved-actions'):
                     button(
-                        translate('Cancel'), type='button',
+                        _('Cancel'), type='button',
                         cls='vs-button', data_close_modal='true',
                         autofocus=True)
                     with button(
@@ -5957,7 +5990,7 @@ class Preferences(SaoEndpoint):
                             hx_target='#workspace',
                             hx_swap='outerHTML'):
                         icon('close')
-                        span(translate('Close tabs and continue'))
+                        span(_('Close tabs and continue'))
         return backdrop
 
     def render_preferences(self, engine):
@@ -5997,7 +6030,7 @@ class Preferences(SaoEndpoint):
                     role='dialog', aria_modal='true',
                     aria_labelledby='preferences-title',
                     cls='vs-modal vs-preferences-dialog'):
-                h2(translate('Preferences'), id='preferences-title')
+                h2(_('Preferences'), id='preferences-title')
                 with form(
                         id='preferences-form',
                         cls='vs-form',
@@ -6011,12 +6044,12 @@ class Preferences(SaoEndpoint):
                         root, renderer, pseudo_tab, pseudo_record)
                     with div(cls='vs-dialog-actions'):
                         button(
-                            translate('Cancel'), type='button', cls='vs-button',
+                            _('Cancel'), type='button', cls='vs-button',
                             hx_post=ClosePreferences.url(),
                             hx_target='#modal',
                             hx_swap='innerHTML')
                         button(
-                            translate('Save'), type='submit',
+                            _('Save'), type='submit',
                             cls='vs-button vs-button-primary')
                 div(
                     id='relation-modal',
@@ -6071,7 +6104,7 @@ class SwitchPreferencePage(SaoEndpoint):
     @handle_endpoint_errors
     def render(self):
         if not self.engine.interface.data.get('preferences_open'):
-            raise ValueError(translate('Preferences are not open'))
+            raise ValueError(_('Preferences are not open'))
         path = self.notebook.removeprefix('n-').split('-')
         if (
                 not self.notebook.startswith('n-')
@@ -6079,7 +6112,7 @@ class SwitchPreferencePage(SaoEndpoint):
                 or any(not item.isdigit() for item in path)
                 or self.page < 0
                 or self.page > 99):
-            raise ValueError(translate('Unknown preferences page'))
+            raise ValueError(_('Unknown preferences page'))
         state = self.engine.interface.component('preferences')
         state.setdefault('pages', {})[self.notebook] = self.page
         self.engine.save()
@@ -6347,7 +6380,7 @@ class WizardStep(SaoEndpoint):
         tab = self.engine.interface.get_tab(self.tab)
         view = tab and tab.get('view')
         if not view:
-            raise ValueError(translate('Wizard has no current view'))
+            raise ValueError(_('Wizard has no current view'))
         view = decode_value(view)
         Model = Pool().get(view['model'])
         request = current_request()
@@ -6370,7 +6403,7 @@ class WizardStep(SaoEndpoint):
             elif name in current_values:
                 values[name] = current_values[name]
         engine = self.engine
-        _, downloads = engine.wizard_step(
+        _actions, downloads = engine.wizard_step(
             self.tab, self.state, values)
         headers = {
             'HX-Push-Url': active_workspace_url(engine),
@@ -6461,9 +6494,9 @@ class UpdateStateComponent(SaoEndpoint):
         try:
             values = json.loads(self.payload or '{}')
         except json.JSONDecodeError as exception:
-            raise ValueError(translate('Component state must be valid JSON')) from exception
+            raise ValueError(_('Component state must be valid JSON')) from exception
         if not isinstance(values, dict):
-            raise ValueError(translate('Component state must be a JSON object'))
+            raise ValueError(_('Component state must be a JSON object'))
         engine = self.engine
         engine.interface.component(self.component).update(values)
         engine.save()

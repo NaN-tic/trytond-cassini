@@ -10,13 +10,13 @@ from dominate.tags import (
     section, select, span, strong, summary, table, tbody, td, th, thead,
     tfoot, tr, ul)
 from dominate.util import raw
+from trytond.modules.xgettext import _
 from trytond.pool import Pool
 from trytond.pyson import PYSONEncoder
 from trytond.transaction import Transaction
 
 from .engine import combine_domains, evaluate, search_field_definitions
 from .icons import filter_icon, icon
-from .i18n import translate
 from .search import search_domain_parser
 from .state import decode_value
 from .widgets import HierarchyWidget, WidgetRenderer, dom_id, stringify
@@ -116,8 +116,8 @@ class ViewRenderer:
                 with button(
                         type='button',
                         cls='vs-icon-button',
-                        title=translate('Reload/Undo'),
-                        aria_label=translate('Reload/Undo'),
+                        title=_('Reload/Undo'),
+                        aria_label=_('Reload/Undo'),
                         hx_post=ReloadTab.url(tab=tab['id']),
                         hx_target='#screen-' + tab['id'],
                         hx_swap='outerHTML'):
@@ -145,7 +145,7 @@ class ViewRenderer:
                         data_chart_payload=payload,
                         style='min-height:%dpx' % height,
                         role='img',
-                        aria_label=translate('Dashboard chart'))
+                        aria_label=_('Dashboard chart'))
                     children = item.get('children') or []
                     if children:
                         self.dashboard_items(children)
@@ -176,11 +176,11 @@ class ViewRenderer:
                 with div(
                         cls='vs-relation-dialog-resource-actions',
                         role='group',
-                        aria_label=translate('Resource actions')):
+                        aria_label=_('Resource actions')):
                     with button(
                             type='button', cls='vs-icon-button',
-                            title=translate('New'),
-                            aria_label=translate('New'),
+                            title=_('New'),
+                            aria_label=_('New'),
                             disabled=not access.get('create', True) or None,
                             hx_post=NewRecord.url(tab=tab['id']),
                             hx_target='#screen-' + tab['id'],
@@ -188,12 +188,12 @@ class ViewRenderer:
                         icon('create')
                     with button(
                             type='button', cls='vs-icon-button',
-                            title=translate('Delete'),
-                            aria_label=translate('Delete'),
+                            title=_('Delete'),
+                            aria_label=_('Delete'),
                             disabled=(
                                 not current
                                 or not access.get('delete', True) or None),
-                            hx_confirm=translate(
+                            hx_confirm=_(
                                 'Delete the selected records?'),
                             hx_post=DeleteRecords.url(tab=tab['id']),
                             hx_target='#screen-' + tab['id'],
@@ -201,8 +201,8 @@ class ViewRenderer:
                         icon('delete')
                     with button(
                             type='button', cls='vs-icon-button',
-                            title=translate('Switch view'),
-                            aria_label=translate('Switch view'),
+                            title=_('Switch view'),
+                            aria_label=_('Switch view'),
                             disabled=len(view_types) < 2 or None,
                             hx_post=SwitchView.url(
                                 tab=tab['id'], view=next_view),
@@ -213,11 +213,11 @@ class ViewRenderer:
                 with div(
                         cls='vs-relation-navigation',
                         role='group',
-                        aria_label=translate('Relation actions')):
+                        aria_label=_('Relation actions')):
                     with button(
                             type='button', cls='vs-icon-button',
-                            title=translate('Previous'),
-                            aria_label=translate('Previous'),
+                            title=_('Previous'),
+                            aria_label=_('Previous'),
                             disabled=(not position or position <= 1) or None,
                             hx_post=SelectNeighbor.url(
                                 tab=tab['id'], direction='previous'),
@@ -231,8 +231,8 @@ class ViewRenderer:
                         cls='vs-relation-navigation-position')
                     with button(
                             type='button', cls='vs-icon-button',
-                            title=translate('Next'),
-                            aria_label=translate('Next'),
+                            title=_('Next'),
+                            aria_label=_('Next'),
                             disabled=(
                                 not position
                                 or position >= len(record_order)) or None,
@@ -248,12 +248,12 @@ class ViewRenderer:
         SaveRecords = self.pool.get('cassini.save.records')
         with div(cls='vs-dialog-actions vs-relation-dialog-actions') as tag:
             button(
-                translate('Cancel'), type='button', cls='vs-button',
+                _('Cancel'), type='button', cls='vs-button',
                 data_modal_cancel='true',
                 hx_post=CloseTab.url(tab=tab['id']),
                 hx_target='#workspace', hx_swap='outerHTML')
             button(
-                translate('OK'), type='button',
+                _('OK'), type='button',
                 cls='vs-button vs-button-primary',
                 hx_post=SaveRecords.url(tab=tab['id']),
                 hx_target='#workspace', hx_swap='outerHTML')
@@ -356,7 +356,7 @@ class ViewRenderer:
                 readonly = not bool(record)
                 invisible = False
                 if renderer:
-                    state_readonly, _, invisible = renderer.states(
+                    state_readonly, _required, invisible = renderer.states(
                         {}, attributes)
                     readonly = readonly or state_readonly
                 multiple = str(
@@ -369,7 +369,7 @@ class ViewRenderer:
                 title = (
                     attributes.get('string')
                     or attributes.get('name')
-                    or translate('Action'))
+                    or _('Action'))
                 items.append({
                         'title': title,
                         'icon': attributes.get('icon'),
@@ -392,28 +392,28 @@ class ViewRenderer:
             return items
 
         controls = (
-            ('create', translate('New'), NewRecord.url(tab=tab['id']),
+            ('create', _('New'), NewRecord.url(tab=tab['id']),
                 not access['create'] or not view_creatable
                 or bool(revision), None),
-            ('save', translate('Save'), SaveRecords.url(tab=tab['id']),
+            ('save', _('Save'), SaveRecords.url(tab=tab['id']),
                 not tab.get('dirty') or not can_save or bool(revision),
                 None),
-            ('refresh', translate('Reload/Undo'), (
+            ('refresh', _('Reload/Undo'), (
                     RevertRecord.url(
                         tab=tab['id'], record=current)
                     if record and record.get('dirty')
                     else ReloadTab.url(tab=tab['id'])),
                 False, (
-                    translate('Discard the unsaved changes to this record?')
+                    _('Discard the unsaved changes to this record?')
                     if record and record.get('dirty') else None)),
-            ('copy', translate('Duplicate'),
+            ('copy', _('Duplicate'),
                 DuplicateRecord.url(tab=tab['id']),
                 not record or record.get('new')
                 or not access['create'] or bool(revision), None),
-            ('delete', translate('Delete'),
+            ('delete', _('Delete'),
                 DeleteRecords.url(tab=tab['id']),
                 not record or not access['delete'] or bool(revision),
-                translate('Delete the selected records?')),
+                _('Delete the selected records?')),
             )
         with div(
                 id='toolbar-' + tab['id'],
@@ -424,9 +424,9 @@ class ViewRenderer:
                         cls='vs-popup vs-window-menu') as window_menu:
                     with summary(
                             cls='vs-window-title',
-                            title=translate('Window actions'),
+                            title=_('Window actions'),
                             aria_label='%s: %s' % (
-                                translate('Window actions'), tab['title'])
+                                _('Window actions'), tab['title'])
                             ) as window_summary:
                         span('', cls='vs-window-title-caret')
                     with div(
@@ -444,10 +444,10 @@ class ViewRenderer:
                                 hx_target='#screen-' + tab['id'],
                                 hx_swap='outerHTML'):
                             icon('switch')
-                            span(translate('Switch view'))
+                            span(_('Switch view'))
                     for direction, image, title in (
-                            ('previous', 'back', translate('Previous')),
-                            ('next', 'forward', translate('Next'))):
+                            ('previous', 'back', _('Previous')),
+                            ('next', 'forward', _('Next'))):
                         with button(
                                 type='button',
                                 cls=(
@@ -469,8 +469,8 @@ class ViewRenderer:
                             role='menuitem',
                             data_shortcut_action='search'):
                         icon('search')
-                        span(translate('Search'))
-                    span(translate('Records'), cls='vs-popup-heading')
+                        span(_('Search'))
+                    span(_('Records'), cls='vs-popup-heading')
                     for image, title, url, disabled, confirm in controls:
                         with button(
                                 type='button',
@@ -504,7 +504,7 @@ class ViewRenderer:
                             hx_swap='outerHTML',
                             hx_push_url='true'):
                         icon('log')
-                        span(translate('View logs'))
+                        span(_('View logs'))
                     if tab.get('history'):
                         with button(
                                 type='button',
@@ -516,11 +516,11 @@ class ViewRenderer:
                                 hx_target='#modal',
                                 hx_swap='innerHTML'):
                             icon('history')
-                            span(translate('Revisions'))
+                            span(_('Revisions'))
                     for resource, image, title in (
                             ('attachments', 'attach',
-                                translate('Attachments')),
-                            ('notes', 'note', translate('Notes'))):
+                                _('Attachments')),
+                            ('notes', 'note', _('Notes'))):
                         with button(
                                 type='button',
                                 cls='vs-popup-item vs-popup-item-icon',
@@ -535,9 +535,9 @@ class ViewRenderer:
                             icon(image)
                             span(title)
                     for category, image, title in (
-                            ('action', 'launch', translate('Action')),
-                            ('relate', 'link', translate('Relate')),
-                            ('print', 'print', translate('Print'))):
+                            ('action', 'launch', _('Action')),
+                            ('relate', 'link', _('Relate')),
+                            ('print', 'print', _('Print'))):
                         items = action_definitions(category)
                         if items:
                             with button(
@@ -549,7 +549,7 @@ class ViewRenderer:
                                     data_open_toolbar_popup=category):
                                 icon(image)
                                 span(title)
-                    span(translate('Data'), cls='vs-popup-heading')
+                    span(_('Data'), cls='vs-popup-heading')
                     with button(
                             type='button',
                             cls='vs-popup-item vs-popup-item-icon',
@@ -558,7 +558,7 @@ class ViewRenderer:
                             hx_target='#modal',
                             hx_swap='innerHTML'):
                         icon('export')
-                        span(translate('Export selected fields'))
+                        span(_('Export'))
                     for export in toolbar_data.get('exports', []):
                         with a(
                                 href=ExportRecords.url(
@@ -581,7 +581,7 @@ class ViewRenderer:
                             hx_target='#modal',
                             hx_swap='innerHTML'):
                         icon('import')
-                        span(translate('Import'))
+                        span(_('Import'))
                     with button(
                             type='button',
                             cls='vs-popup-item vs-popup-item-icon',
@@ -591,7 +591,7 @@ class ViewRenderer:
                             hx_target='#workspace',
                             hx_swap='outerHTML'):
                         icon('close')
-                        span(translate('Close tab'))
+                        span(_('Close tab'))
                 menu_items = [
                     item for item in window_menu.children
                     if item is not window_summary
@@ -604,9 +604,9 @@ class ViewRenderer:
                     if tab.get('dirty'):
                         span(
                             '•', cls='vs-window-dirty',
-                            title=translate('Unsaved'))
+                            title=_('Unsaved'))
                         span(
-                            translate('Unsaved changes'),
+                            _('Unsaved changes'),
                             cls='vs-window-dirty-status')
 
             with div(cls='vs-toolbar-actions'):
@@ -616,12 +616,12 @@ class ViewRenderer:
                                 'vs-toolbar-group '
                                 'vs-relation-navigation'),
                             role='group',
-                            aria_label=translate('Relation actions')):
+                            aria_label=_('Relation actions')):
                         with button(
                                 type='button',
                                 cls='vs-icon-button',
-                                title=translate('Previous'),
-                                aria_label=translate('Previous'),
+                                title=_('Previous'),
+                                aria_label=_('Previous'),
                                 disabled=(
                                     not relation_position
                                     or relation_position <= 1) or None,
@@ -639,8 +639,8 @@ class ViewRenderer:
                         with button(
                                 type='button',
                                 cls='vs-icon-button',
-                                title=translate('Next'),
-                                aria_label=translate('Next'),
+                                title=_('Next'),
+                                aria_label=_('Next'),
                                 disabled=(
                                     not relation_position
                                     or relation_position
@@ -653,8 +653,8 @@ class ViewRenderer:
                 with button(
                         type='button',
                         cls='vs-icon-button',
-                        title=translate('Switch view'),
-                        aria_label=translate('Switch view'),
+                        title=_('Switch view'),
+                        aria_label=_('Switch view'),
                         disabled=len(view_types) < 2 or None,
                         data_shortcut_action='switch',
                         data_next_view=next_view,
@@ -669,11 +669,11 @@ class ViewRenderer:
                                 'vs-toolbar-group '
                                 'vs-record-navigation'),
                             role='group',
-                            aria_label=translate('Record navigation')):
+                            aria_label=_('Record navigation')):
                         with button(
                                 type='button', cls='vs-icon-button',
-                                title=translate('Previous record'),
-                                aria_label=translate('Previous record'),
+                                title=_('Previous record'),
+                                aria_label=_('Previous record'),
                                 disabled=(
                                     not record_position
                                     or record_position <= 1) or None,
@@ -689,8 +689,8 @@ class ViewRenderer:
                                 'vs-record-navigation-position')
                         with button(
                                 type='button', cls='vs-icon-button',
-                                title=translate('Next record'),
-                                aria_label=translate('Next record'),
+                                title=_('Next record'),
+                                aria_label=_('Next record'),
                                 disabled=(
                                     not record_position
                                     or record_position
@@ -707,9 +707,7 @@ class ViewRenderer:
                             disabled, confirm) in controls[:3]:
                         with button(
                                 type='button',
-                                cls='vs-icon-button%s' % (
-                                    ' vs-button-primary'
-                                    if image == 'save' else ''),
+                                cls='vs-icon-button',
                                 title=title, aria_label=title,
                                 disabled=disabled or None,
                                 data_shortcut_action={
@@ -737,16 +735,16 @@ class ViewRenderer:
                                     cls='vs-icon-button',
                                     title=(
                                         '%s (%s)' % (
-                                            translate('Attachments'),
+                                            _('Attachments'),
                                             attachment_count)
                                         if attachment_count else
-                                        translate('Attachments')),
+                                        _('Attachments')),
                                     aria_label=(
                                         '%s (%s)' % (
-                                            translate('Attachments'),
+                                            _('Attachments'),
                                             attachment_count)
                                         if attachment_count else
-                                        translate('Attachments')),
+                                        _('Attachments')),
                                     data_shortcut_action='attach'):
                                 icon('attach')
                                 if attachment_count:
@@ -798,7 +796,7 @@ class ViewRenderer:
                                                     else '')),
                                             role='menuitem'):
                                         icon('create')
-                                        span(translate('Add...'))
+                                        span(_('Add...'))
                                         input_(
                                             type='file', name='attachments',
                                             multiple=True,
@@ -828,7 +826,7 @@ class ViewRenderer:
                                         hx_target='#modal',
                                         hx_swap='innerHTML'):
                                     icon('open')
-                                    span(translate('Preview'))
+                                    span(_('Preview'))
                                 with button(
                                         type='button',
                                         cls=(
@@ -841,12 +839,12 @@ class ViewRenderer:
                                         hx_target='#workspace',
                                         hx_swap='outerHTML'):
                                     icon('menu')
-                                    span(translate('Manage...'))
+                                    span(_('Manage...'))
                     else:
                         with button(
                                 type='button', cls='vs-icon-button',
-                                title=translate('Attachments'),
-                                aria_label=translate('Attachments'),
+                                title=_('Attachments'),
+                                aria_label=_('Attachments'),
                                 disabled=True,
                                 data_shortcut_action='attach'):
                             icon('attach')
@@ -854,10 +852,10 @@ class ViewRenderer:
                     note_unread = resource_counts['note_unread']
                     note_title = (
                         '%s (%s/%s)' % (
-                            translate('Notes'), note_unread, note_count)
+                            _('Notes'), note_unread, note_count)
                         if note_unread else
-                        '%s (%s)' % (translate('Notes'), note_count)
-                        if note_count else translate('Notes'))
+                        '%s (%s)' % (_('Notes'), note_count)
+                        if note_count else _('Notes'))
                     with button(
                             type='button',
                             cls='vs-icon-button vs-resource-button',
@@ -888,9 +886,9 @@ class ViewRenderer:
                                     if note_unread else ''),
                                 aria_hidden='true')
                     for category, image, title in (
-                            ('action', 'launch', translate('Action')),
-                            ('relate', 'link', translate('Relate')),
-                            ('print', 'print', translate('Print'))):
+                            ('action', 'launch', _('Action')),
+                            ('relate', 'link', _('Relate')),
+                            ('print', 'print', _('Print'))):
                         items = action_definitions(category)
                         with details(
                                 cls='vs-popup vs-action-popup',
@@ -933,14 +931,14 @@ class ViewRenderer:
                                                 span(item['title'])
                                 else:
                                     span(
-                                        translate('No actions'),
+                                        _('No actions'),
                                         cls='vs-popup-empty')
                     if tab.get('relation_modal'):
                         with button(
                                 type='button',
                                 cls='vs-icon-button',
-                                title=translate('Close'),
-                                aria_label=translate('Close'),
+                                title=_('Close'),
+                                aria_label=_('Close'),
                                 hx_post=CloseTab.url(tab=tab['id']),
                                 hx_target='#workspace',
                                 hx_swap='outerHTML'):
@@ -957,7 +955,7 @@ class ViewRenderer:
                         cls=(
                             'vs-domain-tabs vs-local-tabs '
                             'vs-tab-strip'),
-                        aria_label=translate('Domains')):
+                        aria_label=_('Domains')):
                     with ul(cls='vs-tab-list', role='tablist'):
                         for index, domain in enumerate(domains):
                             selected = (
@@ -1025,11 +1023,11 @@ class ViewRenderer:
             with details(cls='vs-popup vs-filter-popup'):
                 with summary(
                         cls='vs-icon-button',
-                        title=translate('Filters'), aria_label=translate('Filters')):
+                        title=_('Filters'), aria_label=_('Filters')):
                     filter_icon()
                 with div(
                         cls='vs-popup-menu vs-filter-menu',
-                        role='dialog', aria_label=translate('Filters')):
+                        role='dialog', aria_label=_('Filters')):
                     with form(
                             cls='vs-filter-form',
                             hx_post=Search.url(tab=tab['id']),
@@ -1049,7 +1047,7 @@ class ViewRenderer:
                                 search_filters.get(name, {}))
                         with div(cls='vs-dialog-actions'):
                             button(
-                                translate('Find'), type='submit',
+                                _('Find'), type='submit',
                                 cls='vs-button vs-button-primary')
             query_group = div(cls='vs-search-query-group')
             search_toolbar.add(query_group)
@@ -1065,7 +1063,7 @@ class ViewRenderer:
                     id='search-input-' + tab['id'],
                     value=tab.get(
                         'search_draft', tab.get('search', '')),
-                    placeholder=translate('Search'),
+                    placeholder=_('Search'),
                     autocomplete='off',
                     cls='vs-search-input',
                     data_search_autocomplete='true',
@@ -1081,7 +1079,7 @@ class ViewRenderer:
                 self.search_completion(tab)
                 with button(
                         type='submit', cls='vs-icon-button',
-                        title=translate('Search'), aria_label=translate('Search')):
+                        title=_('Search'), aria_label=_('Search')):
                     icon('search')
             bookmark_control = self.search_bookmark_control(
                 tab, current_bookmark)
@@ -1091,7 +1089,7 @@ class ViewRenderer:
             with bookmark_popup:
                 with summary(
                         cls='vs-icon-button',
-                        title=translate('Bookmarks'), aria_label=translate('Bookmarks')):
+                        title=_('Bookmarks'), aria_label=_('Bookmarks')):
                     icon('bookmarks')
                 with div(cls='vs-popup-menu', role='menu'):
                     if bookmarks:
@@ -1106,20 +1104,18 @@ class ViewRenderer:
                                 hx_target='#screen-' + tab['id'],
                                 hx_swap='outerHTML')
                     else:
-                        span(translate('No bookmarks'), cls='vs-popup-empty')
+                        span(_('No bookmarks'), cls='vs-popup-empty')
             with button(
                     type='button',
-                    cls='vs-icon-button%s' % (
-                        ' vs-button-active'
-                        if tab.get('active_only', True) else ''),
+                    cls='vs-icon-button',
                     title=(
-                        translate('Show inactive records')
+                        _('Show inactive records')
                         if tab.get('active_only', True)
-                        else translate('Show active records')),
+                        else _('Show active records')),
                     aria_label=(
-                        translate('Show inactive records')
+                        _('Show inactive records')
                         if tab.get('active_only', True)
-                        else translate('Show active records')),
+                        else _('Show active records')),
                     hx_post=ToggleActive.url(tab=tab['id']),
                     hx_target='#screen-' + tab['id'],
                     hx_swap='outerHTML'):
@@ -1144,8 +1140,8 @@ class ViewRenderer:
             with button(
                     type='button', cls='vs-icon-button',
                     id='search-bookmark-control-' + tab['id'],
-                    title=translate('Remove this bookmark'),
-                    aria_label=translate('Remove this bookmark'),
+                    title=_('Remove this bookmark'),
+                    aria_label=_('Remove this bookmark'),
                     hx_post=DeleteSearchBookmark.url(
                         tab=tab['id'], bookmark=current_bookmark[0]),
                     hx_target='#screen-' + tab['id'],
@@ -1155,8 +1151,8 @@ class ViewRenderer:
         with button(
                 type='button', cls='vs-icon-button',
                 id='search-bookmark-control-' + tab['id'],
-                title=translate('Bookmark this filter'),
-                aria_label=translate('Bookmark this filter'),
+                title=_('Bookmark this filter'),
+                aria_label=_('Bookmark this filter'),
                 disabled=(
                     not search_domain
                     or current_draft != tab.get('search', '')) or None,
@@ -1172,11 +1168,11 @@ class ViewRenderer:
         count = int(tab.get('count') or len(tab.get('record_order', [])))
         with nav(
                 cls='vs-page-navigation',
-                aria_label=translate('Record pages')) as pagination:
+                aria_label=_('Record pages')) as pagination:
             with button(
                     type='button', cls='vs-icon-button',
-                    title=translate('Previous page'),
-                    aria_label=translate('Previous page'),
+                    title=_('Previous page'),
+                    aria_label=_('Previous page'),
                     disabled=offset <= 0 or None,
                     hx_post=PageRecords.url(
                         tab=tab['id'], direction='previous'),
@@ -1190,8 +1186,8 @@ class ViewRenderer:
                 cls='vs-page-navigation-position')
             with button(
                     type='button', cls='vs-icon-button',
-                    title=translate('Next page'),
-                    aria_label=translate('Next page'),
+                    title=_('Next page'),
+                    aria_label=_('Next page'),
                     disabled=offset + limit >= count or None,
                     hx_post=PageRecords.url(
                         tab=tab['id'], direction='next'),
@@ -1250,8 +1246,8 @@ class ViewRenderer:
                         cls='vs-input'):
                     for value, text in (
                             ('', ''),
-                            ('true', translate('True')),
-                            ('false', translate('False'))):
+                            ('true', _('True')),
+                            ('false', _('False'))):
                         option(
                             text, value=value,
                             selected=(
@@ -1284,7 +1280,7 @@ class ViewRenderer:
                         type=input_type,
                         name=prefix + 'from',
                         value=values.get('from', ''),
-                        placeholder=translate('From'),
+                        placeholder=_('From'),
                         step='any' if input_type == 'number' else None,
                         cls='vs-input')
                     span('..', aria_hidden='true')
@@ -1292,7 +1288,7 @@ class ViewRenderer:
                         type=input_type,
                         name=prefix + 'to',
                         value=values.get('to', ''),
-                        placeholder=translate('To'),
+                        placeholder=_('To'),
                         step='any' if input_type == 'number' else None,
                         cls='vs-input')
             else:
@@ -1487,7 +1483,7 @@ class ViewRenderer:
                         if reorderable:
                             with th(
                                     cls='vs-drag-column',
-                                    title=translate('Reorder')):
+                                    title=_('Reorder')):
                                 icon('drag')
                         with th(cls=select_column_class):
                             with div(cls='vs-tree-header-controls'):
@@ -1495,13 +1491,13 @@ class ViewRenderer:
                                         cls='vs-popup vs-column-popup'):
                                     with summary(
                                             cls='vs-tree-menu',
-                                            title=translate('Columns'),
-                                            aria_label=translate('Columns')):
+                                            title=_('Columns'),
+                                            aria_label=_('Columns')):
                                         icon('menu')
                                     with div(
                                             cls='vs-popup-menu',
                                             role='menu',
-                                            aria_label=translate('Optional columns')):
+                                            aria_label=_('Optional columns')):
                                         if optional_columns:
                                             for node in optional_columns:
                                                 name = node.attrib['name']
@@ -1567,7 +1563,7 @@ class ViewRenderer:
                                                         or name)
                                         else:
                                             span(
-                                                translate('No optional columns'),
+                                                _('No optional columns'),
                                                 cls='vs-popup-empty')
                                 if not embedded:
                                     input_(
@@ -1577,7 +1573,7 @@ class ViewRenderer:
                                         and len(tab.get('selected', []))
                                         == len(tab.get('record_order', []))
                                         or None,
-                                        aria_label=translate(
+                                        aria_label=_(
                                             'Select all records'),
                                         hx_post=SelectAll.url(tab=tab['id']),
                                         hx_trigger='change',
@@ -1611,17 +1607,17 @@ class ViewRenderer:
                                         '', cls='vs-column-resizer',
                                         role='separator',
                                         tabindex='0',
-                                        aria_label=translate(
-                                            'Resize %(column)s column',
-                                            column=(
+                                        aria_label=_(
+                                            'Resize %(column)s column') % {
+                                            'column': (
                                                 node.attrib.get('string')
                                                 or definition.get('string')
-                                                or node.attrib['name'])),
+                                                or node.attrib['name'])},
                                         aria_orientation='vertical',
                                         data_column_resizer='true')
                             else:
                                 th(node.attrib.get(
-                                    'string', translate('Action')))
+                                    'string', _('Action')))
                 with tbody():
                     for key, depth, has_children in rows:
                         record = tab['records'][key]
@@ -1678,8 +1674,8 @@ class ViewRenderer:
                                             cls='vs-tree-drag-handle',
                                             draggable='true',
                                             tabindex='0',
-                                            title=translate('Reorder'),
-                                            aria_label=translate('Reorder'),
+                                            title=_('Reorder'),
+                                            aria_label=_('Reorder'),
                                             data_tree_drag_handle='true'):
                                         icon('drag')
                             with td(cls=select_column_class):
@@ -1690,13 +1686,13 @@ class ViewRenderer:
                                             if relation_search_origin[
                                                 'multiple'] else 'radio'),
                                         name='value', value=record['id'],
-                                        aria_label=translate(
-                                            'Select %(record)s',
-                                            record=(
+                                        aria_label=_(
+                                            'Select %(record)s') % {
+                                            'record': (
                                                 decode_value(record.get(
                                                         'values', {})).get(
                                                             'rec_name')
-                                                or record['id'])))
+                                                or record['id'])})
                                 elif relation_origin:
                                     input_(
                                         type='checkbox', name='selected',
@@ -1704,7 +1700,7 @@ class ViewRenderer:
                                         checked=(
                                             key in tab.get('selected', []))
                                         or None,
-                                        aria_label=translate('Select record'),
+                                        aria_label=_('Select record'),
                                         hx_post=X2ManyAction.url(
                                             tab=tab['id'],
                                             record=relation_origin['record'],
@@ -1723,7 +1719,7 @@ class ViewRenderer:
                                         value='true',
                                         checked=key in tab.get('selected', [])
                                         or None,
-                                        aria_label=translate('Select record'),
+                                        aria_label=_('Select record'),
                                         hx_post=SelectRecord.url(
                                             tab=tab['id'], record=key),
                                         hx_trigger='change',
@@ -1816,10 +1812,10 @@ class ViewRenderer:
                                                         'vs-hierarchy-toggle '
                                                         'vs-tree-toggle'),
                                                     aria_label=(
-                                                        translate(
+                                                        _(
                                                             'Collapse node')
                                                         if is_expanded else
-                                                        translate(
+                                                        _(
                                                             'Expand node')),
                                                     aria_expanded=str(
                                                         is_expanded).lower(),
@@ -1899,7 +1895,7 @@ class ViewRenderer:
                                                     field_attributes = dict(
                                                         node.attrib)
                                                     if focus_new_field:
-                                                        readonly, _, invisible = (
+                                                        readonly, _required, invisible = (
                                                             renderer.states(
                                                                 definition,
                                                                 field_attributes))
@@ -1939,7 +1935,7 @@ class ViewRenderer:
                                                     'vs-tree-hierarchy'))
                                     elif not embedded:
                                         attributes = dict(node.attrib)
-                                        readonly, _, invisible = (
+                                        readonly, _required, invisible = (
                                             renderer.states({}, attributes))
                                         if not invisible:
                                             attributes['_state_readonly'] = (
@@ -1956,7 +1952,7 @@ class ViewRenderer:
                         with tr():
                             if reorderable:
                                 td(cls='vs-drag-column')
-                            td(translate('Total'), cls='vs-select-column')
+                            td(_('Total'), cls='vs-select-column')
                             for node in columns:
                                 if node.tag != 'field':
                                     td()
@@ -1974,7 +1970,7 @@ class ViewRenderer:
                                 td(stringify(total), cls='vs-tree-total')
             if not tab.get('record_order'):
                 p(
-                    tab.get('empty_message') or translate('No records'),
+                    tab.get('empty_message') or _('No records'),
                     cls='vs-empty')
             selected = [
                 key for key in tab.get('selected', [])
@@ -1983,7 +1979,7 @@ class ViewRenderer:
                 with div(
                         cls='vs-tree-multiple-actions',
                         role='toolbar',
-                        aria_label=translate('Selected record actions')):
+                        aria_label=_('Selected record actions')):
                     for node in multiple_buttons:
                         attributes = dict(node.attrib)
                         invisible = False
@@ -1993,7 +1989,7 @@ class ViewRenderer:
                             selected_renderer = WidgetRenderer(
                                 tab, selected_record, view,
                                 editable=editable)
-                            state_readonly, _, state_invisible = (
+                            state_readonly, _required, state_invisible = (
                                 selected_renderer.states(
                                     {}, attributes))
                             readonly = readonly or state_readonly
@@ -2186,7 +2182,7 @@ class ViewRenderer:
     def form(self, tab, view):
         key = tab.get('current_record')
         if not key or key not in tab.get('records', {}):
-            return p(translate('No record selected'), cls='vs-empty')
+            return p(_('No record selected'), cls='vs-empty')
         record = tab['records'][key]
         access = tab.get('access', {})
         editable = (
@@ -2204,7 +2200,7 @@ class ViewRenderer:
         for node in focus_nodes:
             definition = view.get(
                 'fields', {}).get(node.attrib.get('name'), {})
-            readonly, _, invisible = renderer.states(
+            readonly, _required, invisible = renderer.states(
                 definition, dict(node.attrib))
             if not readonly and not invisible and editable:
                 node.attrib['autofocus'] = '1'
@@ -2218,7 +2214,7 @@ class ViewRenderer:
                 ScanCode = self.pool.get('cassini.scan.code')
                 scan_states = {
                     'states': root.attrib.get('scan_code_states')}
-                scan_readonly, _, scan_invisible = renderer.states(
+                scan_readonly, _required, scan_invisible = renderer.states(
                     {}, scan_states)
                 with form(
                         cls='vs-scan-code%s' % (
@@ -2226,14 +2222,14 @@ class ViewRenderer:
                         style='grid-column:1/-1;grid-row:1'):
                     input_(
                         type='text', name='code',
-                        placeholder=translate('Scan or enter a code'),
-                        aria_label=translate('Code'), cls='vs-input',
+                        placeholder=_('Scan or enter a code'),
+                        aria_label=_('Code'), cls='vs-input',
                         autocomplete='off')
                     with button(
                             type='button',
                             cls='vs-icon-button vs-button-primary',
                             disabled=scan_readonly or None,
-                            title=translate('Scan'), aria_label=translate('Scan'),
+                            title=_('Scan'), aria_label=_('Scan'),
                             hx_post=ScanCode.url(
                                 tab=tab['id'], record=record['key']),
                             hx_include='closest form',
@@ -2300,7 +2296,7 @@ class ViewRenderer:
             if child.tag != 'field':
                 definition = renderer.view.get(
                     'fields', {}).get(attributes.get('name'), {})
-                readonly, _, invisible = renderer.states(
+                readonly, _required, invisible = renderer.states(
                     definition, attributes)
                 if invisible:
                     continue
@@ -2316,7 +2312,7 @@ class ViewRenderer:
             elif child.tag == 'label':
                 name = attributes.get('name')
                 definition = renderer.view.get('fields', {}).get(name, {})
-                _, required, _ = renderer.states(
+                _readonly, required, _invisible = renderer.states(
                     definition, attributes)
                 parent.add(label(
                     attributes.get('string')
@@ -2391,7 +2387,7 @@ class ViewRenderer:
                             style=layout_style, open=True) as group:
                         summary(
                             attributes.get('string')
-                            or translate('Details'),
+                            or _('Details'),
                             cls='vs-expandable-summary')
                         with div(
                                 cls='vs-group-body',
@@ -2441,7 +2437,7 @@ class ViewRenderer:
                                     'vs-tab-strip'),
                                 aria_label=attributes.get(
                                     'string',
-                                    translate('Notebook pages'))):
+                                    _('Notebook pages'))):
                             with ul(cls='vs-tab-list', role='tablist'):
                                 for page_index, page in enumerate(pages):
                                     selected = page_index == active
@@ -2505,9 +2501,8 @@ class ViewRenderer:
                                             span(
                                                 page.attrib.get('string')
                                                 or page.attrib.get('name')
-                                                or translate(
-                                                    'Page %(page)d',
-                                                    page=page_index + 1))
+                                                or _('Page %(page)d') % {
+                                                    'page': page_index + 1})
                     if pages and notebook_kind in {'window', 'wizard'}:
                         page = pages[active]
                         page_id = dom_id(
@@ -2622,7 +2617,7 @@ class ViewRenderer:
             self, tab, record, renderer, attributes, layout_style):
         OpenAction = self.pool.get('cassini.open.action')
         action_id = attributes.get('id')
-        title = attributes.get('string') or translate('Open')
+        title = attributes.get('string') or _('Open')
         counts = []
         domain_titles = []
         try:
@@ -2733,7 +2728,7 @@ class ViewRenderer:
                 icon(icon_name.removeprefix('tryton-'))
             span(
                 attributes.get('string')
-                or attributes.get('name', translate('Action')))
+                or attributes.get('name', _('Action')))
         return control
 
     def list_form(self, tab, view):
@@ -2759,7 +2754,7 @@ class ViewRenderer:
                         columns=root.attrib.get('col', 4))
                 tag.add(card)
             if not tab.get('record_order'):
-                p(translate('No records'), cls='vs-empty')
+                p(_('No records'), cls='vs-empty')
         return tag
 
     def calendar(self, tab, view):
@@ -2818,7 +2813,7 @@ class ViewRenderer:
                     else None)) as calendar:
             with header(cls='vs-calendar-header'):
                 button(
-                    translate('Previous'), type='button', cls='vs-button',
+                    _('Previous'), type='button', cls='vs-button',
                     hx_post=Navigate.url(
                         tab=tab['id'], direction='previous'),
                     hx_target='#screen-' + tab['id'],
@@ -2830,11 +2825,11 @@ class ViewRenderer:
                         else '%B %Y'))
                 with nav(
                         cls='vs-calendar-modes',
-                        aria_label=translate('Calendar mode')):
+                        aria_label=_('Calendar mode')):
                     for candidate, title in (
-                            ('day', translate('Day')),
-                            ('week', translate('Week')),
-                            ('month', translate('Month'))):
+                            ('day', _('Day')),
+                            ('week', _('Week')),
+                            ('month', _('Month'))):
                         button(
                             title,
                             type='button',
@@ -2848,13 +2843,13 @@ class ViewRenderer:
                             hx_target='#screen-' + tab['id'],
                             hx_swap='outerHTML')
                 button(
-                    translate('Today'), type='button', cls='vs-button',
+                    _('Today'), type='button', cls='vs-button',
                     hx_post=Navigate.url(
                         tab=tab['id'], direction='today'),
                     hx_target='#screen-' + tab['id'],
                     hx_swap='outerHTML')
                 button(
-                    translate('Next'), type='button', cls='vs-button',
+                    _('Next'), type='button', cls='vs-button',
                     hx_post=Navigate.url(
                         tab=tab['id'], direction='next'),
                     hx_target='#screen-' + tab['id'],
@@ -2880,10 +2875,9 @@ class ViewRenderer:
                             button(
                                 '+', type='button',
                                 cls='vs-calendar-new',
-                                title=translate('New event'),
-                                aria_label=translate(
-                                    'New event on %(date)s',
-                                    date=day.isoformat()),
+                                title=_('New event'),
+                                aria_label=_('New event on %(date)s') % {
+                                    'date': day.isoformat()},
                                 hx_post=NewCalendarRecord.url(
                                     tab=tab['id'],
                                     day=day.isoformat()),
@@ -2968,7 +2962,7 @@ class ViewRenderer:
                                                 renderer.display(
                                                     name, node.attrib)
             if not events:
-                p(translate('No events'), cls='vs-empty')
+                p(_('No events'), cls='vs-empty')
         return calendar
 
     def wizard(self, tab):
@@ -3012,8 +3006,8 @@ class ViewRenderer:
                         cls='vs-icon-button vs-wizard-help-toggle%s' % (
                             ' vs-button-active'
                             if tab.get('wizard_help_open') else ''),
-                        title=translate('Help'),
-                        aria_label=translate('Help'),
+                        title=_('Help'),
+                        aria_label=_('Help'),
                         aria_pressed=str(bool(tab.get(
                                     'wizard_help_open'))).lower(),
                         hx_post=WizardHelp.url(
@@ -3097,16 +3091,16 @@ class ViewRenderer:
                 id='wizard-help-' + tab['id'],
                 cls='vs-wizard-help') as panel:
             with header(cls='vs-wizard-help-header'):
-                h3(translate('Updates'))
+                h3(_('Updates'))
                 with div(
                         cls='vs-wizard-help-actions',
                         role='group',
-                        aria_label=translate('Updates')):
+                        aria_label=_('Updates')):
                     for value, image, title in (
                             ('unread', 'notification',
-                                translate('Unread updates')),
+                                _('Unread updates')),
                             ('all', 'history',
-                                translate('All updates'))):
+                                _('All updates'))):
                         with button(
                                 type='button',
                                 cls='vs-help-heading-button%s' % (
@@ -3121,7 +3115,7 @@ class ViewRenderer:
                             icon(image)
             if selected:
                 with button(
-                        translate('Back'), type='button',
+                        _('Back'), type='button',
                         cls='vs-help-document-back',
                         hx_post=WizardHelp.url(
                             tab=tab['id'], action='back'),
@@ -3148,20 +3142,20 @@ class ViewRenderer:
                                 hx_swap='outerHTML'):
                             strong(
                                 notification.get('subject')
-                                or translate('Update'))
+                                or _('Update'))
                             span(
                                 str(notification.get('datetime') or ''),
                                 cls='vs-muted')
             else:
-                p(translate('No updates available.'), cls='vs-muted')
+                p(_('No updates available.'), cls='vs-muted')
         return panel
 
     def url(self, tab):
         with div(cls='vs-url-tab') as tag:
             h2(tab['title'])
-            p(translate('This action opens an external address.'))
+            p(_('This action opens an external address.'))
             a(
-                translate('Open link'), href=tab['url'], target='_blank',
+                _('Open link'), href=tab['url'], target='_blank',
                 rel='noreferrer noopener', cls='vs-button vs-button-primary')
         return tag
 
@@ -3225,7 +3219,7 @@ class WorkspaceRenderer:
                 elif tab.get('kind') == 'url':
                     view_renderer.url(tab)
                 else:
-                    p(translate('Unsupported tab type'), cls='vs-notice')
+                    p(_('Unsupported tab type'), cls='vs-notice')
             if modal_wizard:
                 with div(
                         cls=(
@@ -3268,15 +3262,15 @@ class WorkspaceRenderer:
         except KeyError:
             assistant_available = False
         text = {
-            'title': translate('What do you want to do?'),
-            'search': translate(
-                'Search 🔍︎ or chat with the assistant✦'
-                if assistant_available else 'Search 🔍︎'),
-            'menu': translate('Menu'),
-            'help': translate('Help and Updates'),
-            'favorites': translate('Favorites'),
-            'profile': translate('Change preferences and company'),
-            'resize': translate('Resize'),
+            'title': _('What do you want to do?'),
+            'search': (
+                _('Search 🔍︎ or chat with the assistant✦')
+                if assistant_available else _('Search 🔍︎')),
+            'menu': _('Menu'),
+            'help': _('Help and Updates'),
+            'favorites': _('Favorites'),
+            'profile': _('Change preferences and company'),
+            'resize': _('Resize'),
             }
         Favorite = self.pool.get('ir.ui.menu.favorite')
         OpenMenu = self.pool.get('cassini.open.menu')
@@ -3350,7 +3344,7 @@ class WorkspaceRenderer:
         with nav(
                 id='workspace-tabs',
                 cls='vs-tabs vs-tab-strip',
-                aria_label=translate('Open tabs')) as tabs:
+                aria_label=_('Open tabs')) as tabs:
             with ul(cls='vs-tab-list', role='tablist'):
                 for tab in self.interface.tabs:
                     if (tab.get('kind') == 'wizard'
@@ -3378,8 +3372,8 @@ class WorkspaceRenderer:
                             hx_push_url='true')
                         button(
                             '×', type='button',
-                            aria_label=translate(
-                                'Close %(tab)s', tab=tab['title']),
+                            aria_label=_('Close %(tab)s') % {
+                                'tab': tab['title']},
                             cls='vs-tab-close',
                             data_screen_owner=(
                                 'screen-' + active_tab

@@ -2,7 +2,6 @@ import hashlib
 import re
 
 from trytond.pool import Pool
-from trytond.tools.string_ import LazyString
 from trytond.transaction import Transaction
 
 
@@ -106,11 +105,6 @@ def translate(source, **variables):
     if variables:
         value %= variables
     return value
-
-
-def lazy_translate(source):
-    """Translate model metadata when it is converted to text."""
-    return LazyString(translate, source)
 
 
 def javascript_translations():

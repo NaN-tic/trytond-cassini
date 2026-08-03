@@ -7,6 +7,7 @@ from xml.etree import ElementTree
 from dominate.tags import (
     a, button, div, img, input_, label, option, progress, select, span,
     textarea, ul)
+from trytond.modules.xgettext import _
 from trytond.pool import Pool
 from trytond.pyson import PYSONDecoder
 from trytond.tools import timezone
@@ -14,7 +15,6 @@ from trytond.tools.domain_inversion import domain_inversion, unique_value
 from trytond.transaction import Transaction
 
 from .icons import icon
-from .i18n import translate
 from .search import date_format, to_local_datetime
 from .state import decode_value
 
@@ -542,7 +542,7 @@ class WidgetRenderer:
                     size=max(2, len(choices)) if multiple else None,
                     **common) as control:
                 has_selected_choice = any(
-                    key in selected for key, _ in choices)
+                    key in selected for key, _label in choices)
                 if (
                         not multiple
                         and (
@@ -628,8 +628,8 @@ class WidgetRenderer:
                                 cls=(
                                     'vs-relation-icon '
                                     'vs-relation-icon-primary'),
-                                title=translate('Open the record'),
-                                aria_label=translate('Open the record'),
+                                title=_('Open the record'),
+                                aria_label=_('Open the record'),
                                 tabindex='-1',
                                 hx_post=OpenRelationRecord.url(
                                     tab=self.tab['id'],
@@ -650,8 +650,8 @@ class WidgetRenderer:
                                     cls=(
                                         'vs-relation-icon '
                                         'vs-relation-icon-secondary'),
-                                    title=translate('Clear the field'),
-                                    aria_label=translate('Clear the field'),
+                                    title=_('Clear the field'),
+                                    aria_label=_('Clear the field'),
                                     tabindex='-1',
                                     data_relation_clear='true'):
                                 icon('clear')
@@ -661,8 +661,8 @@ class WidgetRenderer:
                                 cls=(
                                     'vs-relation-icon '
                                     'vs-relation-icon-secondary'),
-                                title=translate('Search a record'),
-                                aria_label=translate('Search a record'),
+                                title=_('Search a record'),
+                                aria_label=_('Search a record'),
                                 tabindex='-1',
                                 hx_get=RelationSearch.url(
                                     tab=self.tab['id'],
@@ -763,13 +763,13 @@ class WidgetRenderer:
                         with div(
                                 cls='vs-image-toolbar',
                                 role='group',
-                                aria_label=translate('Image actions')):
+                                aria_label=_('Image actions')):
                             if value and href:
                                 with a(
                                         href=href,
                                         cls='vs-icon-button',
-                                        title=translate('Save as'),
-                                        aria_label=translate('Save as'),
+                                        title=_('Save as'),
+                                        aria_label=_('Save as'),
                                         download=filename or None):
                                     icon('download')
                             elif not readonly:
@@ -777,8 +777,8 @@ class WidgetRenderer:
                                         cls=(
                                             'vs-icon-button '
                                             'vs-file-select'),
-                                        title=translate('Select'),
-                                        aria_label=translate('Select')):
+                                        title=_('Select'),
+                                        aria_label=_('Select')):
                                     input_(
                                         id=field_id + '-input',
                                         name=binary_name,
@@ -797,8 +797,8 @@ class WidgetRenderer:
                                 with button(
                                         type='button',
                                         cls='vs-icon-button',
-                                        title=translate('Clear'),
-                                        aria_label=translate('Clear'),
+                                        title=_('Clear'),
+                                        aria_label=_('Clear'),
                                         **clear_values):
                                     icon('clear')
                 return control
@@ -811,7 +811,7 @@ class WidgetRenderer:
                                 and str(attributes.get(
                                         'filename_visible', '0')).lower()
                                 not in {'0', 'false', 'no'})
-                            else translate('Download')),
+                            else _('Download')),
                         href=href, cls='vs-link')
                 if not readonly:
                     input_(
@@ -825,7 +825,7 @@ class WidgetRenderer:
                         clear_values['hx_vals'] = json.dumps({
                                 binary_name: ''})
                         button(
-                            translate('Clear'), type='button',
+                            _('Clear'), type='button',
                             cls='vs-link-button', **clear_values)
             return control
 
@@ -958,7 +958,7 @@ class WidgetRenderer:
                 entry['values'].setdefault(
                     'rec_name',
                     entry['values'].get(
-                        Relation._rec_name, translate('New record')))
+                        Relation._rec_name, _('New record')))
             else:
                 entry['values'] = {'rec_name': stringify(item)}
         return relation_view, entries
@@ -1042,7 +1042,7 @@ class WidgetRenderer:
                     hx_swap='outerHTML')
             with div(cls='vs-relation-completion-actions'):
                 button(
-                    translate('Search…'), type='button',
+                    _('Search…'), type='button',
                     cls='vs-relation-completion-action',
                     hx_get=RelationSearch.url(
                         tab=self.tab['id'],
@@ -1053,7 +1053,7 @@ class WidgetRenderer:
                     hx_swap='innerHTML')
                 if can_create and self.endpoint != 'preferences':
                     button(
-                        translate('Create…'), type='button',
+                        _('Create…'), type='button',
                         cls='vs-relation-completion-action',
                         hx_post=OpenRelationNew.url(
                             tab=self.tab['id'],
@@ -1088,13 +1088,11 @@ class WidgetRenderer:
                     cls='vs-x2many-string%s' % (
                         ' vs-label-required' if required else ''))
                 span(
-                    translate(
-                        '%(count)d record',
-                        count=len(value or []))
+                    _('%(count)d record') % {
+                        'count': len(value or [])}
                     if len(value or []) == 1 else
-                    translate(
-                        '%(count)d records',
-                        count=len(value or [])),
+                    _('%(count)d records') % {
+                        'count': len(value or [])},
                     cls='vs-x2many-nested-count')
             return control
         relation_access = {
@@ -1223,7 +1221,7 @@ class WidgetRenderer:
                 with div(
                         cls='vs-x2many-toolbar',
                         role='toolbar',
-                        aria_label=translate('Relation actions')):
+                        aria_label=_('Relation actions')):
                     if has_add_remove:
                         suggestions_id = field_id + '-suggestions'
                         entry_id = field_id + '-relation-input'
@@ -1271,8 +1269,8 @@ class WidgetRenderer:
                         with button(
                                 type='button',
                                 cls='vs-icon-button',
-                                title=translate('Add'),
-                                aria_label=translate('Add'),
+                                title=_('Add'),
+                                aria_label=_('Add'),
                                 disabled=not can_add or None,
                                 hx_get=(
                                     RelationSearch.url(
@@ -1297,18 +1295,18 @@ class WidgetRenderer:
                             title='%s / %s' % (
                                 position if position else '_', len(rows)))
                         action_button(
-                            'remove', 'remove', translate('Remove'),
+                            'remove', 'remove', _('Remove'),
                             disabled=not can_delete or not current_row)
                         action_button(
-                            'undelete', 'undo', translate('Undelete'),
+                            'undelete', 'undo', _('Undelete'),
                             disabled=not can_delete
                             or not state.get('deleted'))
                     else:
                         action_button(
-                            'switch', 'switch', translate('Switch'),
+                            'switch', 'switch', _('Switch'),
                             disabled=len(modes) < 2 or not rows)
                         action_button(
-                            'previous', 'back', translate('Previous'),
+                            'previous', 'back', _('Previous'),
                             disabled=position <= 1)
                         span(
                             '%s / %s' % (
@@ -1317,17 +1315,17 @@ class WidgetRenderer:
                             title='%s / %s' % (
                                 position if position else '_', len(rows)))
                         action_button(
-                            'next', 'forward', translate('Next'),
+                            'next', 'forward', _('Next'),
                             disabled=not position or position >= len(rows))
                         if has_add_remove:
                             action_button(
-                                'remove', 'remove', translate('Remove'),
+                                'remove', 'remove', _('Remove'),
                                 disabled=not can_delete or not current_row)
                         with button(
                                 type='button',
                                 cls='vs-icon-button',
-                                title=translate('New'),
-                                aria_label=translate('New'),
+                                title=_('New'),
+                                aria_label=_('New'),
                                 disabled=not can_create or None,
                                 hx_post=(
                                     X2ManyAction.url(
@@ -1354,8 +1352,8 @@ class WidgetRenderer:
                         with button(
                                 type='button',
                                 cls='vs-icon-button',
-                                title=translate('Open'),
-                                aria_label=translate('Open'),
+                                title=_('Open'),
+                                aria_label=_('Open'),
                                 disabled=(
                                     not current_row
                                     or (
@@ -1390,12 +1388,12 @@ class WidgetRenderer:
                                 hx_swap='outerHTML'):
                             icon('open')
                         action_button(
-                            'delete', 'delete', translate('Delete'),
+                            'delete', 'delete', _('Delete'),
                             disabled=(
                                 not can_delete or not current_row
                                 or current_row['deleted']))
                         action_button(
-                            'undelete', 'undo', translate('Undelete'),
+                            'undelete', 'undo', _('Undelete'),
                             disabled=not can_delete
                             or not state.get('deleted'))
             with div(
@@ -1646,7 +1644,7 @@ class WidgetRenderer:
                     data_relation_title=title)
             with div(cls='vs-relation-completion-actions'):
                 button(
-                    translate('Search…'), type='button',
+                    _('Search…'), type='button',
                     cls='vs-relation-completion-action',
                     hx_get=search_url,
                     hx_include=include,
@@ -1654,7 +1652,7 @@ class WidgetRenderer:
                     hx_swap='innerHTML')
                 if new_url:
                     button(
-                        translate('Create…'), type='button',
+                        _('Create…'), type='button',
                         cls='vs-relation-completion-action',
                         hx_post=new_url,
                         hx_include=include,

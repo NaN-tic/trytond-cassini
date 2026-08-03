@@ -2,42 +2,6 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=utf-8\n"
 
-msgctxt "model:ir.message,text:msg_close_all_tabs_13474f23"
-msgid "Close all tabs?"
-msgstr "Voleu tancar totes les pestanyes?"
-
-msgctxt "model:ir.message,text:msg_preferences_require_all_open_tabs_to_be_closed_cd2cbb8b"
-msgid "Preferences require all open tabs to be closed."
-msgstr "Per obrir les preferències cal tancar totes les pestanyes obertes."
-
-msgctxt "model:ir.message,text:msg_any_unsaved_changes_will_be_reviewed_before_each_e060252c"
-msgid "Any unsaved changes will be reviewed before each tab is closed."
-msgstr "Els canvis no desats es revisaran abans de tancar cada pestanya."
-
-msgctxt "model:ir.message,text:msg_close_tabs_and_continue_e7c9cae2"
-msgid "Close tabs and continue"
-msgstr "Tanca les pestanyes i continua"
-
-msgctxt "model:ir.message,text:msg_open_preferences_a9e9fa76"
-msgid "open preferences"
-msgstr "obrir les preferències"
-
-msgctxt "model:ir.message,text:msg_fields_d_modified_field_in_records_d_record_5ead030d"
-msgid "%(fields)d modified field in %(records)d record"
-msgstr "%(fields)d camp modificat en %(records)d registre"
-
-msgctxt "model:ir.message,text:msg_fields_d_modified_field_in_records_d_records_05605ab9"
-msgid "%(fields)d modified field in %(records)d records"
-msgstr "%(fields)d camp modificat en %(records)d registres"
-
-msgctxt "model:ir.message,text:msg_fields_d_modified_fields_in_records_d_record_18298cfa"
-msgid "%(fields)d modified fields in %(records)d record"
-msgstr "%(fields)d camps modificats en %(records)d registre"
-
-msgctxt "model:ir.message,text:msg_fields_d_modified_fields_in_records_d_records_24ebf815"
-msgid "%(fields)d modified fields in %(records)d records"
-msgstr "%(fields)d camps modificats en %(records)d registres"
-
 msgctxt "model:ir.message,text:msg_a_cassini_session_can_only_have_one_workspace_4bb90d57"
 msgid "A Cassini session can only have one workspace."
 msgstr "Una sessió del Cassini només pot tenir un espai de treball."
@@ -45,10 +9,6 @@ msgstr "Una sessió del Cassini només pot tenir un espai de treball."
 msgctxt "model:ir.message,text:msg_a_bookmark_name_and_search_are_required_ff1ec299"
 msgid "A bookmark name and search are required"
 msgstr "Cal indicar un nom d'adreça d'interès i una cerca"
-
-msgctxt "model:ir.message,text:msg_a_component_name_and_callable_renderer_are_requi_b2469de4"
-msgid "A component name and callable renderer are required"
-msgstr "Cal indicar un nom de component i un renderitzador executable"
 
 msgctxt "model:ir.message,text:msg_a_maximum_of_five_attachments_is_allowed_59377610"
 msgid "A maximum of five attachments is allowed."
@@ -62,65 +22,9 @@ msgctxt "model:ir.message,text:msg_a_tree_record_can_not_contain_itself_80215368
 msgid "A tree record can not contain itself"
 msgstr "Un registre de l'arbre no es pot contenir a si mateix"
 
-msgctxt "model:ir.message,text:msg_a_new_task_0123ff8c"
-msgid "A new task"
-msgstr "Una tasca nova"
-
 msgctxt "model:ir.message,text:msg_action_97c89a4d"
 msgid "Action"
 msgstr "Acció"
-
-msgctxt "model:ir.message,text:msg_add_61cc55aa"
-msgid "Add"
-msgstr "Afegeix"
-
-msgctxt "model:ir.message,text:msg_add_menu_s_to_favorites_54d6fc2b"
-msgid "Add %(menu)s to favorites"
-msgstr "Afegeix %(menu)s als preferits"
-
-msgctxt "model:ir.message,text:msg_add_to_favorites_cb10094b"
-msgid "Add to favorites"
-msgstr "Afegeix als preferits"
-
-msgctxt "model:ir.message,text:msg_all_notifications_a0293096"
-msgid "All notifications"
-msgstr "Totes les notificacions"
-
-msgctxt "model:ir.message,text:msg_all_updates_4fb41adb"
-msgid "All updates"
-msgstr "Totes les actualitzacions"
-
-msgctxt "model:ir.message,text:msg_allow_3ad0e369"
-msgid "Allow"
-msgstr "Permet"
-
-msgctxt "model:ir.message,text:msg_application_updates_are_available_when_nantic_co_e555b958"
-msgid "Application updates are available when nantic_connection is installed."
-msgstr "Les actualitzacions de l'aplicació estan disponibles quan nantic_connection està instal·lat."
-
-msgctxt "model:ir.message,text:msg_ask_the_assistant_77cb061d"
-msgid "Ask the assistant…"
-msgstr "Pregunta a l'assistent…"
-
-msgctxt "model:ir.message,text:msg_assistant_8010d1f4"
-msgid "Assistant"
-msgstr "Assistent"
-
-msgctxt "model:ir.message,text:msg_assistant_is_working_a2f4f7a9"
-msgid "Assistant is working"
-msgstr "L'assistent està treballant"
-
-msgctxt "model:ir.message,text:msg_attach_files_137135db"
-msgid "Attach files"
-msgstr "Adjunta fitxers"
-
-msgctxt "model:ir.message,text:msg_attach_recording_39ea08e5"
-msgid "Attach recording"
-msgstr "Adjunta una gravació"
-
-msgctxt "model:ir.message,text:msg_attach_screenshot_5c4e7b7a"
-msgid "Attach screenshot"
-msgstr "Adjunta una captura de pantalla"
 
 msgctxt "model:ir.message,text:msg_attachment_83a56249"
 msgid "Attachment"
@@ -130,113 +34,17 @@ msgctxt "model:ir.message,text:msg_attachments_6771ade6"
 msgid "Attachments"
 msgstr "Adjunts"
 
-msgctxt "model:ir.message,text:msg_back_b52b36b7"
-msgid "Back"
-msgstr "Enrere"
-
-msgctxt "model:ir.message,text:msg_back_to_sao_db603a5d"
-msgid "Back to Sao"
-msgstr "Torna al Sao"
-
-msgctxt "model:ir.message,text:msg_bookmark_name_b98f2462"
-msgid "Bookmark Name"
-msgstr "Nom de l'adreça d'interès"
-
-msgctxt "model:ir.message,text:msg_bookmark_this_filter_ef9d613d"
-msgid "Bookmark this filter"
-msgstr "Desa com a cerca preferida"
-
-msgctxt "model:ir.message,text:msg_bookmarks_ca3cddd2"
-msgid "Bookmarks"
-msgstr "Cerques preferides"
-
-msgctxt "model:ir.message,text:msg_calendar_mode_b81c6e7a"
-msgid "Calendar mode"
-msgstr "Mode del calendari"
-
 msgctxt "model:ir.message,text:msg_cancel_77dfd213"
 msgid "Cancel"
 msgstr "Cancel·la"
-
-msgctxt "model:ir.message,text:msg_cassini_2d134f72"
-msgid "Cassini"
-msgstr "Cassini"
-
-msgctxt "model:ir.message,text:msg_change_preferences_and_company_39e7588a"
-msgid "Change preferences and company"
-msgstr "Canvia les preferències i l'empresa"
-
-msgctxt "model:ir.message,text:msg_choose_a_csv_file_to_import_76db3980"
-msgid "Choose a CSV file to import"
-msgstr "Trieu un fitxer CSV per importar"
-
-msgctxt "model:ir.message,text:msg_choose_a_nan_da8cf98a"
-msgid "Choose a NaN"
-msgstr "Trieu un NaN"
-
-msgctxt "model:ir.message,text:msg_choose_a_related_record_28888328"
-msgid "Choose a related record"
-msgstr "Trieu un registre relacionat"
-
-msgctxt "model:ir.message,text:msg_choose_a_related_record_to_add_eb9e6c48"
-msgid "Choose a related record to add"
-msgstr "Trieu un registre relacionat per afegir"
-
-msgctxt "model:ir.message,text:msg_choose_what_to_do_before_you_action_s_d0dc0f53"
-msgid "Choose what to do before you %(action)s."
-msgstr "Trieu què voleu fer abans de %(action)s."
-
-msgctxt "model:ir.message,text:msg_choose_whether_to_save_the_changes_4e1d8171"
-msgid "Choose whether to save the changes"
-msgstr "Trieu si voleu desar els canvis"
-
-msgctxt "model:ir.message,text:msg_clear_719ea396"
-msgid "Clear"
-msgstr "Netejar"
-
-msgctxt "model:ir.message,text:msg_clear_the_field_720a27d5"
-msgid "Clear the field"
-msgstr "Buida el camp"
 
 msgctxt "model:ir.message,text:msg_close_bbfa773e"
 msgid "Close"
 msgstr "Tanca"
 
-msgctxt "model:ir.message,text:msg_close_tab_s_44fb9a1d"
-msgid "Close %(tab)s"
-msgstr "Tanca %(tab)s"
-
 msgctxt "model:ir.message,text:msg_close_tab_16759802"
 msgid "Close Tab"
 msgstr "Tancar la pestanya"
-
-msgctxt "model:ir.message,text:msg_close_tab_296b59cd"
-msgid "Close tab"
-msgstr "Tanca la pestanya"
-
-msgctxt "model:ir.message,text:msg_close_without_saving_e4591957"
-msgid "Close without saving"
-msgstr "Tanca sense desar"
-
-msgctxt "model:ir.message,text:msg_code_adac6937"
-msgid "Code"
-msgstr "Codi"
-
-msgctxt "model:ir.message,text:msg_collapse_node_f535e70f"
-msgid "Collapse node"
-msgstr "Plega el node"
-
-msgctxt "model:ir.message,text:msg_columns_cf723c59"
-msgid "Columns"
-msgstr "Columnes"
-
-msgctxt "model:ir.message,text:msg_component_state_must_be_a_json_object_2aaeef0a"
-msgid "Component state must be a JSON object"
-msgstr "L'estat del component ha de ser un objecte JSON"
-
-msgctxt "model:ir.message,text:msg_component_state_must_be_valid_json_2b221121"
-msgid "Component state must be valid JSON"
-msgstr "L'estat del component ha de ser un JSON vàlid"
 
 msgctxt "model:ir.message,text:msg_confirm_action_50649c5c"
 msgid "Confirm action"
@@ -246,37 +54,9 @@ msgctxt "model:ir.message,text:msg_continue_2e026239"
 msgid "Continue"
 msgstr "Continua"
 
-msgctxt "model:ir.message,text:msg_continue_without_saving_c3f92b60"
-msgid "Continue without saving"
-msgstr "Continua sense desar"
-
-msgctxt "model:ir.message,text:msg_continuing_without_saving_permanently_discards_t_689f4bf7"
-msgid "Continuing without saving permanently discards the current draft."
-msgstr "Continuar sense desar descarta definitivament l'esborrany actual."
-
-msgctxt "model:ir.message,text:msg_conversation_artifacts_91e250c2"
-msgid "Conversation artifacts"
-msgstr "Artefactes de la conversa"
-
-msgctxt "model:ir.message,text:msg_conversations_07c59b44"
-msgid "Conversations"
-msgstr "Converses"
-
 msgctxt "model:ir.message,text:msg_could_not_save_the_column_widths_56544d9c"
 msgid "Could not save the column widths."
 msgstr "No s'han pogut desar les amplades de columna."
-
-msgctxt "model:ir.message,text:msg_counter_component_f4344847"
-msgid "Counter component"
-msgstr "Component comptador"
-
-msgctxt "model:ir.message,text:msg_create_6e157c5d"
-msgid "Create"
-msgstr "Crea"
-
-msgctxt "model:ir.message,text:msg_create_the_related_record_from_its_own_window_8d981274"
-msgid "Create the related record from its own window"
-msgstr "Crea el registre relacionat des de la seva finestra"
 
 msgctxt "model:ir.message,text:msg_created_at_f1c69716"
 msgid "Created at"
@@ -286,113 +66,17 @@ msgctxt "model:ir.message,text:msg_created_by_5d73cc30"
 msgid "Created by"
 msgstr "Usuari de creació"
 
-msgctxt "model:ir.message,text:msg_create_52f25bb9"
-msgid "Create…"
-msgstr "Crea…"
-
-msgctxt "model:ir.message,text:msg_creating_related_records_is_not_allowed_e35ea2bb"
-msgid "Creating related records is not allowed"
-msgstr "No es permet crear registres relacionats"
-
-msgctxt "model:ir.message,text:msg_current_record_78ea9689"
-msgid "Current record"
-msgstr "Registre actual"
-
-msgctxt "model:ir.message,text:msg_current_values_a9f69b86"
-msgid "Current values"
-msgstr "Valors actuals"
-
-msgctxt "model:ir.message,text:msg_data_e5e429bc"
-msgid "Data"
-msgstr "Dades"
-
-msgctxt "model:ir.message,text:msg_day_987b9ced"
-msgid "Day"
-msgstr "Dia"
-
-msgctxt "model:ir.message,text:msg_decrement_0b826d21"
-msgid "Decrement"
-msgstr "Disminueix"
-
-msgctxt "model:ir.message,text:msg_default_808d7dca"
-msgid "Default"
-msgstr "Per defecte"
-
 msgctxt "model:ir.message,text:msg_delete_f6fdbe48"
 msgid "Delete"
 msgstr "Suprimeix"
-
-msgctxt "model:ir.message,text:msg_delete_the_selected_records_5b0cfc5e"
-msgid "Delete the selected records?"
-msgstr "Voleu eliminar els registres seleccionats?"
-
-msgctxt "model:ir.message,text:msg_deleting_related_records_is_not_allowed_d1d5c481"
-msgid "Deleting related records is not allowed"
-msgstr "No es permet eliminar registres relacionats"
-
-msgctxt "model:ir.message,text:msg_demo_e52c854d"
-msgid "Demo"
-msgstr "Demo"
-
-msgctxt "model:ir.message,text:msg_deny_53577bb5"
-msgid "Deny"
-msgstr "Denega"
-
-msgctxt "model:ir.message,text:msg_details_dc3decbb"
-msgid "Details"
-msgstr "Detalls"
-
-msgctxt "model:ir.message,text:msg_discard_the_unsaved_changes_to_this_record_834e9915"
-msgid "Discard the unsaved changes to this record?"
-msgstr "Voleu descartar els canvis no desats d'aquest registre?"
-
-msgctxt "model:ir.message,text:msg_documentation_9e9cf322"
-msgid "Documentation"
-msgstr "Documentació"
-
-msgctxt "model:ir.message,text:msg_documentation_is_available_when_nantic_connectio_1770c8ee"
-msgid "Documentation is available when nantic_connection is installed."
-msgstr "La documentació està disponible quan nantic_connection està instal·lat."
-
-msgctxt "model:ir.message,text:msg_domains_a0d641b3"
-msgid "Domains"
-msgstr "Dominis"
-
-msgctxt "model:ir.message,text:msg_download_a479c9c3"
-msgid "Download"
-msgstr "Descarrega"
 
 msgctxt "model:ir.message,text:msg_duplicate_972d5737"
 msgid "Duplicate"
 msgstr "Duplicar"
 
-msgctxt "model:ir.message,text:msg_expand_node_d171e0ba"
-msgid "Expand node"
-msgstr "Desplega el node"
-
-msgctxt "model:ir.message,text:msg_export_selected_fields_dcaf5482"
-msgid "Export selected fields"
-msgstr "Exporta els camps seleccionats"
-
 msgctxt "model:ir.message,text:msg_false_97cdbdc7"
 msgid "False"
 msgstr "Fals"
-
-msgctxt "model:ir.message,text:msg_favorites_07b3e447"
-msgid "Favorites"
-msgstr "Preferits"
-
-msgctxt "model:ir.message,text:msg_filters_96e57821"
-msgid "Filters"
-msgstr "Filtres"
-
-msgctxt "model:ir.message,text:msg_find_df251b06"
-msgid "Find"
-msgstr "Cerca"
-
-msgctxt "model:ir.message,text:msg_from_3f66052a"
-msgid "From"
-msgstr "Desde"
 
 msgctxt "model:ir.message,text:msg_global_search_a2b8a166"
 msgid "Global search"
@@ -402,49 +86,9 @@ msgctxt "model:ir.message,text:msg_global_shortcuts_e73da767"
 msgid "Global shortcuts"
 msgstr "Dreceres globals"
 
-msgctxt "model:ir.message,text:msg_help_c47ae153"
-msgid "Help"
-msgstr "Ajuda"
-
-msgctxt "model:ir.message,text:msg_help_and_updates_2d6c4caf"
-msgid "Help and Updates"
-msgstr "Ajuda i actualitzacions"
-
 msgctxt "model:ir.message,text:msg_id_89f89c02"
 msgid "ID"
 msgstr "ID"
-
-msgctxt "model:ir.message,text:msg_image_actions_06299f75"
-msgid "Image actions"
-msgstr "Accions de la imatge"
-
-msgctxt "model:ir.message,text:msg_import_d6fbc9d2"
-msgid "Import"
-msgstr "Import"
-
-msgctxt "model:ir.message,text:msg_increment_d12f1fab"
-msgid "Increment"
-msgstr "Augmenta"
-
-msgctxt "model:ir.message,text:msg_install_nantic_connection_to_enable_the_integrat_9ff426a1"
-msgid "Install nantic_connection to enable the integrated assistant."
-msgstr "Instal·leu nantic_connection per activar l'assistent integrat."
-
-msgctxt "model:ir.message,text:msg_invalid_column_field_f153419b"
-msgid "Invalid column field"
-msgstr "El camp de columna no és vàlid"
-
-msgctxt "model:ir.message,text:msg_invalid_column_occurrences_8a340960"
-msgid "Invalid column occurrences"
-msgstr "Les aparicions de columna no són vàlides"
-
-msgctxt "model:ir.message,text:msg_invalid_column_width_80fa17ee"
-msgid "Invalid column width"
-msgstr "L'amplada de columna no és vàlida"
-
-msgctxt "model:ir.message,text:msg_invalid_column_widths_4c58dd24"
-msgid "Invalid column widths"
-msgstr "Les amplades de columna no són vàlides"
 
 msgctxt "model:ir.message,text:msg_invalid_decimal_value_6aa118ee"
 msgid "Invalid decimal value"
@@ -454,21 +98,9 @@ msgctxt "model:ir.message,text:msg_keyboard_shortcuts_26669547"
 msgid "Keyboard shortcuts"
 msgstr "Dreceres de teclat"
 
-msgctxt "model:ir.message,text:msg_logout_e43d612e"
-msgid "Logout"
-msgstr "Tanca la sessió"
-
 msgctxt "model:ir.message,text:msg_logs_126dd3b7"
 msgid "Logs"
 msgstr "Registres"
-
-msgctxt "model:ir.message,text:msg_menu_57f5f5ef"
-msgid "Menu"
-msgstr "Menú"
-
-msgctxt "model:ir.message,text:msg_message_68f4145f"
-msgid "Message"
-msgstr "Missatge"
 
 msgctxt "model:ir.message,text:msg_modified_at_e0978c14"
 msgid "Modified at"
@@ -478,189 +110,33 @@ msgctxt "model:ir.message,text:msg_modified_by_83f5aabd"
 msgid "Modified by"
 msgstr "Modificat per"
 
-msgctxt "model:ir.message,text:msg_month_082bc378"
-msgid "Month"
-msgstr "Mes"
-
-msgctxt "model:ir.message,text:msg_nans_413257a0"
-msgid "NaNs"
-msgstr "NaNs"
-
-msgctxt "model:ir.message,text:msg_nans_and_goblins_0f7f7736"
-msgid "NaNs and goblins"
-msgstr "NaNs i follets"
-
 msgctxt "model:ir.message,text:msg_new_6403f2b7"
 msgid "New"
 msgstr "Nou"
-
-msgctxt "model:ir.message,text:msg_new_conversation_7f031b1a"
-msgid "New conversation"
-msgstr "Conversa nova"
-
-msgctxt "model:ir.message,text:msg_new_event_2ef3795c"
-msgid "New event"
-msgstr "Esdeveniment nou"
-
-msgctxt "model:ir.message,text:msg_new_event_on_date_s_c9302309"
-msgid "New event on %(date)s"
-msgstr "Esdeveniment nou el %(date)s"
-
-msgctxt "model:ir.message,text:msg_new_record_c6e29531"
-msgid "New record"
-msgstr "Registre nou"
 
 msgctxt "model:ir.message,text:msg_next_bc981983"
 msgid "Next"
 msgstr "Següent"
 
-msgctxt "model:ir.message,text:msg_next_record_daadf068"
-msgid "Next record"
-msgstr "Registre següent"
-
 msgctxt "model:ir.message,text:msg_next_tab_84c508a2"
 msgid "Next tab"
 msgstr "Pestanya següent"
-
-msgctxt "model:ir.message,text:msg_no_816c52fd"
-msgid "No"
-msgstr "No"
-
-msgctxt "model:ir.message,text:msg_no_actions_2c06c907"
-msgid "No actions"
-msgstr "No hi ha accions"
-
-msgctxt "model:ir.message,text:msg_no_bookmarks_74d6658a"
-msgid "No bookmarks"
-msgstr "No hi ha adreces d'interès"
-
-msgctxt "model:ir.message,text:msg_no_documentation_found_3fc39952"
-msgid "No documentation found."
-msgstr "No s'ha trobat documentació."
-
-msgctxt "model:ir.message,text:msg_no_events_e339ba73"
-msgid "No events"
-msgstr "No hi ha esdeveniments"
-
-msgctxt "model:ir.message,text:msg_no_favorites_yet_95bc6801"
-msgid "No favorites yet"
-msgstr "Encara no hi ha preferits"
-
-msgctxt "model:ir.message,text:msg_no_matching_records_748bd377"
-msgid "No matching records"
-msgstr "No hi ha registres coincidents"
-
-msgctxt "model:ir.message,text:msg_no_notifications_at_this_time_a5ee0b24"
-msgid "No notifications at this time"
-msgstr "No hi ha notificacions en aquest moment"
-
-msgctxt "model:ir.message,text:msg_no_optional_columns_ca04d390"
-msgid "No optional columns"
-msgstr "No hi ha columnes opcionals"
-
-msgctxt "model:ir.message,text:msg_no_record_selected_26e10911"
-msgid "No record selected"
-msgstr "No s'ha seleccionat cap registre"
-
-msgctxt "model:ir.message,text:msg_no_records_04dfe4ba"
-msgid "No records"
-msgstr "No hi ha registres"
-
-msgctxt "model:ir.message,text:msg_no_results_b993b0c5"
-msgid "No results"
-msgstr "No hi ha resultats"
-
-msgctxt "model:ir.message,text:msg_no_side_panel_b7063937"
-msgid "No side panel"
-msgstr "Sense panell lateral"
-
-msgctxt "model:ir.message,text:msg_no_tasks_yet_1562a21c"
-msgid "No tasks yet"
-msgstr "Encara no hi ha tasques"
-
-msgctxt "model:ir.message,text:msg_no_updates_available_6360c5ff"
-msgid "No updates available."
-msgstr "No hi ha actualitzacions disponibles."
 
 msgctxt "model:ir.message,text:msg_note_2c924e30"
 msgid "Note"
 msgstr "Nota"
 
-msgctxt "model:ir.message,text:msg_notebook_pages_4b91df6a"
-msgid "Notebook pages"
-msgstr "Pàgines del quadern"
-
 msgctxt "model:ir.message,text:msg_notes_70440046"
 msgid "Notes"
 msgstr "Notes"
-
-msgctxt "model:ir.message,text:msg_notification_c18f8f25"
-msgid "Notification"
-msgstr "Notificació"
 
 msgctxt "model:ir.message,text:msg_ok_9ce3bd42"
 msgid "OK"
 msgstr "D'acord"
 
-msgctxt "model:ir.message,text:msg_open_cf9b7706"
-msgid "Open"
-msgstr "Obrir"
-
-msgctxt "model:ir.message,text:msg_open_full_documentation_26f18528"
-msgid "Open full documentation"
-msgstr "Obre tota la documentació"
-
-msgctxt "model:ir.message,text:msg_open_link_d2de1a28"
-msgid "Open link"
-msgstr "Obre l'enllaç"
-
-msgctxt "model:ir.message,text:msg_open_tabs_b4d5aeaf"
-msgid "Open tabs"
-msgstr "Pestanyes obertes"
-
-msgctxt "model:ir.message,text:msg_open_the_record_3288615f"
-msgid "Open the record"
-msgstr "Obre el registre"
-
-msgctxt "model:ir.message,text:msg_open_tickets_1af99e72"
-msgid "Open tickets"
-msgstr "Obre els tiquets"
-
-msgctxt "model:ir.message,text:msg_optional_columns_50272a7e"
-msgid "Optional columns"
-msgstr "Columnes opcionals"
-
-msgctxt "model:ir.message,text:msg_page_page_d_ad5fcb7e"
-msgid "Page %(page)d"
-msgstr "Pàgina %(page)d"
-
-msgctxt "model:ir.message,text:msg_page_title_015b7398"
-msgid "Page title"
-msgstr "Títol de la pàgina"
-
-msgctxt "model:ir.message,text:msg_password_8be3c943"
-msgid "Password"
-msgstr "Contrasenya"
-
-msgctxt "model:ir.message,text:msg_persistent_draft_839bc80e"
-msgid "Persistent draft"
-msgstr "Esborrany persistent"
-
-msgctxt "model:ir.message,text:msg_preferences_9dfd349e"
-msgid "Preferences"
-msgstr "Preferències"
-
-msgctxt "model:ir.message,text:msg_preferences_are_not_open_32e0913e"
-msgid "Preferences are not open"
-msgstr "Les preferències no estan obertes"
-
 msgctxt "model:ir.message,text:msg_previous_50f94286"
 msgid "Previous"
 msgstr "Anterior"
-
-msgctxt "model:ir.message,text:msg_previous_record_c6d21226"
-msgid "Previous record"
-msgstr "Registre anterior"
 
 msgctxt "model:ir.message,text:msg_previous_tab_75dd5109"
 msgid "Previous tab"
@@ -670,45 +146,13 @@ msgctxt "model:ir.message,text:msg_print_5b221e9c"
 msgid "Print"
 msgstr "Imprimeix"
 
-msgctxt "model:ir.message,text:msg_record_1c54132b"
-msgid "Record"
-msgstr "Registre"
-
-msgctxt "model:ir.message,text:msg_record_pages_ef9cedb4"
-msgid "Record pages"
-msgstr "Pàgines de registres"
-
-msgctxt "model:ir.message,text:msg_records_e51c5525"
-msgid "Records"
-msgstr "Registres"
-
 msgctxt "model:ir.message,text:msg_relate_0289b666"
 msgid "Relate"
 msgstr "Relacionat"
 
-msgctxt "model:ir.message,text:msg_reorder_33d9978c"
-msgid "Reorder"
-msgstr "Reordena"
-
-msgctxt "model:ir.message,text:msg_reordering_related_records_is_not_allowed_27448124"
-msgid "Reordering related records is not allowed"
-msgstr "No està permès reordenar els registres relacionats"
-
-msgctxt "model:ir.message,text:msg_relation_actions_eace41a0"
-msgid "Relation actions"
-msgstr "Accions de la relació"
-
-msgctxt "model:ir.message,text:msg_reload_now_the_unfinished_value_stays_here_a3da1541"
-msgid "Reload now: the unfinished value stays here."
-msgstr "Recarregueu ara: el valor sense acabar es mantindrà aquí."
-
 msgctxt "model:ir.message,text:msg_reload_undo_b896471c"
 msgid "Reload/Undo"
 msgstr "Recarrega/Desfés"
-
-msgctxt "model:ir.message,text:msg_remote_assistance_9e29c2bd"
-msgid "Remote assistance"
-msgstr "Assistència remota"
 
 msgctxt "model:ir.message,text:msg_remote_assistance_could_not_be_initialized_95820921"
 msgid "Remote assistance could not be initialized."
@@ -718,73 +162,13 @@ msgctxt "model:ir.message,text:msg_remote_assistance_did_not_load_19908242"
 msgid "Remote assistance did not load."
 msgstr "No s'ha carregat l'assistència remota."
 
-msgctxt "model:ir.message,text:msg_remove_e963907d"
-msgid "Remove"
-msgstr "Elimina"
-
 msgctxt "model:ir.message,text:msg_remove_file_s_7b17974a"
 msgid "Remove %(file)s"
 msgstr "Elimina %(file)s"
 
-msgctxt "model:ir.message,text:msg_remove_menu_s_from_favorites_8d18cec8"
-msgid "Remove %(menu)s from favorites"
-msgstr "Elimina %(menu)s dels preferits"
-
-msgctxt "model:ir.message,text:msg_remove_from_favorites_b6ddf62b"
-msgid "Remove from favorites"
-msgstr "Elimina dels preferits"
-
-msgctxt "model:ir.message,text:msg_remove_this_bookmark_2437ede7"
-msgid "Remove this bookmark"
-msgstr "Elimina de les cerques preferides"
-
-msgctxt "model:ir.message,text:msg_removing_related_records_is_not_allowed_f977e41d"
-msgid "Removing related records is not allowed"
-msgstr "No es permet treure registres relacionats"
-
-msgctxt "model:ir.message,text:msg_resize_f52dc753"
-msgid "Resize"
-msgstr "Redimensiona"
-
-msgctxt "model:ir.message,text:msg_resize_column_s_column_df283138"
-msgid "Resize %(column)s column"
-msgstr "Redimensiona la columna %(column)s"
-
-msgctxt "model:ir.message,text:msg_revisions_2dba7961"
-msgid "Revisions"
-msgstr "Revisions"
-
 msgctxt "model:ir.message,text:msg_save_efc007a3"
 msgid "Save"
 msgstr "Desa"
-
-msgctxt "model:ir.message,text:msg_save_and_close_2164d00c"
-msgid "Save and close"
-msgstr "Desa i tanca"
-
-msgctxt "model:ir.message,text:msg_save_and_continue_3b033f4c"
-msgid "Save and continue"
-msgstr "Desa i continua"
-
-msgctxt "model:ir.message,text:msg_save_and_switch_c3efae95"
-msgid "Save and switch"
-msgstr "Desa i canvia"
-
-msgctxt "model:ir.message,text:msg_save_as_f313a0b1"
-msgid "Save as"
-msgstr "Anomena i desa"
-
-msgctxt "model:ir.message,text:msg_save_validates_the_record_and_writes_the_changes_a0fcbd39"
-msgid "Save validates the record and writes the changes to Tryton."
-msgstr "Desar valida el registre i escriu els canvis a Tryton."
-
-msgctxt "model:ir.message,text:msg_scan_28cba55d"
-msgid "Scan"
-msgstr "Escaneja"
-
-msgctxt "model:ir.message,text:msg_scan_or_enter_a_code_2e05dc81"
-msgid "Scan or enter a code"
-msgstr "Escanegeu o introduïu un codi"
 
 msgctxt "model:ir.message,text:msg_screen_capture_is_not_available_ae53045e"
 msgid "Screen capture is not available."
@@ -798,46 +182,6 @@ msgctxt "model:ir.message,text:msg_search_bce06414"
 msgid "Search"
 msgstr "Cerca"
 
-msgctxt "model:ir.message,text:msg_search_a_record_b847f64e"
-msgid "Search a record"
-msgstr "Cerca un registre"
-
-msgctxt "model:ir.message,text:msg_search_and_add_608ea3e6"
-msgid "Search and add"
-msgstr "Cerca i afegeix"
-
-msgctxt "model:ir.message,text:msg_search_documentation_ea548d20"
-msgid "Search documentation"
-msgstr "Cerca documentació"
-
-msgctxt "model:ir.message,text:msg_search_documentation_210f8161"
-msgid "Search documentation…"
-msgstr "Cerca documentació…"
-
-msgctxt "model:ir.message,text:msg_search_for_records_before_adding_a_bookmark_6e4f214b"
-msgid "Search for records before adding a bookmark"
-msgstr "Cerqueu registres abans d'afegir una adreça d'interès"
-
-msgctxt "model:ir.message,text:msg_search_records_2495e622"
-msgid "Search records"
-msgstr "Cerca registres"
-
-msgctxt "model:ir.message,text:msg_search_c2030252"
-msgid "Search 🔍︎"
-msgstr "Cerca 🔍︎"
-
-msgctxt "model:ir.message,text:msg_search_or_chat_with_the_assistant_958b3539"
-msgid "Search 🔍︎ or chat with the assistant✦"
-msgstr "Cerca 🔍︎ o conversa amb l'assistent✦"
-
-msgctxt "model:ir.message,text:msg_search_f54fbca1"
-msgid "Search…"
-msgstr "Cerca…"
-
-msgctxt "model:ir.message,text:msg_select_85982229"
-msgid "Select"
-msgstr "Seleccionar"
-
 msgctxt "model:ir.message,text:msg_select_a_record_before_scanning_e4e5cbd8"
 msgid "Select a record before scanning"
 msgstr "Seleccioneu un registre abans d'escanejar"
@@ -850,30 +194,6 @@ msgctxt "model:ir.message,text:msg_select_a_saved_record_first_f7386e0a"
 msgid "Select a saved record first"
 msgstr "Seleccioneu primer un registre desat"
 
-msgctxt "model:ir.message,text:msg_select_all_records_e89606db"
-msgid "Select all records"
-msgstr "Selecciona tots els registres"
-
-msgctxt "model:ir.message,text:msg_select_record_809d3f3a"
-msgid "Select record"
-msgstr "Selecciona el registre"
-
-msgctxt "model:ir.message,text:msg_selected_record_actions_fbfc04de"
-msgid "Selected record actions"
-msgstr "Accions dels registres seleccionats"
-
-msgctxt "model:ir.message,text:msg_send_9bc2575c"
-msgid "Send"
-msgstr "Enviar"
-
-msgctxt "model:ir.message,text:msg_show_active_records_a48c1c6e"
-msgid "Show active records"
-msgstr "Mostra registres actius"
-
-msgctxt "model:ir.message,text:msg_show_inactive_records_156bf187"
-msgid "Show inactive records"
-msgstr "Mostra registres inactius"
-
 msgctxt "model:ir.message,text:msg_show_this_help_3ab981f8"
 msgid "Show this help"
 msgstr "Mostra aquesta ajuda"
@@ -882,73 +202,21 @@ msgctxt "model:ir.message,text:msg_show_hide_access_keys_26bbd1af"
 msgid "Show/Hide access keys"
 msgstr "Mostra/Amaga les tecles ràpides"
 
-msgctxt "model:ir.message,text:msg_side_panel_7907c33b"
-msgid "Side panel"
-msgstr "Panell lateral"
-
-msgctxt "model:ir.message,text:msg_sign_in_ada2e9e9"
-msgid "Sign in"
-msgstr "Inicia la sessió"
-
-msgctxt "model:ir.message,text:msg_sign_in_with_your_tryton_account_62adb31f"
-msgid "Sign in with your Tryton account."
-msgstr "Inicieu la sessió amb el vostre compte del Tryton."
-
-msgctxt "model:ir.message,text:msg_speech_recognition_is_not_available_cdb1a588"
-msgid "Speech recognition is not available"
-msgstr "El reconeixement de veu no està disponible"
-
 msgctxt "model:ir.message,text:msg_speech_recognition_is_not_available_478ab226"
 msgid "Speech recognition is not available."
 msgstr "El reconeixement de veu no està disponible."
-
-msgctxt "model:ir.message,text:msg_speech_to_text_eaf1450c"
-msgid "Speech to text"
-msgstr "Conversió de veu a text"
-
-msgctxt "model:ir.message,text:msg_start_a_conversation_the_active_model_record_sel_3c282288"
-msgid "Start a conversation. The active model, record, selection, domain and language are sent as context."
-msgstr "Inicieu una conversa. El model actiu, el registre, la selecció, el domini i l'idioma s'envien com a context."
 
 msgctxt "model:ir.message,text:msg_start_a_support_session_by_sharing_the_current_b_48331194"
 msgid "Start a support session by sharing the current browser tab."
 msgstr "Inicieu una sessió d'assistència compartint la pestanya actual del navegador."
 
-msgctxt "model:ir.message,text:msg_start_or_select_a_conversation_first_c272b817"
-msgid "Start or select a conversation first"
-msgstr "Inicieu o seleccioneu primer una conversa"
-
-msgctxt "model:ir.message,text:msg_start_with_a_nan_c6986d09"
-msgid "Start with a NaN"
-msgstr "Inicia amb un NaN"
-
 msgctxt "model:ir.message,text:msg_support_f32d5a3b"
 msgid "Support"
 msgstr "Suport"
 
-msgctxt "model:ir.message,text:msg_support_tickets_46b7e6e0"
-msgid "Support tickets"
-msgstr "Tiquets de suport"
-
-msgctxt "model:ir.message,text:msg_support_tickets_are_available_when_nantic_connec_e51580c1"
-msgid "Support tickets are available when nantic_connection is installed."
-msgstr "Els tiquets de suport estan disponibles quan nantic_connection està instal·lat."
-
 msgctxt "model:ir.message,text:msg_switch_3e44c920"
 msgid "Switch"
 msgstr "Canvia la vista"
-
-msgctxt "model:ir.message,text:msg_switch_light_dark_mode_59ee09c8"
-msgid "Switch light/dark mode"
-msgstr "Canvia el mode clar/fosc"
-
-msgctxt "model:ir.message,text:msg_switch_view_5c89ea0f"
-msgid "Switch view"
-msgstr "Canvia la vista"
-
-msgctxt "model:ir.message,text:msg_switch_without_saving_edc21c18"
-msgid "Switch without saving"
-msgstr "Canvia sense desar"
 
 msgctxt "model:ir.message,text:msg_tab_s_is_not_a_s_tab_f909d1b2"
 msgid "Tab %s is not a %s tab"
@@ -958,25 +226,9 @@ msgctxt "model:ir.message,text:msg_tab_shortcuts_47d9e482"
 msgid "Tab shortcuts"
 msgstr "Dreceres de la pestanya"
 
-msgctxt "model:ir.message,text:msg_task_component_2e8f98bd"
-msgid "Task component"
-msgstr "Component de tasques"
-
-msgctxt "model:ir.message,text:msg_text_to_speech_did_not_return_audio_c5294036"
-msgid "Text to speech did not return audio"
-msgstr "La conversió de text a veu no ha retornat àudio"
-
-msgctxt "model:ir.message,text:msg_text_to_speech_is_not_available_1adbb213"
-msgid "Text to speech is not available"
-msgstr "La conversió de text a veu no està disponible"
-
 msgctxt "model:ir.message,text:msg_the_csv_file_is_empty_2bf21a83"
 msgid "The CSV file is empty"
 msgstr "El fitxer CSV és buit"
-
-msgctxt "model:ir.message,text:msg_the_assistant_needs_confirmation_to_continue_0c406f24"
-msgid "The assistant needs confirmation to continue."
-msgstr "L'assistent necessita confirmació per continuar."
 
 msgctxt "model:ir.message,text:msg_the_assistant_voice_is_not_available_c73be59e"
 msgid "The assistant voice is not available."
@@ -994,10 +246,6 @@ msgctxt "model:ir.message,text:msg_the_recording_could_not_be_started_59a9df19"
 msgid "The recording could not be started."
 msgstr "No s'ha pogut iniciar la gravació."
 
-msgctxt "model:ir.message,text:msg_the_related_record_is_already_saved_4c1532df"
-msgid "The related record is already saved"
-msgstr "El registre relacionat ja està desat"
-
 msgctxt "model:ir.message,text:msg_the_screenshot_could_not_be_captured_2a406353"
 msgid "The screenshot could not be captured."
 msgstr "No s'ha pogut fer la captura de pantalla."
@@ -1006,17 +254,9 @@ msgctxt "model:ir.message,text:msg_the_server_could_not_complete_this_action_7b5
 msgid "The server could not complete this action."
 msgstr "El servidor no ha pogut completar aquesta acció."
 
-msgctxt "model:ir.message,text:msg_this_action_opens_an_external_address_c6ee0d49"
-msgid "This action opens an external address."
-msgstr "Aquesta acció obre una adreça externa."
-
 msgctxt "model:ir.message,text:msg_this_download_is_no_longer_available_f25d5e7d"
 msgid "This download is no longer available"
 msgstr "Aquesta baixada ja no està disponible"
-
-msgctxt "model:ir.message,text:msg_this_help_resource_is_not_installed_6a3a043e"
-msgid "This help resource is not installed"
-msgstr "Aquest recurs d'ajuda no està instal·lat"
 
 msgctxt "model:ir.message,text:msg_this_menu_does_not_define_an_action_4c2a49f3"
 msgid "This menu does not define an action"
@@ -1025,18 +265,6 @@ msgstr "Aquest menú no defineix cap acció"
 msgctxt "model:ir.message,text:msg_this_model_does_not_keep_revisions_144217b6"
 msgid "This model does not keep revisions"
 msgstr "Aquest model no conserva revisions"
-
-msgctxt "model:ir.message,text:msg_this_page_uses_no_tryton_xml_view_dominate_rende_1d1e0110"
-msgid "This page uses no Tryton XML view. Dominate renders its custom components, HTMX updates fragments and the same workspace stores every draft."
-msgstr "Aquesta pàgina no utilitza cap vista XML del Tryton. Dominate renderitza els components personalitzats, HTMX actualitza els fragments i el mateix espai de treball desa tots els esborranys."
-
-msgctxt "model:ir.message,text:msg_this_relation_field_is_read_only_601788be"
-msgid "This relation field is read-only"
-msgstr "Aquest camp de relació és de només lectura"
-
-msgctxt "model:ir.message,text:msg_this_relation_is_not_readable_4153f601"
-msgid "This relation is not readable"
-msgstr "Aquesta relació no es pot llegir"
 
 msgctxt "model:ir.message,text:msg_this_tree_can_not_be_reordered_092df402"
 msgid "This tree can not be reordered"
@@ -1054,45 +282,13 @@ msgctxt "model:ir.message,text:msg_this_tab_is_not_a_relation_draft_5142b2a7"
 msgid "This tab is not a relation draft"
 msgstr "Aquesta pestanya no és un esborrany de relació"
 
-msgctxt "model:ir.message,text:msg_to_ae79ea1e"
-msgid "To"
-msgstr "A"
-
-msgctxt "model:ir.message,text:msg_today_24345a14"
-msgid "Today"
-msgstr "Avuí"
-
-msgctxt "model:ir.message,text:msg_toggle_assistant_voice_56746db4"
-msgid "Toggle assistant voice"
-msgstr "Activa o desactiva la veu de l'assistent"
-
-msgctxt "model:ir.message,text:msg_toggle_task_75db9591"
-msgid "Toggle task"
-msgstr "Activa o desactiva la tasca"
-
 msgctxt "model:ir.message,text:msg_toolbar_action_s_not_found_3642237e"
 msgid "Toolbar action %s not found"
 msgstr "No s'ha trobat l'acció %s de la barra d'eines"
 
-msgctxt "model:ir.message,text:msg_total_b25928c6"
-msgid "Total"
-msgstr "Total"
-
-msgctxt "model:ir.message,text:msg_track_tickets_created_from_the_assistant_and_add_e5b6f65d"
-msgid "Track tickets created from the assistant and add comments without losing your current workspace."
-msgstr "Seguiu els tiquets creats des de l'assistent i afegiu comentaris sense perdre l'espai de treball actual."
-
 msgctxt "model:ir.message,text:msg_true_88b33e4e"
 msgid "True"
 msgstr "Cert"
-
-msgctxt "model:ir.message,text:msg_tryton_menu_485fb53e"
-msgid "Tryton menu"
-msgstr "Menú del Tryton"
-
-msgctxt "model:ir.message,text:msg_undelete_9b2a9354"
-msgid "Undelete"
-msgstr "Recupera"
 
 msgctxt "model:ir.message,text:msg_unknown_button_s_dadea476"
 msgid "Unknown button %s"
@@ -1114,53 +310,13 @@ msgctxt "model:ir.message,text:msg_unknown_conversation_156667a3"
 msgid "Unknown conversation"
 msgstr "No s'ha trobat: conversa"
 
-msgctxt "model:ir.message,text:msg_unknown_demo_action_10fbddda"
-msgid "Unknown demo action"
-msgstr "No s'ha trobat: acció de demostració"
-
-msgctxt "model:ir.message,text:msg_unknown_demo_task_83617687"
-msgid "Unknown demo task"
-msgstr "No s'ha trobat: tasca de demostració"
-
-msgctxt "model:ir.message,text:msg_unknown_documentation_action_c4e647e8"
-msgid "Unknown documentation action"
-msgstr "No s'ha trobat: acció de documentació"
-
 msgctxt "model:ir.message,text:msg_unknown_domain_tab_cb641669"
 msgid "Unknown domain tab"
 msgstr "No s'ha trobat: pestanya de domini"
 
-msgctxt "model:ir.message,text:msg_unknown_favorite_action_4bce58a9"
-msgid "Unknown favorite action"
-msgstr "No s'ha trobat: acció de preferits"
-
 msgctxt "model:ir.message,text:msg_unknown_field_s_e452e987"
 msgid "Unknown field %s"
 msgstr "No s'ha trobat: camp %s"
-
-msgctxt "model:ir.message,text:msg_unknown_help_resource_864e56bf"
-msgid "Unknown help resource"
-msgstr "No s'ha trobat: recurs d’ajuda"
-
-msgctxt "model:ir.message,text:msg_unknown_help_section_e66dc646"
-msgid "Unknown help section"
-msgstr "No s'ha trobat: secció d’ajuda"
-
-msgctxt "model:ir.message,text:msg_unknown_leave_action_00e5198e"
-msgid "Unknown leave action"
-msgstr "No s'ha trobat: acció de sortida"
-
-msgctxt "model:ir.message,text:msg_unknown_menu_action_98c01a12"
-msgid "Unknown menu action"
-msgstr "No s'ha trobat: acció de menú"
-
-msgctxt "model:ir.message,text:msg_unknown_menu_item_a2359449"
-msgid "Unknown menu item"
-msgstr "No s'ha trobat: element de menú"
-
-msgctxt "model:ir.message,text:msg_unknown_notification_2557bc8b"
-msgid "Unknown notification"
-msgstr "No s'ha trobat: notificació"
 
 msgctxt "model:ir.message,text:msg_unknown_optional_column_8ec99f22"
 msgid "Unknown optional column"
@@ -1178,18 +334,6 @@ msgctxt "model:ir.message,text:msg_unknown_preference_field_s_554b39ef"
 msgid "Unknown preference field %s"
 msgstr "No s'ha trobat: camp de preferències %s"
 
-msgctxt "model:ir.message,text:msg_unknown_preference_record_ef3a4eaa"
-msgid "Unknown preference record"
-msgstr "No s'ha trobat: registre de preferències"
-
-msgctxt "model:ir.message,text:msg_unknown_preferences_page_2498ce21"
-msgid "Unknown preferences page"
-msgstr "No s'ha trobat: pàgina de preferències"
-
-msgctxt "model:ir.message,text:msg_unknown_record_ad246024"
-msgid "Unknown record"
-msgstr "No s'ha trobat: registre"
-
 msgctxt "model:ir.message,text:msg_unknown_record_s_431ef202"
 msgid "Unknown record %s"
 msgstr "No s'ha trobat: registre %s"
@@ -1205,10 +349,6 @@ msgstr "No s'ha trobat: registre relacionat"
 msgctxt "model:ir.message,text:msg_unknown_related_resource_f8dcd623"
 msgid "Unknown related resource"
 msgstr "No s'ha trobat: recurs relacionat"
-
-msgctxt "model:ir.message,text:msg_unknown_relation_field_45919c86"
-msgid "Unknown relation field"
-msgstr "No s'ha trobat: camp de relació"
 
 msgctxt "model:ir.message,text:msg_unknown_relation_draft_e129b8dc"
 msgid "Unknown relation draft"
@@ -1226,21 +366,9 @@ msgctxt "model:ir.message,text:msg_unknown_search_bookmark_aa59fe27"
 msgid "Unknown search bookmark"
 msgstr "No s'ha trobat: adreça d’interès de cerca"
 
-msgctxt "model:ir.message,text:msg_unknown_shell_action_b8c205b2"
-msgid "Unknown shell action"
-msgstr "No s'ha trobat: acció de la interfície"
-
 msgctxt "model:ir.message,text:msg_unknown_sort_field_790ee4b9"
 msgid "Unknown sort field"
 msgstr "No s'ha trobat: camp d’ordenació"
-
-msgctxt "model:ir.message,text:msg_unknown_state_component_s_150ad0be"
-msgid "Unknown state component %s"
-msgstr "No s'ha trobat: component d’estat %s"
-
-msgctxt "model:ir.message,text:msg_unknown_tab_e1e8dfe0"
-msgid "Unknown tab"
-msgstr "No s'ha trobat: pestanya"
 
 msgctxt "model:ir.message,text:msg_unknown_tab_s_3482ea05"
 msgid "Unknown tab %s"
@@ -1262,97 +390,18 @@ msgctxt "model:ir.message,text:msg_unknown_wizard_field_s_d02f6297"
 msgid "Unknown wizard field %s"
 msgstr "No s'ha trobat: camp de l’assistent %s"
 
-msgctxt "model:ir.message,text:msg_unknown_x2many_action_b57d2104"
-msgid "Unknown x2many action"
-msgstr "No s'ha trobat: acció x2many"
-
-msgctxt "model:ir.message,text:msg_unread_updates_32d00893"
-msgid "Unread updates"
-msgstr "Actualitzacions no llegides"
-
-msgctxt "model:ir.message,text:msg_unsaved_2ab06e25"
-msgid "Unsaved"
-msgstr "Sense desar"
-
-msgctxt "model:ir.message,text:msg_unsaved_changes_29267269"
-msgid "Unsaved changes"
-msgstr "Canvis sense desar"
-
 msgctxt "model:ir.message,text:msg_unsupported_action_type_s_9c66a81e"
 msgid "Unsupported action type %s"
 msgstr "El tipus d'acció %s no és compatible"
-
-msgctxt "model:ir.message,text:msg_unsupported_tab_type_cd25cf8c"
-msgid "Unsupported tab type"
-msgstr "El tipus de pestanya no és compatible"
-
-msgctxt "model:ir.message,text:msg_update_fb91e24f"
-msgid "Update"
-msgstr "Actualització"
-
-msgctxt "model:ir.message,text:msg_updates_c76d1807"
-msgid "Updates"
-msgstr "Actualitzacions"
-
-msgctxt "model:ir.message,text:msg_user_9f8a2389"
-msgid "User"
-msgstr "Usuari"
-
-msgctxt "model:ir.message,text:msg_user_and_notifications_3393b7f2"
-msgid "User and notifications"
-msgstr "Usuari i notificacions"
-
-msgctxt "model:ir.message,text:msg_user_menu_a2d8625b"
-msgid "User menu"
-msgstr "Menú de l'usuari"
 
 msgctxt "model:ir.message,text:msg_view_s_is_not_part_of_this_action_c97ba4f2"
 msgid "View %s is not part of this action"
 msgstr "La vista %s no forma part d'aquesta acció"
 
-msgctxt "model:ir.message,text:msg_view_logs_4c3958dd"
-msgid "View logs"
-msgstr "Mostra els registres"
-
-msgctxt "model:ir.message,text:msg_cassini_state_infrastructure_ae6a45d3"
-msgid "Cassini state infrastructure"
-msgstr "Infraestructura d'estat del Cassini"
-
-msgctxt "model:ir.message,text:msg_week_f82be68a"
-msgid "Week"
-msgstr "Setmana"
-
-msgctxt "model:ir.message,text:msg_what_do_you_want_to_do_8d4f6ef5"
-msgid "What do you want to do?"
-msgstr "Què vols fer?"
-
-msgctxt "model:ir.message,text:msg_wizard_has_no_current_view_ae22a488"
-msgid "Wizard has no current view"
-msgstr "L'assistent no té cap vista actual"
-
 msgctxt "model:ir.message,text:msg_yes_5397e058"
 msgid "Yes"
 msgstr "Si"
 
-msgctxt "model:ir.message,text:msg_you_905cb326"
-msgid "You"
-msgstr "Vós"
-
-msgctxt "model:ir.message,text:msg_close_this_tab_f30f909d"
-msgid "close this tab"
-msgstr "tancar aquesta pestanya"
-
-msgctxt "model:ir.message,text:msg_create_another_record_08c7017f"
-msgid "create another record"
-msgstr "crear un altre registre"
-
-msgctxt "model:ir.message,text:msg_open_another_record_06e5fa39"
-msgid "open another record"
-msgstr "obrir un altre registre"
-
-msgctxt "model:ir.message,text:msg_switch_view_023c59a0"
-msgid "switch view"
-msgstr "canviar de vista"
 msgctxt "field:cassini.activate.tab,tab:"
 msgid "Tab"
 msgstr "Pestanya"
@@ -2421,61 +1470,13 @@ msgctxt "selection:www.site,type:cassini"
 msgid "Cassini"
 msgstr "Cassini"
 
-msgctxt "model:ir.message,text:msg_count_d_record_5726c64e"
-msgid "%(count)d record"
-msgstr "%(count)d registre"
-
-msgctxt "model:ir.message,text:msg_count_d_records_7fd6dfd3"
-msgid "%(count)d records"
-msgstr "%(count)d registres"
-
-msgctxt "model:ir.message,text:msg_search_model_s_18bdb9f0"
-msgid "Search %(model)s"
-msgstr "Cerca %(model)s"
-
-msgctxt "model:ir.message,text:msg_select_record_s_4af0864f"
-msgid "Select %(record)s"
-msgstr "Selecciona %(record)s"
-
-msgctxt "model:ir.message,text:msg_unknown_relation_column_9e4f93b3"
-msgid "Unknown relation column"
-msgstr "Columna de relació desconeguda"
-
-msgctxt "model:ir.message,text:msg_window_actions_fe0e3a5d"
-msgid "Window actions"
-msgstr "Accions de la finestra"
-
-msgctxt "model:ir.message,text:msg_record_navigation_d4fab182"
-msgid "Record navigation"
-msgstr "Navegació de registres"
-
-msgctxt "model:ir.message,text:msg_previous_page_81f54719"
-msgid "Previous page"
-msgstr "Pàgina anterior"
-
-msgctxt "model:ir.message,text:msg_next_page_4bfc194b"
-msgid "Next page"
-msgstr "Pàgina següent"
-
-msgctxt "model:ir.message,text:msg_accept_bb54db51"
-msgid "Accept"
-msgstr "Accepta"
-
 msgctxt "model:ir.message,text:msg_dashboard_d87f47b4"
 msgid "Dashboard"
 msgstr "Tauler"
 
-msgctxt "model:ir.message,text:msg_dashboard_chart_d182dcee"
-msgid "Dashboard chart"
-msgstr "Gràfic del tauler"
-
 msgctxt "model:ir.message,text:msg_direct_printing_failed_error_s_0c46e137"
 msgid "Direct printing failed: %(error)s"
 msgstr "La impressió directa ha fallat: %(error)s"
-
-msgctxt "model:ir.message,text:msg_don_t_show_again_d9afd5ec"
-msgid "Don't show again"
-msgstr "No ho tornis a mostrar"
 
 msgctxt "model:ir.message,text:msg_plotly_could_not_be_initialized_71855ebb"
 msgid "Plotly could not be initialized."
@@ -2505,209 +1506,13 @@ msgctxt "model:ir.message,text:msg_unknown_dashboard_64c495b2"
 msgid "Unknown dashboard"
 msgstr "Tauler desconegut"
 
-msgctxt "model:ir.message,text:msg_unknown_version_change_2ff41c57"
-msgid "Unknown version change"
-msgstr "Canvi de versió desconegut"
-
-msgctxt "model:ir.message,text:msg_unknown_version_change_action_792cf612"
-msgid "Unknown version change action"
-msgstr "Acció de canvi de versió desconeguda"
-
-msgctxt "model:ir.message,text:msg_version_changes_fd73f751"
-msgid "Version changes"
-msgstr "Canvis de versió"
-
-msgctxt "model:ir.message,text:msg_version_changes_require_nantic_connection_0ef1ce89"
-msgid "Version changes require nantic_connection."
-msgstr "Els canvis de versió requereixen nantic_connection."
-
-msgctxt "model:ir.message,text:msg_add_2cceefe2"
-msgid "Add..."
-msgstr "Afegeix..."
-
-msgctxt "model:ir.message,text:msg_manage_82d54088"
-msgid "Manage..."
-msgstr "Gestiona..."
-
-msgctxt "model:ir.message,text:msg_attachment_preview_cc8da619"
-msgid "Attachment preview"
-msgstr "Previsualització de l'adjunt"
-
-msgctxt "model:ir.message,text:msg_no_attachments_f941b4d9"
-msgid "No attachments"
-msgstr "No hi ha adjunts"
-
-msgctxt "model:ir.message,text:msg_open_attachment_b36bd6b7"
-msgid "Open attachment"
-msgstr "Obre l'adjunt"
-
-msgctxt "model:ir.message,text:msg_this_record_is_read_only_a31e4eba"
-msgid "This record is read-only"
-msgstr "Aquest registre és de només lectura"
-
-msgctxt "model:ir.message,text:msg_resource_actions_e4834c66"
-msgid "Resource actions"
-msgstr "Accions del recurs"
-
-msgctxt "model:ir.message,text:msg_preview_f1fbb2b4"
-msgid "Preview"
-msgstr "Previsualitza"
-
-msgctxt "model:ir.message,text:msg_unknown_csv_field_field_s_cf9f5720"
-msgid "Unknown CSV field \"%(field)s\""
-msgstr "Camp CSV \"%(field)s\" desconegut"
-
-msgctxt "model:ir.message,text:msg_only_one_to_many_fields_can_be_expanded_for_impo_55c575a0"
-msgid "Only one-to-many fields can be expanded for import"
-msgstr "Només es poden desplegar camps un-a-molts per importar"
-
-msgctxt "model:ir.message,text:msg_expand_field_1b8c62b9"
-msgid "Expand field"
-msgstr "Desplega el camp"
-
-msgctxt "model:ir.message,text:msg_field_s_string_787b9f04"
-msgid "%(field)s (string)"
-msgstr "%(field)s (text)"
-
-msgctxt "model:ir.message,text:msg_field_s_model_name_f777e4c5"
-msgid "%(field)s (model name)"
-msgstr "%(field)s (nom del model)"
-
-msgctxt "model:ir.message,text:msg_field_s_record_name_72e24512"
-msgid "%(field)s/Record Name"
-msgstr "%(field)s/Nom del registre"
-
-msgctxt "model:ir.message,text:msg_csv_export_name_s_59629579"
-msgid "CSV Export: %(name)s"
-msgstr "Exportació CSV: %(name)s"
-
-msgctxt "model:ir.message,text:msg_csv_import_name_s_3756e85a"
-msgid "CSV Import: %(name)s"
-msgstr "Importació CSV: %(name)s"
-
-msgctxt "model:ir.message,text:msg_all_fields_f51c7336"
-msgid "All Fields"
-msgstr "Tots els camps"
-
-msgctxt "model:ir.message,text:msg_auto_detect_518fc452"
-msgid "Auto-Detect"
-msgstr "Detecció automàtica"
-
-msgctxt "model:ir.message,text:msg_save_export_6e133815"
-msgid "Save Export"
-msgstr "Desa l'exportació"
-
-msgctxt "model:ir.message,text:msg_url_export_3fe35e36"
-msgid "URL Export"
-msgstr "URL d'exportació"
-
-msgctxt "model:ir.message,text:msg_delete_export_9ce2d612"
-msgid "Delete Export"
-msgstr "Suprimeix l'exportació"
-
-msgctxt "model:ir.message,text:msg_fields_selected_ed301cf7"
-msgid "Fields Selected"
-msgstr "Camps seleccionats"
-
-msgctxt "model:ir.message,text:msg_export_name_2ffae16e"
-msgid "Export Name"
-msgstr "Nom de l'exportació"
-
-msgctxt "model:ir.message,text:msg_export_f3e4fadb"
-msgid "Export"
-msgstr "Exportació"
-
-msgctxt "model:ir.message,text:msg_selected_records_8ac0df07"
-msgid "Selected Records"
-msgstr "Registres seleccionats"
-
-msgctxt "model:ir.message,text:msg_listed_records_3da40c09"
-msgid "Listed Records"
-msgstr "Registres llistats"
-
-msgctxt "model:ir.message,text:msg_ignore_search_limit_12bcdad5"
-msgid "Ignore search limit"
-msgstr "Ignora el límit de cerca"
-
-msgctxt "model:ir.message,text:msg_predefined_exports_3af8b314"
-msgid "Predefined Exports"
-msgstr "Exportacions predefinides"
-
-msgctxt "model:ir.message,text:msg_file_to_import_b5fa1ece"
-msgid "File to Import"
-msgstr "Fitxer a importar"
-
-msgctxt "model:ir.message,text:msg_csv_parameters_7523082c"
-msgid "CSV Parameters"
-msgstr "Paràmetres CSV"
-
-msgctxt "model:ir.message,text:msg_encoding_5821fec7"
-msgid "Encoding"
-msgstr "Codificació"
-
-msgctxt "model:ir.message,text:msg_lines_to_skip_2ee6a49f"
-msgid "Lines to Skip"
-msgstr "Línies a ometre"
-
-msgctxt "model:ir.message,text:msg_use_locale_format_f03d0fa2"
-msgid "Use locale format"
-msgstr "Utilitza el format local"
-
-msgctxt "model:ir.message,text:msg_add_field_names_786e8fa5"
-msgid "Add Field Names"
-msgstr "Afegeix els noms dels camps"
-
-msgctxt "model:ir.message,text:msg_delimiter_5e96ff2a"
-msgid "Delimiter"
-msgstr "Delimitador"
-
-msgctxt "model:ir.message,text:msg_quote_char_214076d9"
-msgid "Quote Char"
-msgstr "Caràcter de cometes"
-
-msgctxt "model:ir.message,text:msg_save_as_d8916376"
-msgid "Save As..."
-msgstr "Anomena i desa..."
-
-msgctxt "model:ir.message,text:msg_unknown_column_header_header_s_d970625b"
-msgid "Unknown column header \"%(header)s\""
-msgstr "Capçalera de columna \"%(header)s\" desconeguda"
-
-msgctxt "model:ir.message,text:msg_the_field_field_s_is_read_only_a302f8bd"
-msgid "The field \"%(field)s\" is read-only"
-msgstr "El camp \"%(field)s\" és de només lectura"
-
-msgctxt "model:ir.message,text:msg_you_are_not_allowed_to_import_records_a5a4b9b2"
-msgid "You are not allowed to import records"
-msgstr "No teniu permís per importar registres"
-
-msgctxt "model:ir.message,text:msg_unknown_csv_operation_b1c9f818"
-msgid "Unknown CSV operation"
-msgstr "Operació CSV desconeguda"
-
-msgctxt "model:ir.message,text:msg_you_must_select_an_import_file_first_017de126"
-msgid "You must select an import file first."
-msgstr "Primer heu de seleccionar un fitxer d'importació."
-
 msgctxt "model:ir.message,text:msg_the_csv_file_could_not_be_decoded_with_encoding__f12698f7"
 msgid "The CSV file could not be decoded with %(encoding)s"
 msgstr "No s'ha pogut descodificar el fitxer CSV amb %(encoding)s"
 
-msgctxt "model:ir.message,text:msg_the_first_csv_row_must_contain_field_names_b82d7ac5"
-msgid "The first CSV row must contain field names"
-msgstr "La primera fila del CSV ha de contenir noms de camps"
-
 msgctxt "model:ir.message,text:msg_select_at_least_one_field_e1839336"
 msgid "Select at least one field"
 msgstr "Seleccioneu almenys un camp"
-
-msgctxt "model:ir.message,text:msg_enter_a_name_for_the_export_3d4e17a7"
-msgid "Enter a name for the export"
-msgstr "Introduïu un nom per a l'exportació"
-
-msgctxt "model:ir.message,text:msg_select_a_predefined_export_893ce241"
-msgid "Select a predefined export"
-msgstr "Seleccioneu una exportació predefinida"
 
 msgctxt "model:ir.message,text:msg_the_csv_delimiter_must_be_one_character_ae41c2fd"
 msgid "The CSV delimiter must be one character"
@@ -2724,3 +1529,1311 @@ msgstr "Selecció de registres CSV desconeguda"
 msgctxt "model:ir.message,text:msg_select_at_least_one_field_to_import_ecb61539"
 msgid "Select at least one field to import"
 msgstr "Seleccioneu almenys un camp per importar"
+
+msgctxt "xgettext:x:"
+msgid "%(count)d record"
+msgstr "%(count)d registre"
+
+msgctxt "xgettext:x:"
+msgid "%(count)d records"
+msgstr "%(count)d registres"
+
+msgctxt "xgettext:x:"
+msgid "%(field)s (model name)"
+msgstr "%(field)s (nom del model)"
+
+msgctxt "xgettext:x:"
+msgid "%(field)s (string)"
+msgstr "%(field)s (text)"
+
+msgctxt "xgettext:x:"
+msgid "%(field)s/Record Name"
+msgstr "%(field)s/Nom del registre"
+
+msgctxt "xgettext:x:"
+msgid "%(fields)d modified field in %(records)d record"
+msgstr "%(fields)d camp modificat en %(records)d registre"
+
+msgctxt "xgettext:x:"
+msgid "%(fields)d modified field in %(records)d records"
+msgstr "%(fields)d camp modificat en %(records)d registres"
+
+msgctxt "xgettext:x:"
+msgid "%(fields)d modified fields in %(records)d record"
+msgstr "%(fields)d camps modificats en %(records)d registre"
+
+msgctxt "xgettext:x:"
+msgid "%(fields)d modified fields in %(records)d records"
+msgstr "%(fields)d camps modificats en %(records)d registres"
+
+msgctxt "xgettext:x:"
+msgid "A component name and callable renderer are required"
+msgstr "Cal indicar un nom de component i un renderitzador executable"
+
+msgctxt "xgettext:x:"
+msgid "A new task"
+msgstr "Una tasca nova"
+
+msgctxt "xgettext:x:"
+msgid "Accept"
+msgstr "Accepta"
+
+msgctxt "xgettext:x:"
+msgid "Action"
+msgstr "Acció"
+
+msgctxt "xgettext:x:"
+msgid "Add"
+msgstr "Afegeix"
+
+msgctxt "xgettext:x:"
+msgid "Add %(menu)s to favorites"
+msgstr "Afegeix %(menu)s als preferits"
+
+msgctxt "xgettext:x:"
+msgid "Add Field Names"
+msgstr "Afegeix els noms dels camps"
+
+msgctxt "xgettext:x:"
+msgid "Add to favorites"
+msgstr "Afegeix als preferits"
+
+msgctxt "xgettext:x:"
+msgid "Add..."
+msgstr "Afegeix..."
+
+msgctxt "xgettext:x:"
+msgid "All Fields"
+msgstr "Tots els camps"
+
+msgctxt "xgettext:x:"
+msgid "All notifications"
+msgstr "Totes les notificacions"
+
+msgctxt "xgettext:x:"
+msgid "All updates"
+msgstr "Totes les actualitzacions"
+
+msgctxt "xgettext:x:"
+msgid "Allow"
+msgstr "Permet"
+
+msgctxt "xgettext:x:"
+msgid "Any unsaved changes will be reviewed before each tab is closed."
+msgstr "Els canvis no desats es revisaran abans de tancar cada pestanya."
+
+msgctxt "xgettext:x:"
+msgid "Application updates are available when nantic_connection is installed."
+msgstr "Les actualitzacions de l'aplicació estan disponibles quan nantic_connection està instal·lat."
+
+msgctxt "xgettext:x:"
+msgid "Ask the assistant…"
+msgstr "Pregunta a l'assistent…"
+
+msgctxt "xgettext:x:"
+msgid "Assistant"
+msgstr "Assistent"
+
+msgctxt "xgettext:x:"
+msgid "Assistant is working"
+msgstr "L'assistent està treballant"
+
+msgctxt "xgettext:x:"
+msgid "Attach files"
+msgstr "Adjunta fitxers"
+
+msgctxt "xgettext:x:"
+msgid "Attach recording"
+msgstr "Adjunta una gravació"
+
+msgctxt "xgettext:x:"
+msgid "Attach screenshot"
+msgstr "Adjunta una captura de pantalla"
+
+msgctxt "xgettext:x:"
+msgid "Attachment preview"
+msgstr "Previsualització de l'adjunt"
+
+msgctxt "xgettext:x:"
+msgid "Attachments"
+msgstr "Adjunts"
+
+msgctxt "xgettext:x:"
+msgid "Auto-Detect"
+msgstr "Detecció automàtica"
+
+msgctxt "xgettext:x:"
+msgid "Back"
+msgstr "Enrere"
+
+msgctxt "xgettext:x:"
+msgid "Back to Sao"
+msgstr "Torna al Sao"
+
+msgctxt "xgettext:x:"
+msgid "Bookmark Name"
+msgstr "Nom de l'adreça d'interès"
+
+msgctxt "xgettext:x:"
+msgid "Bookmark this filter"
+msgstr "Desa com a cerca preferida"
+
+msgctxt "xgettext:x:"
+msgid "Bookmarks"
+msgstr "Cerques preferides"
+
+msgctxt "xgettext:x:"
+msgid "CSV Export: %(name)s"
+msgstr "Exportació CSV: %(name)s"
+
+msgctxt "xgettext:x:"
+msgid "CSV Import: %(name)s"
+msgstr "Importació CSV: %(name)s"
+
+msgctxt "xgettext:x:"
+msgid "CSV Parameters"
+msgstr "Paràmetres CSV"
+
+msgctxt "xgettext:x:"
+msgid "Calendar mode"
+msgstr "Mode del calendari"
+
+msgctxt "xgettext:x:"
+msgid "Cancel"
+msgstr "Cancel·la"
+
+msgctxt "xgettext:x:"
+msgid "Cassini state infrastructure"
+msgstr "Infraestructura d'estat del Cassini"
+
+msgctxt "xgettext:x:"
+msgid "Change preferences and company"
+msgstr "Canvia les preferències i l'empresa"
+
+msgctxt "xgettext:x:"
+msgid "Choose a CSV file to import"
+msgstr "Trieu un fitxer CSV per importar"
+
+msgctxt "xgettext:x:"
+msgid "Choose a NaN"
+msgstr "Trieu un NaN"
+
+msgctxt "xgettext:x:"
+msgid "Choose a related record"
+msgstr "Trieu un registre relacionat"
+
+msgctxt "xgettext:x:"
+msgid "Choose a related record to add"
+msgstr "Trieu un registre relacionat per afegir"
+
+msgctxt "xgettext:x:"
+msgid "Choose what to do before you %(action)s."
+msgstr "Trieu què voleu fer abans de %(action)s."
+
+msgctxt "xgettext:x:"
+msgid "Choose whether to save the changes"
+msgstr "Trieu si voleu desar els canvis"
+
+msgctxt "xgettext:x:"
+msgid "Clear"
+msgstr "Netejar"
+
+msgctxt "xgettext:x:"
+msgid "Clear the field"
+msgstr "Buida el camp"
+
+msgctxt "xgettext:x:"
+msgid "Close"
+msgstr "Tanca"
+
+msgctxt "xgettext:x:"
+msgid "Close %(tab)s"
+msgstr "Tanca %(tab)s"
+
+msgctxt "xgettext:x:"
+msgid "Close all tabs?"
+msgstr "Voleu tancar totes les pestanyes?"
+
+msgctxt "xgettext:x:"
+msgid "Close tab"
+msgstr "Tanca la pestanya"
+
+msgctxt "xgettext:x:"
+msgid "Close tabs and continue"
+msgstr "Tanca les pestanyes i continua"
+
+msgctxt "xgettext:x:"
+msgid "Close without saving"
+msgstr "Tanca sense desar"
+
+msgctxt "xgettext:x:"
+msgid "Code"
+msgstr "Codi"
+
+msgctxt "xgettext:x:"
+msgid "Collapse node"
+msgstr "Plega el node"
+
+msgctxt "xgettext:x:"
+msgid "Columns"
+msgstr "Columnes"
+
+msgctxt "xgettext:x:"
+msgid "Component state must be a JSON object"
+msgstr "L'estat del component ha de ser un objecte JSON"
+
+msgctxt "xgettext:x:"
+msgid "Component state must be valid JSON"
+msgstr "L'estat del component ha de ser un JSON vàlid"
+
+msgctxt "xgettext:x:"
+msgid "Contextual documentation"
+msgstr "Documentació contextual"
+
+msgctxt "xgettext:x:"
+msgid "Continue"
+msgstr "Continua"
+
+msgctxt "xgettext:x:"
+msgid "Continue without saving"
+msgstr "Continua sense desar"
+
+msgctxt "xgettext:x:"
+msgid "Continuing without saving permanently discards the current draft."
+msgstr "Continuar sense desar descarta definitivament l'esborrany actual."
+
+msgctxt "xgettext:x:"
+msgid "Conversation artifacts"
+msgstr "Artefactes de la conversa"
+
+msgctxt "xgettext:x:"
+msgid "Conversations"
+msgstr "Converses"
+
+msgctxt "xgettext:x:"
+msgid "Counter component"
+msgstr "Component comptador"
+
+msgctxt "xgettext:x:"
+msgid "Create"
+msgstr "Crea"
+
+msgctxt "xgettext:x:"
+msgid "Create the related record from its own window"
+msgstr "Crea el registre relacionat des de la seva finestra"
+
+msgctxt "xgettext:x:"
+msgid "Create…"
+msgstr "Crea…"
+
+msgctxt "xgettext:x:"
+msgid "Creating related records is not allowed"
+msgstr "No es permet crear registres relacionats"
+
+msgctxt "xgettext:x:"
+msgid "Current record"
+msgstr "Registre actual"
+
+msgctxt "xgettext:x:"
+msgid "Current values"
+msgstr "Valors actuals"
+
+msgctxt "xgettext:x:"
+msgid "Dashboard chart"
+msgstr "Gràfic del tauler"
+
+msgctxt "xgettext:x:"
+msgid "Data"
+msgstr "Dades"
+
+msgctxt "xgettext:x:"
+msgid "Day"
+msgstr "Dia"
+
+msgctxt "xgettext:x:"
+msgid "Decrement"
+msgstr "Disminueix"
+
+msgctxt "xgettext:x:"
+msgid "Default"
+msgstr "Per defecte"
+
+msgctxt "xgettext:x:"
+msgid "Delete"
+msgstr "Suprimeix"
+
+msgctxt "xgettext:x:"
+msgid "Delete Export"
+msgstr "Suprimeix l'exportació"
+
+msgctxt "xgettext:x:"
+msgid "Delete the selected records?"
+msgstr "Voleu eliminar els registres seleccionats?"
+
+msgctxt "xgettext:x:"
+msgid "Deleting related records is not allowed"
+msgstr "No es permet eliminar registres relacionats"
+
+msgctxt "xgettext:x:"
+msgid "Delimiter"
+msgstr "Delimitador"
+
+msgctxt "xgettext:x:"
+msgid "Demo"
+msgstr "Demo"
+
+msgctxt "xgettext:x:"
+msgid "Deny"
+msgstr "Denega"
+
+msgctxt "xgettext:x:"
+msgid "Details"
+msgstr "Detalls"
+
+msgctxt "xgettext:x:"
+msgid "Discard the unsaved changes to this record?"
+msgstr "Voleu descartar els canvis no desats d'aquest registre?"
+
+msgctxt "xgettext:x:"
+msgid "Documentation"
+msgstr "Documentació"
+
+msgctxt "xgettext:x:"
+msgid "Documentation is available when nantic_connection is installed."
+msgstr "La documentació està disponible quan nantic_connection està instal·lat."
+
+msgctxt "xgettext:x:"
+msgid "Domains"
+msgstr "Dominis"
+
+msgctxt "xgettext:x:"
+msgid "Don't show again"
+msgstr "No ho tornis a mostrar"
+
+msgctxt "xgettext:x:"
+msgid "Download"
+msgstr "Descarrega"
+
+msgctxt "xgettext:x:"
+msgid "Duplicate"
+msgstr "Duplicar"
+
+msgctxt "xgettext:x:"
+msgid "Encoding"
+msgstr "Codificació"
+
+msgctxt "xgettext:x:"
+msgid "Enter a name for the export"
+msgstr "Introduïu un nom per a l'exportació"
+
+msgctxt "xgettext:x:"
+msgid "Expand field"
+msgstr "Desplega el camp"
+
+msgctxt "xgettext:x:"
+msgid "Expand node"
+msgstr "Desplega el node"
+
+msgctxt "xgettext:x:"
+msgid "Export"
+msgstr "Exportació"
+
+msgctxt "xgettext:x:"
+msgid "Export Name"
+msgstr "Nom de l'exportació"
+
+msgctxt "xgettext:x:"
+msgid "False"
+msgstr "Fals"
+
+msgctxt "xgettext:x:"
+msgid "Favorites"
+msgstr "Preferits"
+
+msgctxt "xgettext:x:"
+msgid "Fields Selected"
+msgstr "Camps seleccionats"
+
+msgctxt "xgettext:x:"
+msgid "File to Import"
+msgstr "Fitxer a importar"
+
+msgctxt "xgettext:x:"
+msgid "Filters"
+msgstr "Filtres"
+
+msgctxt "xgettext:x:"
+msgid "Find"
+msgstr "Cerca"
+
+msgctxt "xgettext:x:"
+msgid "From"
+msgstr "Desde"
+
+msgctxt "xgettext:x:"
+msgid "Global search"
+msgstr "Cerca global"
+
+msgctxt "xgettext:x:"
+msgid "Help"
+msgstr "Ajuda"
+
+msgctxt "xgettext:x:"
+msgid "Help and Updates"
+msgstr "Ajuda i actualitzacions"
+
+msgctxt "xgettext:x:"
+msgid "Ignore search limit"
+msgstr "Ignora el límit de cerca"
+
+msgctxt "xgettext:x:"
+msgid "Image actions"
+msgstr "Accions de la imatge"
+
+msgctxt "xgettext:x:"
+msgid "Import"
+msgstr "Import"
+
+msgctxt "xgettext:x:"
+msgid "Increment"
+msgstr "Augmenta"
+
+msgctxt "xgettext:x:"
+msgid "Install nantic_connection to enable the integrated assistant."
+msgstr "Instal·leu nantic_connection per activar l'assistent integrat."
+
+msgctxt "xgettext:x:"
+msgid "Invalid column field"
+msgstr "El camp de columna no és vàlid"
+
+msgctxt "xgettext:x:"
+msgid "Invalid column occurrences"
+msgstr "Les aparicions de columna no són vàlides"
+
+msgctxt "xgettext:x:"
+msgid "Invalid column width"
+msgstr "L'amplada de columna no és vàlida"
+
+msgctxt "xgettext:x:"
+msgid "Invalid column widths"
+msgstr "Les amplades de columna no són vàlides"
+
+msgctxt "xgettext:x:"
+msgid "Latest"
+msgstr "Últimes"
+
+msgctxt "xgettext:x:"
+msgid "Lines to Skip"
+msgstr "Línies a ometre"
+
+msgctxt "xgettext:x:"
+msgid "Listed Records"
+msgstr "Registres llistats"
+
+msgctxt "xgettext:x:"
+msgid "Logout"
+msgstr "Tanca la sessió"
+
+msgctxt "xgettext:x:"
+msgid "Manage..."
+msgstr "Gestiona..."
+
+msgctxt "xgettext:x:"
+msgid "Menu"
+msgstr "Menú"
+
+msgctxt "xgettext:x:"
+msgid "Message"
+msgstr "Missatge"
+
+msgctxt "xgettext:x:"
+msgid "Month"
+msgstr "Mes"
+
+msgctxt "xgettext:x:"
+msgid "NaNs"
+msgstr "NaNs"
+
+msgctxt "xgettext:x:"
+msgid "NaNs and goblins"
+msgstr "NaNs i follets"
+
+msgctxt "xgettext:x:"
+msgid "New"
+msgstr "Nou"
+
+msgctxt "xgettext:x:"
+msgid "New conversation"
+msgstr "Conversa nova"
+
+msgctxt "xgettext:x:"
+msgid "New event"
+msgstr "Esdeveniment nou"
+
+msgctxt "xgettext:x:"
+msgid "New event on %(date)s"
+msgstr "Esdeveniment nou el %(date)s"
+
+msgctxt "xgettext:x:"
+msgid "New record"
+msgstr "Registre nou"
+
+msgctxt "xgettext:x:"
+msgid "Next"
+msgstr "Següent"
+
+msgctxt "xgettext:x:"
+msgid "Next page"
+msgstr "Pàgina següent"
+
+msgctxt "xgettext:x:"
+msgid "Next record"
+msgstr "Registre següent"
+
+msgctxt "xgettext:x:"
+msgid "No actions"
+msgstr "No hi ha accions"
+
+msgctxt "xgettext:x:"
+msgid "No attachments"
+msgstr "No hi ha adjunts"
+
+msgctxt "xgettext:x:"
+msgid "No bookmarks"
+msgstr "No hi ha adreces d'interès"
+
+msgctxt "xgettext:x:"
+msgid "No documentation found."
+msgstr "No s'ha trobat documentació."
+
+msgctxt "xgettext:x:"
+msgid "No events"
+msgstr "No hi ha esdeveniments"
+
+msgctxt "xgettext:x:"
+msgid "No favorites yet"
+msgstr "Encara no hi ha preferits"
+
+msgctxt "xgettext:x:"
+msgid "No matching records"
+msgstr "No hi ha registres coincidents"
+
+msgctxt "xgettext:x:"
+msgid "No notifications at this time"
+msgstr "No hi ha notificacions en aquest moment"
+
+msgctxt "xgettext:x:"
+msgid "No optional columns"
+msgstr "No hi ha columnes opcionals"
+
+msgctxt "xgettext:x:"
+msgid "No record selected"
+msgstr "No s'ha seleccionat cap registre"
+
+msgctxt "xgettext:x:"
+msgid "No records"
+msgstr "No hi ha registres"
+
+msgctxt "xgettext:x:"
+msgid "No results"
+msgstr "No hi ha resultats"
+
+msgctxt "xgettext:x:"
+msgid "No side panel"
+msgstr "Sense panell lateral"
+
+msgctxt "xgettext:x:"
+msgid "No tasks yet"
+msgstr "Encara no hi ha tasques"
+
+msgctxt "xgettext:x:"
+msgid "No updates available."
+msgstr "No hi ha actualitzacions disponibles."
+
+msgctxt "xgettext:x:"
+msgid "Notebook pages"
+msgstr "Pàgines del quadern"
+
+msgctxt "xgettext:x:"
+msgid "Notes"
+msgstr "Notes"
+
+msgctxt "xgettext:x:"
+msgid "Notification"
+msgstr "Notificació"
+
+msgctxt "xgettext:x:"
+msgid "OK"
+msgstr "D'acord"
+
+msgctxt "xgettext:x:"
+msgid "Only one-to-many fields can be expanded for import"
+msgstr "Només es poden desplegar camps un-a-molts per importar"
+
+msgctxt "xgettext:x:"
+msgid "Open"
+msgstr "Obrir"
+
+msgctxt "xgettext:x:"
+msgid "Open attachment"
+msgstr "Obre l'adjunt"
+
+msgctxt "xgettext:x:"
+msgid "Open link"
+msgstr "Obre l'enllaç"
+
+msgctxt "xgettext:x:"
+msgid "Open tabs"
+msgstr "Pestanyes obertes"
+
+msgctxt "xgettext:x:"
+msgid "Open the record"
+msgstr "Obre el registre"
+
+msgctxt "xgettext:x:"
+msgid "Open tickets"
+msgstr "Obre els tiquets"
+
+msgctxt "xgettext:x:"
+msgid "Optional columns"
+msgstr "Columnes opcionals"
+
+msgctxt "xgettext:x:"
+msgid "Page %(page)d"
+msgstr "Pàgina %(page)d"
+
+msgctxt "xgettext:x:"
+msgid "Page title"
+msgstr "Títol de la pàgina"
+
+msgctxt "xgettext:x:"
+msgid "Password"
+msgstr "Contrasenya"
+
+msgctxt "xgettext:x:"
+msgid "Pending"
+msgstr "Pendents"
+
+msgctxt "xgettext:x:"
+msgid "Persistent draft"
+msgstr "Esborrany persistent"
+
+msgctxt "xgettext:x:"
+msgid "Predefined Exports"
+msgstr "Exportacions predefinides"
+
+msgctxt "xgettext:x:"
+msgid "Preferences"
+msgstr "Preferències"
+
+msgctxt "xgettext:x:"
+msgid "Preferences are not open"
+msgstr "Les preferències no estan obertes"
+
+msgctxt "xgettext:x:"
+msgid "Preferences require all open tabs to be closed."
+msgstr "Per obrir les preferències cal tancar totes les pestanyes obertes."
+
+msgctxt "xgettext:x:"
+msgid "Preview"
+msgstr "Previsualitza"
+
+msgctxt "xgettext:x:"
+msgid "Previous"
+msgstr "Anterior"
+
+msgctxt "xgettext:x:"
+msgid "Previous page"
+msgstr "Pàgina anterior"
+
+msgctxt "xgettext:x:"
+msgid "Previous record"
+msgstr "Registre anterior"
+
+msgctxt "xgettext:x:"
+msgid "Print"
+msgstr "Imprimeix"
+
+msgctxt "xgettext:x:"
+msgid "Quote Char"
+msgstr "Caràcter de cometes"
+
+msgctxt "xgettext:x:"
+msgid "Record navigation"
+msgstr "Navegació de registres"
+
+msgctxt "xgettext:x:"
+msgid "Record pages"
+msgstr "Pàgines de registres"
+
+msgctxt "xgettext:x:"
+msgid "Records"
+msgstr "Registres"
+
+msgctxt "xgettext:x:"
+msgid "Relate"
+msgstr "Relacionat"
+
+msgctxt "xgettext:x:"
+msgid "Relation actions"
+msgstr "Accions de la relació"
+
+msgctxt "xgettext:x:"
+msgid "Reload now: the unfinished value stays here."
+msgstr "Recarregueu ara: el valor sense acabar es mantindrà aquí."
+
+msgctxt "xgettext:x:"
+msgid "Reload/Undo"
+msgstr "Recarrega/Desfés"
+
+msgctxt "xgettext:x:"
+msgid "Remote assistance"
+msgstr "Assistència remota"
+
+msgctxt "xgettext:x:"
+msgid "Remove"
+msgstr "Elimina"
+
+msgctxt "xgettext:x:"
+msgid "Remove %(menu)s from favorites"
+msgstr "Elimina %(menu)s dels preferits"
+
+msgctxt "xgettext:x:"
+msgid "Remove from favorites"
+msgstr "Elimina dels preferits"
+
+msgctxt "xgettext:x:"
+msgid "Remove this bookmark"
+msgstr "Elimina de les cerques preferides"
+
+msgctxt "xgettext:x:"
+msgid "Removing related records is not allowed"
+msgstr "No es permet treure registres relacionats"
+
+msgctxt "xgettext:x:"
+msgid "Reorder"
+msgstr "Reordena"
+
+msgctxt "xgettext:x:"
+msgid "Reordering related records is not allowed"
+msgstr "No està permès reordenar els registres relacionats"
+
+msgctxt "xgettext:x:"
+msgid "Resize"
+msgstr "Redimensiona"
+
+msgctxt "xgettext:x:"
+msgid "Resize %(column)s column"
+msgstr "Redimensiona la columna %(column)s"
+
+msgctxt "xgettext:x:"
+msgid "Resource actions"
+msgstr "Accions del recurs"
+
+msgctxt "xgettext:x:"
+msgid "Revisions"
+msgstr "Revisions"
+
+msgctxt "xgettext:x:"
+msgid "Save"
+msgstr "Desa"
+
+msgctxt "xgettext:x:"
+msgid "Save As..."
+msgstr "Anomena i desa..."
+
+msgctxt "xgettext:x:"
+msgid "Save Export"
+msgstr "Desa l'exportació"
+
+msgctxt "xgettext:x:"
+msgid "Save and close"
+msgstr "Desa i tanca"
+
+msgctxt "xgettext:x:"
+msgid "Save and continue"
+msgstr "Desa i continua"
+
+msgctxt "xgettext:x:"
+msgid "Save and switch"
+msgstr "Desa i canvia"
+
+msgctxt "xgettext:x:"
+msgid "Save as"
+msgstr "Anomena i desa"
+
+msgctxt "xgettext:x:"
+msgid "Save validates the record and writes the changes to Tryton."
+msgstr "Desar valida el registre i escriu els canvis a Tryton."
+
+msgctxt "xgettext:x:"
+msgid "Scan"
+msgstr "Escaneja"
+
+msgctxt "xgettext:x:"
+msgid "Scan or enter a code"
+msgstr "Escanegeu o introduïu un codi"
+
+msgctxt "xgettext:x:"
+msgid "Search"
+msgstr "Cerca"
+
+msgctxt "xgettext:x:"
+msgid "Search %(model)s"
+msgstr "Cerca %(model)s"
+
+msgctxt "xgettext:x:"
+msgid "Search a record"
+msgstr "Cerca un registre"
+
+msgctxt "xgettext:x:"
+msgid "Search documentation"
+msgstr "Cerca documentació"
+
+msgctxt "xgettext:x:"
+msgid "Search documentation…"
+msgstr "Cerca documentació…"
+
+msgctxt "xgettext:x:"
+msgid "Search for records before adding a bookmark"
+msgstr "Cerqueu registres abans d'afegir una adreça d'interès"
+
+msgctxt "xgettext:x:"
+msgid "Search records"
+msgstr "Cerca registres"
+
+msgctxt "xgettext:x:"
+msgid "Search words"
+msgstr "Cerca paraules"
+
+msgctxt "xgettext:x:"
+msgid "Search 🔍︎"
+msgstr "Cerca 🔍︎"
+
+msgctxt "xgettext:x:"
+msgid "Search 🔍︎ or chat with the assistant✦"
+msgstr "Cerca 🔍︎ o conversa amb l'assistent✦"
+
+msgctxt "xgettext:x:"
+msgid "Search…"
+msgstr "Cerca…"
+
+msgctxt "xgettext:x:"
+msgid "Select"
+msgstr "Seleccionar"
+
+msgctxt "xgettext:x:"
+msgid "Select %(record)s"
+msgstr "Selecciona %(record)s"
+
+msgctxt "xgettext:x:"
+msgid "Select a predefined export"
+msgstr "Seleccioneu una exportació predefinida"
+
+msgctxt "xgettext:x:"
+msgid "Select a saved record first"
+msgstr "Seleccioneu primer un registre desat"
+
+msgctxt "xgettext:x:"
+msgid "Select all records"
+msgstr "Selecciona tots els registres"
+
+msgctxt "xgettext:x:"
+msgid "Select at least one field"
+msgstr "Seleccioneu almenys un camp"
+
+msgctxt "xgettext:x:"
+msgid "Select record"
+msgstr "Selecciona el registre"
+
+msgctxt "xgettext:x:"
+msgid "Selected Records"
+msgstr "Registres seleccionats"
+
+msgctxt "xgettext:x:"
+msgid "Selected record actions"
+msgstr "Accions dels registres seleccionats"
+
+msgctxt "xgettext:x:"
+msgid "Send"
+msgstr "Enviar"
+
+msgctxt "xgettext:x:"
+msgid "Show active records"
+msgstr "Mostra registres actius"
+
+msgctxt "xgettext:x:"
+msgid "Show inactive records"
+msgstr "Mostra registres inactius"
+
+msgctxt "xgettext:x:"
+msgid "Side panel"
+msgstr "Panell lateral"
+
+msgctxt "xgettext:x:"
+msgid "Sign in"
+msgstr "Inicia la sessió"
+
+msgctxt "xgettext:x:"
+msgid "Sign in with your Tryton account."
+msgstr "Inicieu la sessió amb el vostre compte del Tryton."
+
+msgctxt "xgettext:x:"
+msgid "Speech recognition is not available"
+msgstr "El reconeixement de veu no està disponible"
+
+msgctxt "xgettext:x:"
+msgid "Speech to text"
+msgstr "Conversió de veu a text"
+
+msgctxt "xgettext:x:"
+msgid "Start a conversation. The active model, record, selection, domain and language are sent as context."
+msgstr "Inicieu una conversa. El model actiu, el registre, la selecció, el domini i l'idioma s'envien com a context."
+
+msgctxt "xgettext:x:"
+msgid "Start or select a conversation first"
+msgstr "Inicieu o seleccioneu primer una conversa"
+
+msgctxt "xgettext:x:"
+msgid "Start with a NaN"
+msgstr "Inicia amb un NaN"
+
+msgctxt "xgettext:x:"
+msgid "Support"
+msgstr "Suport"
+
+msgctxt "xgettext:x:"
+msgid "Support tickets are available when nantic_connection is installed."
+msgstr "Els tiquets de suport estan disponibles quan nantic_connection està instal·lat."
+
+msgctxt "xgettext:x:"
+msgid "Switch"
+msgstr "Canvia la vista"
+
+msgctxt "xgettext:x:"
+msgid "Switch light/dark mode"
+msgstr "Canvia el mode clar/fosc"
+
+msgctxt "xgettext:x:"
+msgid "Switch view"
+msgstr "Canvia la vista"
+
+msgctxt "xgettext:x:"
+msgid "Switch without saving"
+msgstr "Canvia sense desar"
+
+msgctxt "xgettext:x:"
+msgid "Task component"
+msgstr "Component de tasques"
+
+msgctxt "xgettext:x:"
+msgid "Text to speech did not return audio"
+msgstr "La conversió de text a veu no ha retornat àudio"
+
+msgctxt "xgettext:x:"
+msgid "Text to speech is not available"
+msgstr "La conversió de text a veu no està disponible"
+
+msgctxt "xgettext:x:"
+msgid "The CSV file could not be decoded with %(encoding)s"
+msgstr "No s'ha pogut descodificar el fitxer CSV amb %(encoding)s"
+
+msgctxt "xgettext:x:"
+msgid "The CSV file is empty"
+msgstr "El fitxer CSV és buit"
+
+msgctxt "xgettext:x:"
+msgid "The assistant needs confirmation to continue."
+msgstr "L'assistent necessita confirmació per continuar."
+
+msgctxt "xgettext:x:"
+msgid "The field \"%(field)s\" is read-only"
+msgstr "El camp \"%(field)s\" és de només lectura"
+
+msgctxt "xgettext:x:"
+msgid "The first CSV row must contain field names"
+msgstr "La primera fila del CSV ha de contenir noms de camps"
+
+msgctxt "xgettext:x:"
+msgid "The related record is already saved"
+msgstr "El registre relacionat ja està desat"
+
+msgctxt "xgettext:x:"
+msgid "This action opens an external address."
+msgstr "Aquesta acció obre una adreça externa."
+
+msgctxt "xgettext:x:"
+msgid "This help resource is not installed"
+msgstr "Aquest recurs d'ajuda no està instal·lat"
+
+msgctxt "xgettext:x:"
+msgid "This page uses no Tryton XML view. Dominate renders its custom components, HTMX updates fragments and the same workspace stores every draft."
+msgstr "Aquesta pàgina no utilitza cap vista XML del Tryton. Dominate renderitza els components personalitzats, HTMX actualitza els fragments i el mateix espai de treball desa tots els esborranys."
+
+msgctxt "xgettext:x:"
+msgid "This record is read-only"
+msgstr "Aquest registre és de només lectura"
+
+msgctxt "xgettext:x:"
+msgid "This relation field is read-only"
+msgstr "Aquest camp de relació és de només lectura"
+
+msgctxt "xgettext:x:"
+msgid "This relation is not readable"
+msgstr "Aquesta relació no es pot llegir"
+
+msgctxt "xgettext:x:"
+msgid "This tree can not be reordered"
+msgstr "Aquest arbre no es pot reordenar"
+
+msgctxt "xgettext:x:"
+msgid "To"
+msgstr "A"
+
+msgctxt "xgettext:x:"
+msgid "Today"
+msgstr "Avuí"
+
+msgctxt "xgettext:x:"
+msgid "Toggle assistant voice"
+msgstr "Activa o desactiva la veu de l'assistent"
+
+msgctxt "xgettext:x:"
+msgid "Toggle task"
+msgstr "Activa o desactiva la tasca"
+
+msgctxt "xgettext:x:"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "xgettext:x:"
+msgid "Track tickets created from the assistant and add comments without losing your current workspace."
+msgstr "Seguiu els tiquets creats des de l'assistent i afegiu comentaris sense perdre l'espai de treball actual."
+
+msgctxt "xgettext:x:"
+msgid "True"
+msgstr "Cert"
+
+msgctxt "xgettext:x:"
+msgid "Tryton menu"
+msgstr "Menú del Tryton"
+
+msgctxt "xgettext:x:"
+msgid "URL Export"
+msgstr "URL d'exportació"
+
+msgctxt "xgettext:x:"
+msgid "Undelete"
+msgstr "Recupera"
+
+msgctxt "xgettext:x:"
+msgid "Unknown CSV field \"%(field)s\""
+msgstr "Camp CSV \"%(field)s\" desconegut"
+
+msgctxt "xgettext:x:"
+msgid "Unknown CSV operation"
+msgstr "Operació CSV desconeguda"
+
+msgctxt "xgettext:x:"
+msgid "Unknown column header \"%(header)s\""
+msgstr "Capçalera de columna \"%(header)s\" desconeguda"
+
+msgctxt "xgettext:x:"
+msgid "Unknown conversation"
+msgstr "No s'ha trobat: conversa"
+
+msgctxt "xgettext:x:"
+msgid "Unknown demo action"
+msgstr "No s'ha trobat: acció de demostració"
+
+msgctxt "xgettext:x:"
+msgid "Unknown demo task"
+msgstr "No s'ha trobat: tasca de demostració"
+
+msgctxt "xgettext:x:"
+msgid "Unknown documentation action"
+msgstr "No s'ha trobat: acció de documentació"
+
+msgctxt "xgettext:x:"
+msgid "Unknown favorite action"
+msgstr "No s'ha trobat: acció de preferits"
+
+msgctxt "xgettext:x:"
+msgid "Unknown help resource"
+msgstr "No s'ha trobat: recurs d’ajuda"
+
+msgctxt "xgettext:x:"
+msgid "Unknown help section"
+msgstr "No s'ha trobat: secció d’ajuda"
+
+msgctxt "xgettext:x:"
+msgid "Unknown leave action"
+msgstr "No s'ha trobat: acció de sortida"
+
+msgctxt "xgettext:x:"
+msgid "Unknown menu action"
+msgstr "No s'ha trobat: acció de menú"
+
+msgctxt "xgettext:x:"
+msgid "Unknown menu item"
+msgstr "No s'ha trobat: element de menú"
+
+msgctxt "xgettext:x:"
+msgid "Unknown notification"
+msgstr "No s'ha trobat: notificació"
+
+msgctxt "xgettext:x:"
+msgid "Unknown preference record"
+msgstr "No s'ha trobat: registre de preferències"
+
+msgctxt "xgettext:x:"
+msgid "Unknown preferences page"
+msgstr "No s'ha trobat: pàgina de preferències"
+
+msgctxt "xgettext:x:"
+msgid "Unknown record"
+msgstr "No s'ha trobat: registre"
+
+msgctxt "xgettext:x:"
+msgid "Unknown related record"
+msgstr "No s'ha trobat: registre relacionat"
+
+msgctxt "xgettext:x:"
+msgid "Unknown relation column"
+msgstr "Columna de relació desconeguda"
+
+msgctxt "xgettext:x:"
+msgid "Unknown relation field"
+msgstr "No s'ha trobat: camp de relació"
+
+msgctxt "xgettext:x:"
+msgid "Unknown shell action"
+msgstr "No s'ha trobat: acció de la interfície"
+
+msgctxt "xgettext:x:"
+msgid "Unknown state component %s"
+msgstr "No s'ha trobat: component d’estat %s"
+
+msgctxt "xgettext:x:"
+msgid "Unknown tab"
+msgstr "No s'ha trobat: pestanya"
+
+msgctxt "xgettext:x:"
+msgid "Unknown tab %s"
+msgstr "No s'ha trobat: pestanya %s"
+
+msgctxt "xgettext:x:"
+msgid "Unknown tree drop position"
+msgstr "No s'ha trobat: posició de destinació de l'arbre"
+
+msgctxt "xgettext:x:"
+msgid "Unknown version change"
+msgstr "Canvi de versió desconegut"
+
+msgctxt "xgettext:x:"
+msgid "Unknown version change action"
+msgstr "Acció de canvi de versió desconeguda"
+
+msgctxt "xgettext:x:"
+msgid "Unknown x2many action"
+msgstr "No s'ha trobat: acció x2many"
+
+msgctxt "xgettext:x:"
+msgid "Unread updates"
+msgstr "Actualitzacions no llegides"
+
+msgctxt "xgettext:x:"
+msgid "Unsaved"
+msgstr "Sense desar"
+
+msgctxt "xgettext:x:"
+msgid "Unsaved changes"
+msgstr "Canvis sense desar"
+
+msgctxt "xgettext:x:"
+msgid "Unsupported tab type"
+msgstr "El tipus de pestanya no és compatible"
+
+msgctxt "xgettext:x:"
+msgid "Update"
+msgstr "Actualització"
+
+msgctxt "xgettext:x:"
+msgid "Updates"
+msgstr "Actualitzacions"
+
+msgctxt "xgettext:x:"
+msgid "Use locale format"
+msgstr "Utilitza el format local"
+
+msgctxt "xgettext:x:"
+msgid "User"
+msgstr "Usuari"
+
+msgctxt "xgettext:x:"
+msgid "User and notifications"
+msgstr "Usuari i notificacions"
+
+msgctxt "xgettext:x:"
+msgid "User menu"
+msgstr "Menú de l'usuari"
+
+msgctxt "xgettext:x:"
+msgid "Version changes"
+msgstr "Canvis de versió"
+
+msgctxt "xgettext:x:"
+msgid "Version changes require nantic_connection."
+msgstr "Els canvis de versió requereixen nantic_connection."
+
+msgctxt "xgettext:x:"
+msgid "View logs"
+msgstr "Mostra els registres"
+
+msgctxt "xgettext:x:"
+msgid "Week"
+msgstr "Setmana"
+
+msgctxt "xgettext:x:"
+msgid "What do you want to do?"
+msgstr "Què vols fer?"
+
+msgctxt "xgettext:x:"
+msgid "Window actions"
+msgstr "Accions de la finestra"
+
+msgctxt "xgettext:x:"
+msgid "Wizard has no current view"
+msgstr "L'assistent no té cap vista actual"
+
+msgctxt "xgettext:x:"
+msgid "You"
+msgstr "Vós"
+
+msgctxt "xgettext:x:"
+msgid "You are not allowed to import records"
+msgstr "No teniu permís per importar registres"
+
+msgctxt "xgettext:x:"
+msgid "You must select an import file first."
+msgstr "Primer heu de seleccionar un fitxer d'importació."
+
+msgctxt "xgettext:x:"
+msgid "close this tab"
+msgstr "tancar aquesta pestanya"
+
+msgctxt "xgettext:x:"
+msgid "create another record"
+msgstr "crear un altre registre"
+
+msgctxt "xgettext:x:"
+msgid "open another record"
+msgstr "obrir un altre registre"
+
+msgctxt "xgettext:x:"
+msgid "open preferences"
+msgstr "obrir les preferències"
+
+msgctxt "xgettext:x:"
+msgid "switch view"
+msgstr "canviar de vista"

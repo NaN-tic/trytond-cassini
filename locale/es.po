@@ -2,42 +2,6 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=utf-8\n"
 
-msgctxt "model:ir.message,text:msg_close_all_tabs_13474f23"
-msgid "Close all tabs?"
-msgstr "¿Quiere cerrar todas las pestañas?"
-
-msgctxt "model:ir.message,text:msg_preferences_require_all_open_tabs_to_be_closed_cd2cbb8b"
-msgid "Preferences require all open tabs to be closed."
-msgstr "Para abrir las preferencias se deben cerrar todas las pestañas abiertas."
-
-msgctxt "model:ir.message,text:msg_any_unsaved_changes_will_be_reviewed_before_each_e060252c"
-msgid "Any unsaved changes will be reviewed before each tab is closed."
-msgstr "Los cambios no guardados se revisarán antes de cerrar cada pestaña."
-
-msgctxt "model:ir.message,text:msg_close_tabs_and_continue_e7c9cae2"
-msgid "Close tabs and continue"
-msgstr "Cerrar las pestañas y continuar"
-
-msgctxt "model:ir.message,text:msg_open_preferences_a9e9fa76"
-msgid "open preferences"
-msgstr "abrir las preferencias"
-
-msgctxt "model:ir.message,text:msg_fields_d_modified_field_in_records_d_record_5ead030d"
-msgid "%(fields)d modified field in %(records)d record"
-msgstr "%(fields)d campo modificado en %(records)d registro"
-
-msgctxt "model:ir.message,text:msg_fields_d_modified_field_in_records_d_records_05605ab9"
-msgid "%(fields)d modified field in %(records)d records"
-msgstr "%(fields)d campo modificado en %(records)d registros"
-
-msgctxt "model:ir.message,text:msg_fields_d_modified_fields_in_records_d_record_18298cfa"
-msgid "%(fields)d modified fields in %(records)d record"
-msgstr "%(fields)d campos modificados en %(records)d registro"
-
-msgctxt "model:ir.message,text:msg_fields_d_modified_fields_in_records_d_records_24ebf815"
-msgid "%(fields)d modified fields in %(records)d records"
-msgstr "%(fields)d campos modificados en %(records)d registros"
-
 msgctxt "model:ir.message,text:msg_a_cassini_session_can_only_have_one_workspace_4bb90d57"
 msgid "A Cassini session can only have one workspace."
 msgstr "Una sesión de Cassini solo puede tener un espacio de trabajo."
@@ -45,10 +9,6 @@ msgstr "Una sesión de Cassini solo puede tener un espacio de trabajo."
 msgctxt "model:ir.message,text:msg_a_bookmark_name_and_search_are_required_ff1ec299"
 msgid "A bookmark name and search are required"
 msgstr "Se requiere un nombre de marcador y una búsqueda"
-
-msgctxt "model:ir.message,text:msg_a_component_name_and_callable_renderer_are_requi_b2469de4"
-msgid "A component name and callable renderer are required"
-msgstr "Se requiere un nombre de componente y un renderizador ejecutable"
 
 msgctxt "model:ir.message,text:msg_a_maximum_of_five_attachments_is_allowed_59377610"
 msgid "A maximum of five attachments is allowed."
@@ -62,65 +22,9 @@ msgctxt "model:ir.message,text:msg_a_tree_record_can_not_contain_itself_80215368
 msgid "A tree record can not contain itself"
 msgstr "Un registro del árbol no puede contenerse a sí mismo"
 
-msgctxt "model:ir.message,text:msg_a_new_task_0123ff8c"
-msgid "A new task"
-msgstr "Una tarea nueva"
-
 msgctxt "model:ir.message,text:msg_action_97c89a4d"
 msgid "Action"
 msgstr "Acción"
-
-msgctxt "model:ir.message,text:msg_add_61cc55aa"
-msgid "Add"
-msgstr "Agregar"
-
-msgctxt "model:ir.message,text:msg_add_menu_s_to_favorites_54d6fc2b"
-msgid "Add %(menu)s to favorites"
-msgstr "Añadir %(menu)s a favoritos"
-
-msgctxt "model:ir.message,text:msg_add_to_favorites_cb10094b"
-msgid "Add to favorites"
-msgstr "Agregar a favoritos"
-
-msgctxt "model:ir.message,text:msg_all_notifications_a0293096"
-msgid "All notifications"
-msgstr "Todas las notificaciones"
-
-msgctxt "model:ir.message,text:msg_all_updates_4fb41adb"
-msgid "All updates"
-msgstr "Todas las actualizaciones"
-
-msgctxt "model:ir.message,text:msg_allow_3ad0e369"
-msgid "Allow"
-msgstr "Permitir"
-
-msgctxt "model:ir.message,text:msg_application_updates_are_available_when_nantic_co_e555b958"
-msgid "Application updates are available when nantic_connection is installed."
-msgstr "Las actualizaciones de la aplicación están disponibles cuando nantic_connection está instalado."
-
-msgctxt "model:ir.message,text:msg_ask_the_assistant_77cb061d"
-msgid "Ask the assistant…"
-msgstr "Pregunta al asistente…"
-
-msgctxt "model:ir.message,text:msg_assistant_8010d1f4"
-msgid "Assistant"
-msgstr "Asistente"
-
-msgctxt "model:ir.message,text:msg_assistant_is_working_a2f4f7a9"
-msgid "Assistant is working"
-msgstr "El asistente está trabajando"
-
-msgctxt "model:ir.message,text:msg_attach_files_137135db"
-msgid "Attach files"
-msgstr "Adjuntar archivos"
-
-msgctxt "model:ir.message,text:msg_attach_recording_39ea08e5"
-msgid "Attach recording"
-msgstr "Adjuntar una grabación"
-
-msgctxt "model:ir.message,text:msg_attach_screenshot_5c4e7b7a"
-msgid "Attach screenshot"
-msgstr "Adjuntar una captura de pantalla"
 
 msgctxt "model:ir.message,text:msg_attachment_83a56249"
 msgid "Attachment"
@@ -130,113 +34,17 @@ msgctxt "model:ir.message,text:msg_attachments_6771ade6"
 msgid "Attachments"
 msgstr "Aadjuntos"
 
-msgctxt "model:ir.message,text:msg_back_b52b36b7"
-msgid "Back"
-msgstr "Atrás"
-
-msgctxt "model:ir.message,text:msg_back_to_sao_db603a5d"
-msgid "Back to Sao"
-msgstr "Volver a Sao"
-
-msgctxt "model:ir.message,text:msg_bookmark_name_b98f2462"
-msgid "Bookmark Name"
-msgstr "Nombre del marcador"
-
-msgctxt "model:ir.message,text:msg_bookmark_this_filter_ef9d613d"
-msgid "Bookmark this filter"
-msgstr "Guardar como búsqueda favorita"
-
-msgctxt "model:ir.message,text:msg_bookmarks_ca3cddd2"
-msgid "Bookmarks"
-msgstr "Búsquedas favoritas"
-
-msgctxt "model:ir.message,text:msg_calendar_mode_b81c6e7a"
-msgid "Calendar mode"
-msgstr "Modo del calendario"
-
 msgctxt "model:ir.message,text:msg_cancel_77dfd213"
 msgid "Cancel"
 msgstr "Cancelar"
-
-msgctxt "model:ir.message,text:msg_cassini_2d134f72"
-msgid "Cassini"
-msgstr "Cassini"
-
-msgctxt "model:ir.message,text:msg_change_preferences_and_company_39e7588a"
-msgid "Change preferences and company"
-msgstr "Cambiar las preferencias y la empresa"
-
-msgctxt "model:ir.message,text:msg_choose_a_csv_file_to_import_76db3980"
-msgid "Choose a CSV file to import"
-msgstr "Seleccione un archivo CSV para importar"
-
-msgctxt "model:ir.message,text:msg_choose_a_nan_da8cf98a"
-msgid "Choose a NaN"
-msgstr "Seleccione un NaN"
-
-msgctxt "model:ir.message,text:msg_choose_a_related_record_28888328"
-msgid "Choose a related record"
-msgstr "Seleccione un registro relacionado"
-
-msgctxt "model:ir.message,text:msg_choose_a_related_record_to_add_eb9e6c48"
-msgid "Choose a related record to add"
-msgstr "Seleccione un registro relacionado para añadir"
-
-msgctxt "model:ir.message,text:msg_choose_what_to_do_before_you_action_s_d0dc0f53"
-msgid "Choose what to do before you %(action)s."
-msgstr "Elija qué hacer antes de %(action)s."
-
-msgctxt "model:ir.message,text:msg_choose_whether_to_save_the_changes_4e1d8171"
-msgid "Choose whether to save the changes"
-msgstr "Elija si quiere guardar los cambios"
-
-msgctxt "model:ir.message,text:msg_clear_719ea396"
-msgid "Clear"
-msgstr "Limpiar"
-
-msgctxt "model:ir.message,text:msg_clear_the_field_720a27d5"
-msgid "Clear the field"
-msgstr "Vacíar el campo"
 
 msgctxt "model:ir.message,text:msg_close_bbfa773e"
 msgid "Close"
 msgstr "Cerrar"
 
-msgctxt "model:ir.message,text:msg_close_tab_s_44fb9a1d"
-msgid "Close %(tab)s"
-msgstr "Cerrar %(tab)s"
-
 msgctxt "model:ir.message,text:msg_close_tab_16759802"
 msgid "Close Tab"
 msgstr "Cerrar pestaña"
-
-msgctxt "model:ir.message,text:msg_close_tab_296b59cd"
-msgid "Close tab"
-msgstr "Cerrar la pestaña"
-
-msgctxt "model:ir.message,text:msg_close_without_saving_e4591957"
-msgid "Close without saving"
-msgstr "Cerrar sin guardar"
-
-msgctxt "model:ir.message,text:msg_code_adac6937"
-msgid "Code"
-msgstr "Código"
-
-msgctxt "model:ir.message,text:msg_collapse_node_f535e70f"
-msgid "Collapse node"
-msgstr "Contraer el nodo"
-
-msgctxt "model:ir.message,text:msg_columns_cf723c59"
-msgid "Columns"
-msgstr "Columnas"
-
-msgctxt "model:ir.message,text:msg_component_state_must_be_a_json_object_2aaeef0a"
-msgid "Component state must be a JSON object"
-msgstr "El estado del componente debe ser un objeto JSON"
-
-msgctxt "model:ir.message,text:msg_component_state_must_be_valid_json_2b221121"
-msgid "Component state must be valid JSON"
-msgstr "El estado del componente debe ser un JSON válido"
 
 msgctxt "model:ir.message,text:msg_confirm_action_50649c5c"
 msgid "Confirm action"
@@ -246,37 +54,9 @@ msgctxt "model:ir.message,text:msg_continue_2e026239"
 msgid "Continue"
 msgstr "Continuar"
 
-msgctxt "model:ir.message,text:msg_continue_without_saving_c3f92b60"
-msgid "Continue without saving"
-msgstr "Continuar sin guardar"
-
-msgctxt "model:ir.message,text:msg_continuing_without_saving_permanently_discards_t_689f4bf7"
-msgid "Continuing without saving permanently discards the current draft."
-msgstr "Continuar sin guardar descarta definitivamente el borrador actual."
-
-msgctxt "model:ir.message,text:msg_conversation_artifacts_91e250c2"
-msgid "Conversation artifacts"
-msgstr "Artefactos de la conversación"
-
-msgctxt "model:ir.message,text:msg_conversations_07c59b44"
-msgid "Conversations"
-msgstr "Conversaciones"
-
 msgctxt "model:ir.message,text:msg_could_not_save_the_column_widths_56544d9c"
 msgid "Could not save the column widths."
 msgstr "No se han podido guardar los anchos de columna."
-
-msgctxt "model:ir.message,text:msg_counter_component_f4344847"
-msgid "Counter component"
-msgstr "Componente contador"
-
-msgctxt "model:ir.message,text:msg_create_6e157c5d"
-msgid "Create"
-msgstr "Crear"
-
-msgctxt "model:ir.message,text:msg_create_the_related_record_from_its_own_window_8d981274"
-msgid "Create the related record from its own window"
-msgstr "Crear el registro relacionado desde su propia ventana"
 
 msgctxt "model:ir.message,text:msg_created_at_f1c69716"
 msgid "Created at"
@@ -286,113 +66,17 @@ msgctxt "model:ir.message,text:msg_created_by_5d73cc30"
 msgid "Created by"
 msgstr "Usuario de creación"
 
-msgctxt "model:ir.message,text:msg_create_52f25bb9"
-msgid "Create…"
-msgstr "Crear…"
-
-msgctxt "model:ir.message,text:msg_creating_related_records_is_not_allowed_e35ea2bb"
-msgid "Creating related records is not allowed"
-msgstr "No se permite crear registros relacionados"
-
-msgctxt "model:ir.message,text:msg_current_record_78ea9689"
-msgid "Current record"
-msgstr "Registro actual"
-
-msgctxt "model:ir.message,text:msg_current_values_a9f69b86"
-msgid "Current values"
-msgstr "Valores actuales"
-
-msgctxt "model:ir.message,text:msg_data_e5e429bc"
-msgid "Data"
-msgstr "Datos"
-
-msgctxt "model:ir.message,text:msg_day_987b9ced"
-msgid "Day"
-msgstr "Día"
-
-msgctxt "model:ir.message,text:msg_decrement_0b826d21"
-msgid "Decrement"
-msgstr "Disminuir"
-
-msgctxt "model:ir.message,text:msg_default_808d7dca"
-msgid "Default"
-msgstr "Por defecto"
-
 msgctxt "model:ir.message,text:msg_delete_f6fdbe48"
 msgid "Delete"
 msgstr "Borrar"
-
-msgctxt "model:ir.message,text:msg_delete_the_selected_records_5b0cfc5e"
-msgid "Delete the selected records?"
-msgstr "¿Quiere eliminar los registros seleccionados?"
-
-msgctxt "model:ir.message,text:msg_deleting_related_records_is_not_allowed_d1d5c481"
-msgid "Deleting related records is not allowed"
-msgstr "No se permite eliminar registros relacionados"
-
-msgctxt "model:ir.message,text:msg_demo_e52c854d"
-msgid "Demo"
-msgstr "Demo"
-
-msgctxt "model:ir.message,text:msg_deny_53577bb5"
-msgid "Deny"
-msgstr "Denegar"
-
-msgctxt "model:ir.message,text:msg_details_dc3decbb"
-msgid "Details"
-msgstr "Detalles"
-
-msgctxt "model:ir.message,text:msg_discard_the_unsaved_changes_to_this_record_834e9915"
-msgid "Discard the unsaved changes to this record?"
-msgstr "¿Quiere descartar los cambios no guardados de este registro?"
-
-msgctxt "model:ir.message,text:msg_documentation_9e9cf322"
-msgid "Documentation"
-msgstr "Documentación"
-
-msgctxt "model:ir.message,text:msg_documentation_is_available_when_nantic_connectio_1770c8ee"
-msgid "Documentation is available when nantic_connection is installed."
-msgstr "La documentación está disponible cuando nantic_connection está instalado."
-
-msgctxt "model:ir.message,text:msg_domains_a0d641b3"
-msgid "Domains"
-msgstr "Dominios"
-
-msgctxt "model:ir.message,text:msg_download_a479c9c3"
-msgid "Download"
-msgstr "Descargar"
 
 msgctxt "model:ir.message,text:msg_duplicate_972d5737"
 msgid "Duplicate"
 msgstr "Duplicar"
 
-msgctxt "model:ir.message,text:msg_expand_node_d171e0ba"
-msgid "Expand node"
-msgstr "Expandir el nodo"
-
-msgctxt "model:ir.message,text:msg_export_selected_fields_dcaf5482"
-msgid "Export selected fields"
-msgstr "Exportar los campos seleccionados"
-
 msgctxt "model:ir.message,text:msg_false_97cdbdc7"
 msgid "False"
 msgstr "Falso"
-
-msgctxt "model:ir.message,text:msg_favorites_07b3e447"
-msgid "Favorites"
-msgstr "Favoritos"
-
-msgctxt "model:ir.message,text:msg_filters_96e57821"
-msgid "Filters"
-msgstr "Filtros"
-
-msgctxt "model:ir.message,text:msg_find_df251b06"
-msgid "Find"
-msgstr "Buscar"
-
-msgctxt "model:ir.message,text:msg_from_3f66052a"
-msgid "From"
-msgstr "Desde"
 
 msgctxt "model:ir.message,text:msg_global_search_a2b8a166"
 msgid "Global search"
@@ -402,49 +86,9 @@ msgctxt "model:ir.message,text:msg_global_shortcuts_e73da767"
 msgid "Global shortcuts"
 msgstr "Atajos globales"
 
-msgctxt "model:ir.message,text:msg_help_c47ae153"
-msgid "Help"
-msgstr "Ayuda"
-
-msgctxt "model:ir.message,text:msg_help_and_updates_2d6c4caf"
-msgid "Help and Updates"
-msgstr "Ayuda y actualizaciones"
-
 msgctxt "model:ir.message,text:msg_id_89f89c02"
 msgid "ID"
 msgstr "ID"
-
-msgctxt "model:ir.message,text:msg_image_actions_06299f75"
-msgid "Image actions"
-msgstr "Acciones de la imagen"
-
-msgctxt "model:ir.message,text:msg_import_d6fbc9d2"
-msgid "Import"
-msgstr "Importe"
-
-msgctxt "model:ir.message,text:msg_increment_d12f1fab"
-msgid "Increment"
-msgstr "Aumentar"
-
-msgctxt "model:ir.message,text:msg_install_nantic_connection_to_enable_the_integrat_9ff426a1"
-msgid "Install nantic_connection to enable the integrated assistant."
-msgstr "Instale nantic_connection para activar el asistente integrado."
-
-msgctxt "model:ir.message,text:msg_invalid_column_field_f153419b"
-msgid "Invalid column field"
-msgstr "El campo de columna no es válido"
-
-msgctxt "model:ir.message,text:msg_invalid_column_occurrences_8a340960"
-msgid "Invalid column occurrences"
-msgstr "Las apariciones de columna no son válidas"
-
-msgctxt "model:ir.message,text:msg_invalid_column_width_80fa17ee"
-msgid "Invalid column width"
-msgstr "El ancho de columna no es válido"
-
-msgctxt "model:ir.message,text:msg_invalid_column_widths_4c58dd24"
-msgid "Invalid column widths"
-msgstr "Los anchos de columna no son válidos"
 
 msgctxt "model:ir.message,text:msg_invalid_decimal_value_6aa118ee"
 msgid "Invalid decimal value"
@@ -454,21 +98,9 @@ msgctxt "model:ir.message,text:msg_keyboard_shortcuts_26669547"
 msgid "Keyboard shortcuts"
 msgstr "Atajos de teclado"
 
-msgctxt "model:ir.message,text:msg_logout_e43d612e"
-msgid "Logout"
-msgstr "Cerrar sesión"
-
 msgctxt "model:ir.message,text:msg_logs_126dd3b7"
 msgid "Logs"
 msgstr "Registros"
-
-msgctxt "model:ir.message,text:msg_menu_57f5f5ef"
-msgid "Menu"
-msgstr "Menús"
-
-msgctxt "model:ir.message,text:msg_message_68f4145f"
-msgid "Message"
-msgstr "Mensaje"
 
 msgctxt "model:ir.message,text:msg_modified_at_e0978c14"
 msgid "Modified at"
@@ -478,189 +110,33 @@ msgctxt "model:ir.message,text:msg_modified_by_83f5aabd"
 msgid "Modified by"
 msgstr "Modificado por"
 
-msgctxt "model:ir.message,text:msg_month_082bc378"
-msgid "Month"
-msgstr "Mes"
-
-msgctxt "model:ir.message,text:msg_nans_413257a0"
-msgid "NaNs"
-msgstr "NaNs"
-
-msgctxt "model:ir.message,text:msg_nans_and_goblins_0f7f7736"
-msgid "NaNs and goblins"
-msgstr "NaNs y duendes"
-
 msgctxt "model:ir.message,text:msg_new_6403f2b7"
 msgid "New"
 msgstr "Nuevo"
-
-msgctxt "model:ir.message,text:msg_new_conversation_7f031b1a"
-msgid "New conversation"
-msgstr "Conversación nueva"
-
-msgctxt "model:ir.message,text:msg_new_event_2ef3795c"
-msgid "New event"
-msgstr "Evento nuevo"
-
-msgctxt "model:ir.message,text:msg_new_event_on_date_s_c9302309"
-msgid "New event on %(date)s"
-msgstr "Evento nuevo el %(date)s"
-
-msgctxt "model:ir.message,text:msg_new_record_c6e29531"
-msgid "New record"
-msgstr "Registro nuevo"
 
 msgctxt "model:ir.message,text:msg_next_bc981983"
 msgid "Next"
 msgstr "Próximo"
 
-msgctxt "model:ir.message,text:msg_next_record_daadf068"
-msgid "Next record"
-msgstr "Registro siguiente"
-
 msgctxt "model:ir.message,text:msg_next_tab_84c508a2"
 msgid "Next tab"
 msgstr "Pestaña siguiente"
-
-msgctxt "model:ir.message,text:msg_no_816c52fd"
-msgid "No"
-msgstr "No"
-
-msgctxt "model:ir.message,text:msg_no_actions_2c06c907"
-msgid "No actions"
-msgstr "No hay acciones"
-
-msgctxt "model:ir.message,text:msg_no_bookmarks_74d6658a"
-msgid "No bookmarks"
-msgstr "No hay marcadores"
-
-msgctxt "model:ir.message,text:msg_no_documentation_found_3fc39952"
-msgid "No documentation found."
-msgstr "No se ha encontrado documentación."
-
-msgctxt "model:ir.message,text:msg_no_events_e339ba73"
-msgid "No events"
-msgstr "No hay eventos"
-
-msgctxt "model:ir.message,text:msg_no_favorites_yet_95bc6801"
-msgid "No favorites yet"
-msgstr "Todavía no hay favoritos"
-
-msgctxt "model:ir.message,text:msg_no_matching_records_748bd377"
-msgid "No matching records"
-msgstr "No hay registros coincidentes"
-
-msgctxt "model:ir.message,text:msg_no_notifications_at_this_time_a5ee0b24"
-msgid "No notifications at this time"
-msgstr "No hay notificaciones en este momento"
-
-msgctxt "model:ir.message,text:msg_no_optional_columns_ca04d390"
-msgid "No optional columns"
-msgstr "No hay columnas opcionales"
-
-msgctxt "model:ir.message,text:msg_no_record_selected_26e10911"
-msgid "No record selected"
-msgstr "No se ha seleccionado ningún registro"
-
-msgctxt "model:ir.message,text:msg_no_records_04dfe4ba"
-msgid "No records"
-msgstr "No hay registros"
-
-msgctxt "model:ir.message,text:msg_no_results_b993b0c5"
-msgid "No results"
-msgstr "No hay resultados"
-
-msgctxt "model:ir.message,text:msg_no_side_panel_b7063937"
-msgid "No side panel"
-msgstr "Sin panel lateral"
-
-msgctxt "model:ir.message,text:msg_no_tasks_yet_1562a21c"
-msgid "No tasks yet"
-msgstr "Todavía no hay tareas"
-
-msgctxt "model:ir.message,text:msg_no_updates_available_6360c5ff"
-msgid "No updates available."
-msgstr "No hay actualizaciones disponibles."
 
 msgctxt "model:ir.message,text:msg_note_2c924e30"
 msgid "Note"
 msgstr "Nota"
 
-msgctxt "model:ir.message,text:msg_notebook_pages_4b91df6a"
-msgid "Notebook pages"
-msgstr "Páginas del cuaderno"
-
 msgctxt "model:ir.message,text:msg_notes_70440046"
 msgid "Notes"
 msgstr "Notas"
-
-msgctxt "model:ir.message,text:msg_notification_c18f8f25"
-msgid "Notification"
-msgstr "Notificación"
 
 msgctxt "model:ir.message,text:msg_ok_9ce3bd42"
 msgid "OK"
 msgstr "Aceptar"
 
-msgctxt "model:ir.message,text:msg_open_cf9b7706"
-msgid "Open"
-msgstr "Abrir"
-
-msgctxt "model:ir.message,text:msg_open_full_documentation_26f18528"
-msgid "Open full documentation"
-msgstr "Abrir toda la documentación"
-
-msgctxt "model:ir.message,text:msg_open_link_d2de1a28"
-msgid "Open link"
-msgstr "Abrir el enlace"
-
-msgctxt "model:ir.message,text:msg_open_tabs_b4d5aeaf"
-msgid "Open tabs"
-msgstr "Pestañas abiertas"
-
-msgctxt "model:ir.message,text:msg_open_the_record_3288615f"
-msgid "Open the record"
-msgstr "Abrir el registro"
-
-msgctxt "model:ir.message,text:msg_open_tickets_1af99e72"
-msgid "Open tickets"
-msgstr "Abrir los tiques"
-
-msgctxt "model:ir.message,text:msg_optional_columns_50272a7e"
-msgid "Optional columns"
-msgstr "Columnas opcionales"
-
-msgctxt "model:ir.message,text:msg_page_page_d_ad5fcb7e"
-msgid "Page %(page)d"
-msgstr "Página %(page)d"
-
-msgctxt "model:ir.message,text:msg_page_title_015b7398"
-msgid "Page title"
-msgstr "Título de la página"
-
-msgctxt "model:ir.message,text:msg_password_8be3c943"
-msgid "Password"
-msgstr "Contraseña"
-
-msgctxt "model:ir.message,text:msg_persistent_draft_839bc80e"
-msgid "Persistent draft"
-msgstr "Borrador persistente"
-
-msgctxt "model:ir.message,text:msg_preferences_9dfd349e"
-msgid "Preferences"
-msgstr "Preferencias"
-
-msgctxt "model:ir.message,text:msg_preferences_are_not_open_32e0913e"
-msgid "Preferences are not open"
-msgstr "Las preferencias no están abiertas"
-
 msgctxt "model:ir.message,text:msg_previous_50f94286"
 msgid "Previous"
 msgstr "Anterior"
-
-msgctxt "model:ir.message,text:msg_previous_record_c6d21226"
-msgid "Previous record"
-msgstr "Registro anterior"
 
 msgctxt "model:ir.message,text:msg_previous_tab_75dd5109"
 msgid "Previous tab"
@@ -670,45 +146,13 @@ msgctxt "model:ir.message,text:msg_print_5b221e9c"
 msgid "Print"
 msgstr "Imprimir"
 
-msgctxt "model:ir.message,text:msg_record_1c54132b"
-msgid "Record"
-msgstr "Registro"
-
-msgctxt "model:ir.message,text:msg_record_pages_ef9cedb4"
-msgid "Record pages"
-msgstr "Páginas de registros"
-
-msgctxt "model:ir.message,text:msg_records_e51c5525"
-msgid "Records"
-msgstr "Registros"
-
 msgctxt "model:ir.message,text:msg_relate_0289b666"
 msgid "Relate"
 msgstr "Relacionado"
 
-msgctxt "model:ir.message,text:msg_reorder_33d9978c"
-msgid "Reorder"
-msgstr "Reordenar"
-
-msgctxt "model:ir.message,text:msg_reordering_related_records_is_not_allowed_27448124"
-msgid "Reordering related records is not allowed"
-msgstr "No está permitido reordenar los registros relacionados"
-
-msgctxt "model:ir.message,text:msg_relation_actions_eace41a0"
-msgid "Relation actions"
-msgstr "Acciones de la relación"
-
-msgctxt "model:ir.message,text:msg_reload_now_the_unfinished_value_stays_here_a3da1541"
-msgid "Reload now: the unfinished value stays here."
-msgstr "Recargue ahora: el valor sin terminar permanecerá aquí."
-
 msgctxt "model:ir.message,text:msg_reload_undo_b896471c"
 msgid "Reload/Undo"
 msgstr "Recargar/Deshacer"
-
-msgctxt "model:ir.message,text:msg_remote_assistance_9e29c2bd"
-msgid "Remote assistance"
-msgstr "Asistencia remota"
 
 msgctxt "model:ir.message,text:msg_remote_assistance_could_not_be_initialized_95820921"
 msgid "Remote assistance could not be initialized."
@@ -718,73 +162,13 @@ msgctxt "model:ir.message,text:msg_remote_assistance_did_not_load_19908242"
 msgid "Remote assistance did not load."
 msgstr "No se ha cargado la asistencia remota."
 
-msgctxt "model:ir.message,text:msg_remove_e963907d"
-msgid "Remove"
-msgstr "Eliminar"
-
 msgctxt "model:ir.message,text:msg_remove_file_s_7b17974a"
 msgid "Remove %(file)s"
 msgstr "Eliminar %(file)s"
 
-msgctxt "model:ir.message,text:msg_remove_menu_s_from_favorites_8d18cec8"
-msgid "Remove %(menu)s from favorites"
-msgstr "Eliminar %(menu)s de favoritos"
-
-msgctxt "model:ir.message,text:msg_remove_from_favorites_b6ddf62b"
-msgid "Remove from favorites"
-msgstr "Eliminar de favoritos"
-
-msgctxt "model:ir.message,text:msg_remove_this_bookmark_2437ede7"
-msgid "Remove this bookmark"
-msgstr "Eliminar de las búsquedas favoritas"
-
-msgctxt "model:ir.message,text:msg_removing_related_records_is_not_allowed_f977e41d"
-msgid "Removing related records is not allowed"
-msgstr "No se permite quitar registros relacionados"
-
-msgctxt "model:ir.message,text:msg_resize_f52dc753"
-msgid "Resize"
-msgstr "Redimensionar"
-
-msgctxt "model:ir.message,text:msg_resize_column_s_column_df283138"
-msgid "Resize %(column)s column"
-msgstr "Redimensionar la columna %(column)s"
-
-msgctxt "model:ir.message,text:msg_revisions_2dba7961"
-msgid "Revisions"
-msgstr "Revisiones"
-
 msgctxt "model:ir.message,text:msg_save_efc007a3"
 msgid "Save"
 msgstr "Ahorrar"
-
-msgctxt "model:ir.message,text:msg_save_and_close_2164d00c"
-msgid "Save and close"
-msgstr "Guardar y cerrar"
-
-msgctxt "model:ir.message,text:msg_save_and_continue_3b033f4c"
-msgid "Save and continue"
-msgstr "Guardar y continuar"
-
-msgctxt "model:ir.message,text:msg_save_and_switch_c3efae95"
-msgid "Save and switch"
-msgstr "Guardar y cambiar"
-
-msgctxt "model:ir.message,text:msg_save_as_f313a0b1"
-msgid "Save as"
-msgstr "Guardar como"
-
-msgctxt "model:ir.message,text:msg_save_validates_the_record_and_writes_the_changes_a0fcbd39"
-msgid "Save validates the record and writes the changes to Tryton."
-msgstr "Guardar valida el registro y escribe los cambios en Tryton."
-
-msgctxt "model:ir.message,text:msg_scan_28cba55d"
-msgid "Scan"
-msgstr "Escanear"
-
-msgctxt "model:ir.message,text:msg_scan_or_enter_a_code_2e05dc81"
-msgid "Scan or enter a code"
-msgstr "Escanee o introduzca un código"
 
 msgctxt "model:ir.message,text:msg_screen_capture_is_not_available_ae53045e"
 msgid "Screen capture is not available."
@@ -798,46 +182,6 @@ msgctxt "model:ir.message,text:msg_search_bce06414"
 msgid "Search"
 msgstr "Buscar"
 
-msgctxt "model:ir.message,text:msg_search_a_record_b847f64e"
-msgid "Search a record"
-msgstr "Buscar un registro"
-
-msgctxt "model:ir.message,text:msg_search_and_add_608ea3e6"
-msgid "Search and add"
-msgstr "Buscar y añadir"
-
-msgctxt "model:ir.message,text:msg_search_documentation_ea548d20"
-msgid "Search documentation"
-msgstr "Buscar documentación"
-
-msgctxt "model:ir.message,text:msg_search_documentation_210f8161"
-msgid "Search documentation…"
-msgstr "Buscar documentación…"
-
-msgctxt "model:ir.message,text:msg_search_for_records_before_adding_a_bookmark_6e4f214b"
-msgid "Search for records before adding a bookmark"
-msgstr "Busque registros antes de añadir un marcador"
-
-msgctxt "model:ir.message,text:msg_search_records_2495e622"
-msgid "Search records"
-msgstr "Buscar registros"
-
-msgctxt "model:ir.message,text:msg_search_c2030252"
-msgid "Search 🔍︎"
-msgstr "Busca 🔍︎"
-
-msgctxt "model:ir.message,text:msg_search_or_chat_with_the_assistant_958b3539"
-msgid "Search 🔍︎ or chat with the assistant✦"
-msgstr "Busca 🔍︎ o conversa con el asistente✦"
-
-msgctxt "model:ir.message,text:msg_search_f54fbca1"
-msgid "Search…"
-msgstr "Buscar…"
-
-msgctxt "model:ir.message,text:msg_select_85982229"
-msgid "Select"
-msgstr "Seleccionar"
-
 msgctxt "model:ir.message,text:msg_select_a_record_before_scanning_e4e5cbd8"
 msgid "Select a record before scanning"
 msgstr "Seleccione un registro antes de escanear"
@@ -850,30 +194,6 @@ msgctxt "model:ir.message,text:msg_select_a_saved_record_first_f7386e0a"
 msgid "Select a saved record first"
 msgstr "Seleccione primero un registro guardado"
 
-msgctxt "model:ir.message,text:msg_select_all_records_e89606db"
-msgid "Select all records"
-msgstr "Seleccionar todos los registros"
-
-msgctxt "model:ir.message,text:msg_select_record_809d3f3a"
-msgid "Select record"
-msgstr "Seleccionar el registro"
-
-msgctxt "model:ir.message,text:msg_selected_record_actions_fbfc04de"
-msgid "Selected record actions"
-msgstr "Acciones de los registros seleccionados"
-
-msgctxt "model:ir.message,text:msg_send_9bc2575c"
-msgid "Send"
-msgstr "Enviar"
-
-msgctxt "model:ir.message,text:msg_show_active_records_a48c1c6e"
-msgid "Show active records"
-msgstr "Mostrar registros activos"
-
-msgctxt "model:ir.message,text:msg_show_inactive_records_156bf187"
-msgid "Show inactive records"
-msgstr "Mostrar registros inactivos"
-
 msgctxt "model:ir.message,text:msg_show_this_help_3ab981f8"
 msgid "Show this help"
 msgstr "Muestra esta ayuda"
@@ -882,73 +202,21 @@ msgctxt "model:ir.message,text:msg_show_hide_access_keys_26bbd1af"
 msgid "Show/Hide access keys"
 msgstr "Mostrar/Esconder las teclas rápidas"
 
-msgctxt "model:ir.message,text:msg_side_panel_7907c33b"
-msgid "Side panel"
-msgstr "Panel lateral"
-
-msgctxt "model:ir.message,text:msg_sign_in_ada2e9e9"
-msgid "Sign in"
-msgstr "Iniciar sesión"
-
-msgctxt "model:ir.message,text:msg_sign_in_with_your_tryton_account_62adb31f"
-msgid "Sign in with your Tryton account."
-msgstr "Inicie sesión con su cuenta de Tryton."
-
-msgctxt "model:ir.message,text:msg_speech_recognition_is_not_available_cdb1a588"
-msgid "Speech recognition is not available"
-msgstr "El reconocimiento de voz no está disponible"
-
 msgctxt "model:ir.message,text:msg_speech_recognition_is_not_available_478ab226"
 msgid "Speech recognition is not available."
 msgstr "El reconocimiento de voz no está disponible."
-
-msgctxt "model:ir.message,text:msg_speech_to_text_eaf1450c"
-msgid "Speech to text"
-msgstr "Conversión de voz a texto"
-
-msgctxt "model:ir.message,text:msg_start_a_conversation_the_active_model_record_sel_3c282288"
-msgid "Start a conversation. The active model, record, selection, domain and language are sent as context."
-msgstr "Inicie una conversación. El modelo activo, el registro, la selección, el dominio y el idioma se envían como contexto."
 
 msgctxt "model:ir.message,text:msg_start_a_support_session_by_sharing_the_current_b_48331194"
 msgid "Start a support session by sharing the current browser tab."
 msgstr "Inicie una sesión de asistencia compartiendo la pestaña actual del navegador."
 
-msgctxt "model:ir.message,text:msg_start_or_select_a_conversation_first_c272b817"
-msgid "Start or select a conversation first"
-msgstr "Inicie o seleccione primero una conversación"
-
-msgctxt "model:ir.message,text:msg_start_with_a_nan_c6986d09"
-msgid "Start with a NaN"
-msgstr "Iniciar con un NaN"
-
 msgctxt "model:ir.message,text:msg_support_f32d5a3b"
 msgid "Support"
 msgstr "Soporte"
 
-msgctxt "model:ir.message,text:msg_support_tickets_46b7e6e0"
-msgid "Support tickets"
-msgstr "Tiques de soporte"
-
-msgctxt "model:ir.message,text:msg_support_tickets_are_available_when_nantic_connec_e51580c1"
-msgid "Support tickets are available when nantic_connection is installed."
-msgstr "Los tiques de soporte están disponibles cuando nantic_connection está instalado."
-
 msgctxt "model:ir.message,text:msg_switch_3e44c920"
 msgid "Switch"
 msgstr "Cambiar"
-
-msgctxt "model:ir.message,text:msg_switch_light_dark_mode_59ee09c8"
-msgid "Switch light/dark mode"
-msgstr "Cambiar el modo claro/oscuro"
-
-msgctxt "model:ir.message,text:msg_switch_view_5c89ea0f"
-msgid "Switch view"
-msgstr "Cambiar de vista"
-
-msgctxt "model:ir.message,text:msg_switch_without_saving_edc21c18"
-msgid "Switch without saving"
-msgstr "Cambiar sin guardar"
 
 msgctxt "model:ir.message,text:msg_tab_s_is_not_a_s_tab_f909d1b2"
 msgid "Tab %s is not a %s tab"
@@ -958,25 +226,9 @@ msgctxt "model:ir.message,text:msg_tab_shortcuts_47d9e482"
 msgid "Tab shortcuts"
 msgstr "Atajos de las pestañas"
 
-msgctxt "model:ir.message,text:msg_task_component_2e8f98bd"
-msgid "Task component"
-msgstr "Componente de tareas"
-
-msgctxt "model:ir.message,text:msg_text_to_speech_did_not_return_audio_c5294036"
-msgid "Text to speech did not return audio"
-msgstr "La conversión de texto a voz no ha devuelto audio"
-
-msgctxt "model:ir.message,text:msg_text_to_speech_is_not_available_1adbb213"
-msgid "Text to speech is not available"
-msgstr "La conversión de texto a voz no está disponible"
-
 msgctxt "model:ir.message,text:msg_the_csv_file_is_empty_2bf21a83"
 msgid "The CSV file is empty"
 msgstr "El archivo CSV está vacío"
-
-msgctxt "model:ir.message,text:msg_the_assistant_needs_confirmation_to_continue_0c406f24"
-msgid "The assistant needs confirmation to continue."
-msgstr "El asistente necesita confirmación para continuar."
 
 msgctxt "model:ir.message,text:msg_the_assistant_voice_is_not_available_c73be59e"
 msgid "The assistant voice is not available."
@@ -994,10 +246,6 @@ msgctxt "model:ir.message,text:msg_the_recording_could_not_be_started_59a9df19"
 msgid "The recording could not be started."
 msgstr "No se ha podido iniciar la grabación."
 
-msgctxt "model:ir.message,text:msg_the_related_record_is_already_saved_4c1532df"
-msgid "The related record is already saved"
-msgstr "El registro relacionado ya está guardado"
-
 msgctxt "model:ir.message,text:msg_the_screenshot_could_not_be_captured_2a406353"
 msgid "The screenshot could not be captured."
 msgstr "No se ha podido realizar la captura de pantalla."
@@ -1006,17 +254,9 @@ msgctxt "model:ir.message,text:msg_the_server_could_not_complete_this_action_7b5
 msgid "The server could not complete this action."
 msgstr "El servidor no ha podido completar esta acción."
 
-msgctxt "model:ir.message,text:msg_this_action_opens_an_external_address_c6ee0d49"
-msgid "This action opens an external address."
-msgstr "Esta acción abre una dirección externa."
-
 msgctxt "model:ir.message,text:msg_this_download_is_no_longer_available_f25d5e7d"
 msgid "This download is no longer available"
 msgstr "Esta descarga ya no está disponible"
-
-msgctxt "model:ir.message,text:msg_this_help_resource_is_not_installed_6a3a043e"
-msgid "This help resource is not installed"
-msgstr "Este recurso de ayuda no está instalado"
 
 msgctxt "model:ir.message,text:msg_this_menu_does_not_define_an_action_4c2a49f3"
 msgid "This menu does not define an action"
@@ -1025,18 +265,6 @@ msgstr "Este menú no define ninguna acción"
 msgctxt "model:ir.message,text:msg_this_model_does_not_keep_revisions_144217b6"
 msgid "This model does not keep revisions"
 msgstr "Este modelo no conserva revisiones"
-
-msgctxt "model:ir.message,text:msg_this_page_uses_no_tryton_xml_view_dominate_rende_1d1e0110"
-msgid "This page uses no Tryton XML view. Dominate renders its custom components, HTMX updates fragments and the same workspace stores every draft."
-msgstr "Esta página no utiliza ninguna vista XML de Tryton. Dominate renderiza los componentes personalizados, HTMX actualiza los fragmentos y el mismo espacio de trabajo guarda todos los borradores."
-
-msgctxt "model:ir.message,text:msg_this_relation_field_is_read_only_601788be"
-msgid "This relation field is read-only"
-msgstr "Este campo de relación es de solo lectura"
-
-msgctxt "model:ir.message,text:msg_this_relation_is_not_readable_4153f601"
-msgid "This relation is not readable"
-msgstr "Esta relación no se puede leer"
 
 msgctxt "model:ir.message,text:msg_this_tree_can_not_be_reordered_092df402"
 msgid "This tree can not be reordered"
@@ -1054,45 +282,13 @@ msgctxt "model:ir.message,text:msg_this_tab_is_not_a_relation_draft_5142b2a7"
 msgid "This tab is not a relation draft"
 msgstr "Esta pestaña no es un borrador de relación"
 
-msgctxt "model:ir.message,text:msg_to_ae79ea1e"
-msgid "To"
-msgstr "Hasta"
-
-msgctxt "model:ir.message,text:msg_today_24345a14"
-msgid "Today"
-msgstr "Hoy"
-
-msgctxt "model:ir.message,text:msg_toggle_assistant_voice_56746db4"
-msgid "Toggle assistant voice"
-msgstr "Activar o desactivar la voz del asistente"
-
-msgctxt "model:ir.message,text:msg_toggle_task_75db9591"
-msgid "Toggle task"
-msgstr "Activar o desactivar la tarea"
-
 msgctxt "model:ir.message,text:msg_toolbar_action_s_not_found_3642237e"
 msgid "Toolbar action %s not found"
 msgstr "No se ha encontrado la acción %s de la barra de herramientas"
 
-msgctxt "model:ir.message,text:msg_total_b25928c6"
-msgid "Total"
-msgstr "Total"
-
-msgctxt "model:ir.message,text:msg_track_tickets_created_from_the_assistant_and_add_e5b6f65d"
-msgid "Track tickets created from the assistant and add comments without losing your current workspace."
-msgstr "Siga los tiques creados desde el asistente y añada comentarios sin perder el espacio de trabajo actual."
-
 msgctxt "model:ir.message,text:msg_true_88b33e4e"
 msgid "True"
 msgstr "Verdadero"
-
-msgctxt "model:ir.message,text:msg_tryton_menu_485fb53e"
-msgid "Tryton menu"
-msgstr "Menú de Tryton"
-
-msgctxt "model:ir.message,text:msg_undelete_9b2a9354"
-msgid "Undelete"
-msgstr "Recuperar"
 
 msgctxt "model:ir.message,text:msg_unknown_button_s_dadea476"
 msgid "Unknown button %s"
@@ -1114,53 +310,13 @@ msgctxt "model:ir.message,text:msg_unknown_conversation_156667a3"
 msgid "Unknown conversation"
 msgstr "No se ha encontrado: conversación"
 
-msgctxt "model:ir.message,text:msg_unknown_demo_action_10fbddda"
-msgid "Unknown demo action"
-msgstr "No se ha encontrado: acción de demostración"
-
-msgctxt "model:ir.message,text:msg_unknown_demo_task_83617687"
-msgid "Unknown demo task"
-msgstr "No se ha encontrado: tarea de demostración"
-
-msgctxt "model:ir.message,text:msg_unknown_documentation_action_c4e647e8"
-msgid "Unknown documentation action"
-msgstr "No se ha encontrado: acción de documentación"
-
 msgctxt "model:ir.message,text:msg_unknown_domain_tab_cb641669"
 msgid "Unknown domain tab"
 msgstr "No se ha encontrado: pestaña de dominio"
 
-msgctxt "model:ir.message,text:msg_unknown_favorite_action_4bce58a9"
-msgid "Unknown favorite action"
-msgstr "No se ha encontrado: acción de favoritos"
-
 msgctxt "model:ir.message,text:msg_unknown_field_s_e452e987"
 msgid "Unknown field %s"
 msgstr "No se ha encontrado: campo %s"
-
-msgctxt "model:ir.message,text:msg_unknown_help_resource_864e56bf"
-msgid "Unknown help resource"
-msgstr "No se ha encontrado: recurso de ayuda"
-
-msgctxt "model:ir.message,text:msg_unknown_help_section_e66dc646"
-msgid "Unknown help section"
-msgstr "No se ha encontrado: sección de ayuda"
-
-msgctxt "model:ir.message,text:msg_unknown_leave_action_00e5198e"
-msgid "Unknown leave action"
-msgstr "No se ha encontrado: acción de salida"
-
-msgctxt "model:ir.message,text:msg_unknown_menu_action_98c01a12"
-msgid "Unknown menu action"
-msgstr "No se ha encontrado: acción de menú"
-
-msgctxt "model:ir.message,text:msg_unknown_menu_item_a2359449"
-msgid "Unknown menu item"
-msgstr "No se ha encontrado: elemento de menú"
-
-msgctxt "model:ir.message,text:msg_unknown_notification_2557bc8b"
-msgid "Unknown notification"
-msgstr "No se ha encontrado: notificación"
 
 msgctxt "model:ir.message,text:msg_unknown_optional_column_8ec99f22"
 msgid "Unknown optional column"
@@ -1178,18 +334,6 @@ msgctxt "model:ir.message,text:msg_unknown_preference_field_s_554b39ef"
 msgid "Unknown preference field %s"
 msgstr "No se ha encontrado: campo de preferencias %s"
 
-msgctxt "model:ir.message,text:msg_unknown_preference_record_ef3a4eaa"
-msgid "Unknown preference record"
-msgstr "No se ha encontrado: registro de preferencias"
-
-msgctxt "model:ir.message,text:msg_unknown_preferences_page_2498ce21"
-msgid "Unknown preferences page"
-msgstr "No se ha encontrado: página de preferencias"
-
-msgctxt "model:ir.message,text:msg_unknown_record_ad246024"
-msgid "Unknown record"
-msgstr "No se ha encontrado: registro"
-
 msgctxt "model:ir.message,text:msg_unknown_record_s_431ef202"
 msgid "Unknown record %s"
 msgstr "No se ha encontrado: registro %s"
@@ -1205,10 +349,6 @@ msgstr "No se ha encontrado: registro relacionado"
 msgctxt "model:ir.message,text:msg_unknown_related_resource_f8dcd623"
 msgid "Unknown related resource"
 msgstr "No se ha encontrado: recurso relacionado"
-
-msgctxt "model:ir.message,text:msg_unknown_relation_field_45919c86"
-msgid "Unknown relation field"
-msgstr "No se ha encontrado: campo de relación"
 
 msgctxt "model:ir.message,text:msg_unknown_relation_draft_e129b8dc"
 msgid "Unknown relation draft"
@@ -1226,21 +366,9 @@ msgctxt "model:ir.message,text:msg_unknown_search_bookmark_aa59fe27"
 msgid "Unknown search bookmark"
 msgstr "No se ha encontrado: marcador de búsqueda"
 
-msgctxt "model:ir.message,text:msg_unknown_shell_action_b8c205b2"
-msgid "Unknown shell action"
-msgstr "No se ha encontrado: acción de la interfaz"
-
 msgctxt "model:ir.message,text:msg_unknown_sort_field_790ee4b9"
 msgid "Unknown sort field"
 msgstr "No se ha encontrado: campo de ordenación"
-
-msgctxt "model:ir.message,text:msg_unknown_state_component_s_150ad0be"
-msgid "Unknown state component %s"
-msgstr "No se ha encontrado: componente de estado %s"
-
-msgctxt "model:ir.message,text:msg_unknown_tab_e1e8dfe0"
-msgid "Unknown tab"
-msgstr "No se ha encontrado: pestaña"
 
 msgctxt "model:ir.message,text:msg_unknown_tab_s_3482ea05"
 msgid "Unknown tab %s"
@@ -1262,97 +390,18 @@ msgctxt "model:ir.message,text:msg_unknown_wizard_field_s_d02f6297"
 msgid "Unknown wizard field %s"
 msgstr "No se ha encontrado: campo del asistente %s"
 
-msgctxt "model:ir.message,text:msg_unknown_x2many_action_b57d2104"
-msgid "Unknown x2many action"
-msgstr "No se ha encontrado: acción x2many"
-
-msgctxt "model:ir.message,text:msg_unread_updates_32d00893"
-msgid "Unread updates"
-msgstr "Actualizaciones no leídas"
-
-msgctxt "model:ir.message,text:msg_unsaved_2ab06e25"
-msgid "Unsaved"
-msgstr "Sin guardar"
-
-msgctxt "model:ir.message,text:msg_unsaved_changes_29267269"
-msgid "Unsaved changes"
-msgstr "Cambios sin guardar"
-
 msgctxt "model:ir.message,text:msg_unsupported_action_type_s_9c66a81e"
 msgid "Unsupported action type %s"
 msgstr "El tipo de acción %s no es compatible"
-
-msgctxt "model:ir.message,text:msg_unsupported_tab_type_cd25cf8c"
-msgid "Unsupported tab type"
-msgstr "El tipo de pestaña no es compatible"
-
-msgctxt "model:ir.message,text:msg_update_fb91e24f"
-msgid "Update"
-msgstr "Actualización"
-
-msgctxt "model:ir.message,text:msg_updates_c76d1807"
-msgid "Updates"
-msgstr "Actualizaciones"
-
-msgctxt "model:ir.message,text:msg_user_9f8a2389"
-msgid "User"
-msgstr "Usuario"
-
-msgctxt "model:ir.message,text:msg_user_and_notifications_3393b7f2"
-msgid "User and notifications"
-msgstr "Usuario y notificaciones"
-
-msgctxt "model:ir.message,text:msg_user_menu_a2d8625b"
-msgid "User menu"
-msgstr "Menú del usuario"
 
 msgctxt "model:ir.message,text:msg_view_s_is_not_part_of_this_action_c97ba4f2"
 msgid "View %s is not part of this action"
 msgstr "La vista %s no forma parte de esta acción"
 
-msgctxt "model:ir.message,text:msg_view_logs_4c3958dd"
-msgid "View logs"
-msgstr "Ver los registros"
-
-msgctxt "model:ir.message,text:msg_cassini_state_infrastructure_ae6a45d3"
-msgid "Cassini state infrastructure"
-msgstr "Infraestructura de estado de Cassini"
-
-msgctxt "model:ir.message,text:msg_week_f82be68a"
-msgid "Week"
-msgstr "Semana"
-
-msgctxt "model:ir.message,text:msg_what_do_you_want_to_do_8d4f6ef5"
-msgid "What do you want to do?"
-msgstr "¿Qué quieres hacer?"
-
-msgctxt "model:ir.message,text:msg_wizard_has_no_current_view_ae22a488"
-msgid "Wizard has no current view"
-msgstr "El asistente no tiene ninguna vista actual"
-
 msgctxt "model:ir.message,text:msg_yes_5397e058"
 msgid "Yes"
 msgstr "Si"
 
-msgctxt "model:ir.message,text:msg_you_905cb326"
-msgid "You"
-msgstr "Tú"
-
-msgctxt "model:ir.message,text:msg_close_this_tab_f30f909d"
-msgid "close this tab"
-msgstr "cerrar esta pestaña"
-
-msgctxt "model:ir.message,text:msg_create_another_record_08c7017f"
-msgid "create another record"
-msgstr "crear otro registro"
-
-msgctxt "model:ir.message,text:msg_open_another_record_06e5fa39"
-msgid "open another record"
-msgstr "abrir otro registro"
-
-msgctxt "model:ir.message,text:msg_switch_view_023c59a0"
-msgid "switch view"
-msgstr "cambiar de vista"
 msgctxt "field:cassini.activate.tab,tab:"
 msgid "Tab"
 msgstr "Pestaña"
@@ -2421,61 +1470,13 @@ msgctxt "selection:www.site,type:cassini"
 msgid "Cassini"
 msgstr "Cassini"
 
-msgctxt "model:ir.message,text:msg_count_d_record_5726c64e"
-msgid "%(count)d record"
-msgstr "%(count)d registro"
-
-msgctxt "model:ir.message,text:msg_count_d_records_7fd6dfd3"
-msgid "%(count)d records"
-msgstr "%(count)d registros"
-
-msgctxt "model:ir.message,text:msg_search_model_s_18bdb9f0"
-msgid "Search %(model)s"
-msgstr "Buscar %(model)s"
-
-msgctxt "model:ir.message,text:msg_select_record_s_4af0864f"
-msgid "Select %(record)s"
-msgstr "Selecciona %(record)s"
-
-msgctxt "model:ir.message,text:msg_unknown_relation_column_9e4f93b3"
-msgid "Unknown relation column"
-msgstr "Columna de relación desconocida"
-
-msgctxt "model:ir.message,text:msg_window_actions_fe0e3a5d"
-msgid "Window actions"
-msgstr "Acciones de la ventana"
-
-msgctxt "model:ir.message,text:msg_record_navigation_d4fab182"
-msgid "Record navigation"
-msgstr "Navegación de registros"
-
-msgctxt "model:ir.message,text:msg_previous_page_81f54719"
-msgid "Previous page"
-msgstr "Página anterior"
-
-msgctxt "model:ir.message,text:msg_next_page_4bfc194b"
-msgid "Next page"
-msgstr "Página siguiente"
-
-msgctxt "model:ir.message,text:msg_accept_bb54db51"
-msgid "Accept"
-msgstr "Aceptar"
-
 msgctxt "model:ir.message,text:msg_dashboard_d87f47b4"
 msgid "Dashboard"
 msgstr "Panel"
 
-msgctxt "model:ir.message,text:msg_dashboard_chart_d182dcee"
-msgid "Dashboard chart"
-msgstr "Gráfico del panel"
-
 msgctxt "model:ir.message,text:msg_direct_printing_failed_error_s_0c46e137"
 msgid "Direct printing failed: %(error)s"
 msgstr "La impresión directa ha fallado: %(error)s"
-
-msgctxt "model:ir.message,text:msg_don_t_show_again_d9afd5ec"
-msgid "Don't show again"
-msgstr "No volver a mostrar"
 
 msgctxt "model:ir.message,text:msg_plotly_could_not_be_initialized_71855ebb"
 msgid "Plotly could not be initialized."
@@ -2505,209 +1506,13 @@ msgctxt "model:ir.message,text:msg_unknown_dashboard_64c495b2"
 msgid "Unknown dashboard"
 msgstr "Panel desconocido"
 
-msgctxt "model:ir.message,text:msg_unknown_version_change_2ff41c57"
-msgid "Unknown version change"
-msgstr "Cambio de versión desconocido"
-
-msgctxt "model:ir.message,text:msg_unknown_version_change_action_792cf612"
-msgid "Unknown version change action"
-msgstr "Acción de cambio de versión desconocida"
-
-msgctxt "model:ir.message,text:msg_version_changes_fd73f751"
-msgid "Version changes"
-msgstr "Cambios de versión"
-
-msgctxt "model:ir.message,text:msg_version_changes_require_nantic_connection_0ef1ce89"
-msgid "Version changes require nantic_connection."
-msgstr "Los cambios de versión requieren nantic_connection."
-
-msgctxt "model:ir.message,text:msg_add_2cceefe2"
-msgid "Add..."
-msgstr "Añadir..."
-
-msgctxt "model:ir.message,text:msg_manage_82d54088"
-msgid "Manage..."
-msgstr "Gestionar..."
-
-msgctxt "model:ir.message,text:msg_attachment_preview_cc8da619"
-msgid "Attachment preview"
-msgstr "Vista previa del adjunto"
-
-msgctxt "model:ir.message,text:msg_no_attachments_f941b4d9"
-msgid "No attachments"
-msgstr "No hay adjuntos"
-
-msgctxt "model:ir.message,text:msg_open_attachment_b36bd6b7"
-msgid "Open attachment"
-msgstr "Abrir adjunto"
-
-msgctxt "model:ir.message,text:msg_this_record_is_read_only_a31e4eba"
-msgid "This record is read-only"
-msgstr "Este registro es de solo lectura"
-
-msgctxt "model:ir.message,text:msg_resource_actions_e4834c66"
-msgid "Resource actions"
-msgstr "Acciones del recurso"
-
-msgctxt "model:ir.message,text:msg_preview_f1fbb2b4"
-msgid "Preview"
-msgstr "Vista previa"
-
-msgctxt "model:ir.message,text:msg_unknown_csv_field_field_s_cf9f5720"
-msgid "Unknown CSV field \"%(field)s\""
-msgstr "Campo CSV \"%(field)s\" desconocido"
-
-msgctxt "model:ir.message,text:msg_only_one_to_many_fields_can_be_expanded_for_impo_55c575a0"
-msgid "Only one-to-many fields can be expanded for import"
-msgstr "Solo se pueden desplegar campos uno-a-muchos para importar"
-
-msgctxt "model:ir.message,text:msg_expand_field_1b8c62b9"
-msgid "Expand field"
-msgstr "Desplegar el campo"
-
-msgctxt "model:ir.message,text:msg_field_s_string_787b9f04"
-msgid "%(field)s (string)"
-msgstr "%(field)s (texto)"
-
-msgctxt "model:ir.message,text:msg_field_s_model_name_f777e4c5"
-msgid "%(field)s (model name)"
-msgstr "%(field)s (nombre del modelo)"
-
-msgctxt "model:ir.message,text:msg_field_s_record_name_72e24512"
-msgid "%(field)s/Record Name"
-msgstr "%(field)s/Nombre del registro"
-
-msgctxt "model:ir.message,text:msg_csv_export_name_s_59629579"
-msgid "CSV Export: %(name)s"
-msgstr "Exportación CSV: %(name)s"
-
-msgctxt "model:ir.message,text:msg_csv_import_name_s_3756e85a"
-msgid "CSV Import: %(name)s"
-msgstr "Importación CSV: %(name)s"
-
-msgctxt "model:ir.message,text:msg_all_fields_f51c7336"
-msgid "All Fields"
-msgstr "Todos los campos"
-
-msgctxt "model:ir.message,text:msg_auto_detect_518fc452"
-msgid "Auto-Detect"
-msgstr "Detección automática"
-
-msgctxt "model:ir.message,text:msg_save_export_6e133815"
-msgid "Save Export"
-msgstr "Guardar exportación"
-
-msgctxt "model:ir.message,text:msg_url_export_3fe35e36"
-msgid "URL Export"
-msgstr "URL de exportación"
-
-msgctxt "model:ir.message,text:msg_delete_export_9ce2d612"
-msgid "Delete Export"
-msgstr "Eliminar exportación"
-
-msgctxt "model:ir.message,text:msg_fields_selected_ed301cf7"
-msgid "Fields Selected"
-msgstr "Campos seleccionados"
-
-msgctxt "model:ir.message,text:msg_export_name_2ffae16e"
-msgid "Export Name"
-msgstr "Nombre de la exportación"
-
-msgctxt "model:ir.message,text:msg_export_f3e4fadb"
-msgid "Export"
-msgstr "Exportación"
-
-msgctxt "model:ir.message,text:msg_selected_records_8ac0df07"
-msgid "Selected Records"
-msgstr "Registros seleccionados"
-
-msgctxt "model:ir.message,text:msg_listed_records_3da40c09"
-msgid "Listed Records"
-msgstr "Registros listados"
-
-msgctxt "model:ir.message,text:msg_ignore_search_limit_12bcdad5"
-msgid "Ignore search limit"
-msgstr "Ignorar el límite de búsqueda"
-
-msgctxt "model:ir.message,text:msg_predefined_exports_3af8b314"
-msgid "Predefined Exports"
-msgstr "Exportaciones predefinidas"
-
-msgctxt "model:ir.message,text:msg_file_to_import_b5fa1ece"
-msgid "File to Import"
-msgstr "Fichero a importar"
-
-msgctxt "model:ir.message,text:msg_csv_parameters_7523082c"
-msgid "CSV Parameters"
-msgstr "Parámetros CSV"
-
-msgctxt "model:ir.message,text:msg_encoding_5821fec7"
-msgid "Encoding"
-msgstr "Codificación"
-
-msgctxt "model:ir.message,text:msg_lines_to_skip_2ee6a49f"
-msgid "Lines to Skip"
-msgstr "Líneas a omitir"
-
-msgctxt "model:ir.message,text:msg_use_locale_format_f03d0fa2"
-msgid "Use locale format"
-msgstr "Utilizar el formato local"
-
-msgctxt "model:ir.message,text:msg_add_field_names_786e8fa5"
-msgid "Add Field Names"
-msgstr "Añadir los nombres de los campos"
-
-msgctxt "model:ir.message,text:msg_delimiter_5e96ff2a"
-msgid "Delimiter"
-msgstr "Delimitador"
-
-msgctxt "model:ir.message,text:msg_quote_char_214076d9"
-msgid "Quote Char"
-msgstr "Carácter de comillas"
-
-msgctxt "model:ir.message,text:msg_save_as_d8916376"
-msgid "Save As..."
-msgstr "Guardar como..."
-
-msgctxt "model:ir.message,text:msg_unknown_column_header_header_s_d970625b"
-msgid "Unknown column header \"%(header)s\""
-msgstr "Cabecera de columna \"%(header)s\" desconocida"
-
-msgctxt "model:ir.message,text:msg_the_field_field_s_is_read_only_a302f8bd"
-msgid "The field \"%(field)s\" is read-only"
-msgstr "El campo \"%(field)s\" es de solo lectura"
-
-msgctxt "model:ir.message,text:msg_you_are_not_allowed_to_import_records_a5a4b9b2"
-msgid "You are not allowed to import records"
-msgstr "No tiene permiso para importar registros"
-
-msgctxt "model:ir.message,text:msg_unknown_csv_operation_b1c9f818"
-msgid "Unknown CSV operation"
-msgstr "Operación CSV desconocida"
-
-msgctxt "model:ir.message,text:msg_you_must_select_an_import_file_first_017de126"
-msgid "You must select an import file first."
-msgstr "Primero debe seleccionar un fichero de importación."
-
 msgctxt "model:ir.message,text:msg_the_csv_file_could_not_be_decoded_with_encoding__f12698f7"
 msgid "The CSV file could not be decoded with %(encoding)s"
 msgstr "No se ha podido descodificar el fichero CSV con %(encoding)s"
 
-msgctxt "model:ir.message,text:msg_the_first_csv_row_must_contain_field_names_b82d7ac5"
-msgid "The first CSV row must contain field names"
-msgstr "La primera fila del CSV debe contener nombres de campos"
-
 msgctxt "model:ir.message,text:msg_select_at_least_one_field_e1839336"
 msgid "Select at least one field"
 msgstr "Seleccione al menos un campo"
-
-msgctxt "model:ir.message,text:msg_enter_a_name_for_the_export_3d4e17a7"
-msgid "Enter a name for the export"
-msgstr "Introduzca un nombre para la exportación"
-
-msgctxt "model:ir.message,text:msg_select_a_predefined_export_893ce241"
-msgid "Select a predefined export"
-msgstr "Seleccione una exportación predefinida"
 
 msgctxt "model:ir.message,text:msg_the_csv_delimiter_must_be_one_character_ae41c2fd"
 msgid "The CSV delimiter must be one character"
@@ -2724,3 +1529,1311 @@ msgstr "Selección de registros CSV desconocida"
 msgctxt "model:ir.message,text:msg_select_at_least_one_field_to_import_ecb61539"
 msgid "Select at least one field to import"
 msgstr "Seleccione al menos un campo para importar"
+
+msgctxt "xgettext:x:"
+msgid "%(count)d record"
+msgstr "%(count)d registro"
+
+msgctxt "xgettext:x:"
+msgid "%(count)d records"
+msgstr "%(count)d registros"
+
+msgctxt "xgettext:x:"
+msgid "%(field)s (model name)"
+msgstr "%(field)s (nombre del modelo)"
+
+msgctxt "xgettext:x:"
+msgid "%(field)s (string)"
+msgstr "%(field)s (texto)"
+
+msgctxt "xgettext:x:"
+msgid "%(field)s/Record Name"
+msgstr "%(field)s/Nombre del registro"
+
+msgctxt "xgettext:x:"
+msgid "%(fields)d modified field in %(records)d record"
+msgstr "%(fields)d campo modificado en %(records)d registro"
+
+msgctxt "xgettext:x:"
+msgid "%(fields)d modified field in %(records)d records"
+msgstr "%(fields)d campo modificado en %(records)d registros"
+
+msgctxt "xgettext:x:"
+msgid "%(fields)d modified fields in %(records)d record"
+msgstr "%(fields)d campos modificados en %(records)d registro"
+
+msgctxt "xgettext:x:"
+msgid "%(fields)d modified fields in %(records)d records"
+msgstr "%(fields)d campos modificados en %(records)d registros"
+
+msgctxt "xgettext:x:"
+msgid "A component name and callable renderer are required"
+msgstr "Se requiere un nombre de componente y un renderizador ejecutable"
+
+msgctxt "xgettext:x:"
+msgid "A new task"
+msgstr "Una tarea nueva"
+
+msgctxt "xgettext:x:"
+msgid "Accept"
+msgstr "Aceptar"
+
+msgctxt "xgettext:x:"
+msgid "Action"
+msgstr "Acción"
+
+msgctxt "xgettext:x:"
+msgid "Add"
+msgstr "Agregar"
+
+msgctxt "xgettext:x:"
+msgid "Add %(menu)s to favorites"
+msgstr "Añadir %(menu)s a favoritos"
+
+msgctxt "xgettext:x:"
+msgid "Add Field Names"
+msgstr "Añadir los nombres de los campos"
+
+msgctxt "xgettext:x:"
+msgid "Add to favorites"
+msgstr "Agregar a favoritos"
+
+msgctxt "xgettext:x:"
+msgid "Add..."
+msgstr "Añadir..."
+
+msgctxt "xgettext:x:"
+msgid "All Fields"
+msgstr "Todos los campos"
+
+msgctxt "xgettext:x:"
+msgid "All notifications"
+msgstr "Todas las notificaciones"
+
+msgctxt "xgettext:x:"
+msgid "All updates"
+msgstr "Todas las actualizaciones"
+
+msgctxt "xgettext:x:"
+msgid "Allow"
+msgstr "Permitir"
+
+msgctxt "xgettext:x:"
+msgid "Any unsaved changes will be reviewed before each tab is closed."
+msgstr "Los cambios no guardados se revisarán antes de cerrar cada pestaña."
+
+msgctxt "xgettext:x:"
+msgid "Application updates are available when nantic_connection is installed."
+msgstr "Las actualizaciones de la aplicación están disponibles cuando nantic_connection está instalado."
+
+msgctxt "xgettext:x:"
+msgid "Ask the assistant…"
+msgstr "Pregunta al asistente…"
+
+msgctxt "xgettext:x:"
+msgid "Assistant"
+msgstr "Asistente"
+
+msgctxt "xgettext:x:"
+msgid "Assistant is working"
+msgstr "El asistente está trabajando"
+
+msgctxt "xgettext:x:"
+msgid "Attach files"
+msgstr "Adjuntar archivos"
+
+msgctxt "xgettext:x:"
+msgid "Attach recording"
+msgstr "Adjuntar una grabación"
+
+msgctxt "xgettext:x:"
+msgid "Attach screenshot"
+msgstr "Adjuntar una captura de pantalla"
+
+msgctxt "xgettext:x:"
+msgid "Attachment preview"
+msgstr "Vista previa del adjunto"
+
+msgctxt "xgettext:x:"
+msgid "Attachments"
+msgstr "Aadjuntos"
+
+msgctxt "xgettext:x:"
+msgid "Auto-Detect"
+msgstr "Detección automática"
+
+msgctxt "xgettext:x:"
+msgid "Back"
+msgstr "Atrás"
+
+msgctxt "xgettext:x:"
+msgid "Back to Sao"
+msgstr "Volver a Sao"
+
+msgctxt "xgettext:x:"
+msgid "Bookmark Name"
+msgstr "Nombre del marcador"
+
+msgctxt "xgettext:x:"
+msgid "Bookmark this filter"
+msgstr "Guardar como búsqueda favorita"
+
+msgctxt "xgettext:x:"
+msgid "Bookmarks"
+msgstr "Búsquedas favoritas"
+
+msgctxt "xgettext:x:"
+msgid "CSV Export: %(name)s"
+msgstr "Exportación CSV: %(name)s"
+
+msgctxt "xgettext:x:"
+msgid "CSV Import: %(name)s"
+msgstr "Importación CSV: %(name)s"
+
+msgctxt "xgettext:x:"
+msgid "CSV Parameters"
+msgstr "Parámetros CSV"
+
+msgctxt "xgettext:x:"
+msgid "Calendar mode"
+msgstr "Modo del calendario"
+
+msgctxt "xgettext:x:"
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgctxt "xgettext:x:"
+msgid "Cassini state infrastructure"
+msgstr "Infraestructura de estado de Cassini"
+
+msgctxt "xgettext:x:"
+msgid "Change preferences and company"
+msgstr "Cambiar las preferencias y la empresa"
+
+msgctxt "xgettext:x:"
+msgid "Choose a CSV file to import"
+msgstr "Seleccione un archivo CSV para importar"
+
+msgctxt "xgettext:x:"
+msgid "Choose a NaN"
+msgstr "Seleccione un NaN"
+
+msgctxt "xgettext:x:"
+msgid "Choose a related record"
+msgstr "Seleccione un registro relacionado"
+
+msgctxt "xgettext:x:"
+msgid "Choose a related record to add"
+msgstr "Seleccione un registro relacionado para añadir"
+
+msgctxt "xgettext:x:"
+msgid "Choose what to do before you %(action)s."
+msgstr "Elija qué hacer antes de %(action)s."
+
+msgctxt "xgettext:x:"
+msgid "Choose whether to save the changes"
+msgstr "Elija si quiere guardar los cambios"
+
+msgctxt "xgettext:x:"
+msgid "Clear"
+msgstr "Limpiar"
+
+msgctxt "xgettext:x:"
+msgid "Clear the field"
+msgstr "Vacíar el campo"
+
+msgctxt "xgettext:x:"
+msgid "Close"
+msgstr "Cerrar"
+
+msgctxt "xgettext:x:"
+msgid "Close %(tab)s"
+msgstr "Cerrar %(tab)s"
+
+msgctxt "xgettext:x:"
+msgid "Close all tabs?"
+msgstr "¿Quiere cerrar todas las pestañas?"
+
+msgctxt "xgettext:x:"
+msgid "Close tab"
+msgstr "Cerrar la pestaña"
+
+msgctxt "xgettext:x:"
+msgid "Close tabs and continue"
+msgstr "Cerrar las pestañas y continuar"
+
+msgctxt "xgettext:x:"
+msgid "Close without saving"
+msgstr "Cerrar sin guardar"
+
+msgctxt "xgettext:x:"
+msgid "Code"
+msgstr "Código"
+
+msgctxt "xgettext:x:"
+msgid "Collapse node"
+msgstr "Contraer el nodo"
+
+msgctxt "xgettext:x:"
+msgid "Columns"
+msgstr "Columnas"
+
+msgctxt "xgettext:x:"
+msgid "Component state must be a JSON object"
+msgstr "El estado del componente debe ser un objeto JSON"
+
+msgctxt "xgettext:x:"
+msgid "Component state must be valid JSON"
+msgstr "El estado del componente debe ser un JSON válido"
+
+msgctxt "xgettext:x:"
+msgid "Contextual documentation"
+msgstr "Documentación contextual"
+
+msgctxt "xgettext:x:"
+msgid "Continue"
+msgstr "Continuar"
+
+msgctxt "xgettext:x:"
+msgid "Continue without saving"
+msgstr "Continuar sin guardar"
+
+msgctxt "xgettext:x:"
+msgid "Continuing without saving permanently discards the current draft."
+msgstr "Continuar sin guardar descarta definitivamente el borrador actual."
+
+msgctxt "xgettext:x:"
+msgid "Conversation artifacts"
+msgstr "Artefactos de la conversación"
+
+msgctxt "xgettext:x:"
+msgid "Conversations"
+msgstr "Conversaciones"
+
+msgctxt "xgettext:x:"
+msgid "Counter component"
+msgstr "Componente contador"
+
+msgctxt "xgettext:x:"
+msgid "Create"
+msgstr "Crear"
+
+msgctxt "xgettext:x:"
+msgid "Create the related record from its own window"
+msgstr "Crear el registro relacionado desde su propia ventana"
+
+msgctxt "xgettext:x:"
+msgid "Create…"
+msgstr "Crear…"
+
+msgctxt "xgettext:x:"
+msgid "Creating related records is not allowed"
+msgstr "No se permite crear registros relacionados"
+
+msgctxt "xgettext:x:"
+msgid "Current record"
+msgstr "Registro actual"
+
+msgctxt "xgettext:x:"
+msgid "Current values"
+msgstr "Valores actuales"
+
+msgctxt "xgettext:x:"
+msgid "Dashboard chart"
+msgstr "Gráfico del panel"
+
+msgctxt "xgettext:x:"
+msgid "Data"
+msgstr "Datos"
+
+msgctxt "xgettext:x:"
+msgid "Day"
+msgstr "Día"
+
+msgctxt "xgettext:x:"
+msgid "Decrement"
+msgstr "Disminuir"
+
+msgctxt "xgettext:x:"
+msgid "Default"
+msgstr "Por defecto"
+
+msgctxt "xgettext:x:"
+msgid "Delete"
+msgstr "Borrar"
+
+msgctxt "xgettext:x:"
+msgid "Delete Export"
+msgstr "Eliminar exportación"
+
+msgctxt "xgettext:x:"
+msgid "Delete the selected records?"
+msgstr "¿Quiere eliminar los registros seleccionados?"
+
+msgctxt "xgettext:x:"
+msgid "Deleting related records is not allowed"
+msgstr "No se permite eliminar registros relacionados"
+
+msgctxt "xgettext:x:"
+msgid "Delimiter"
+msgstr "Delimitador"
+
+msgctxt "xgettext:x:"
+msgid "Demo"
+msgstr "Demo"
+
+msgctxt "xgettext:x:"
+msgid "Deny"
+msgstr "Denegar"
+
+msgctxt "xgettext:x:"
+msgid "Details"
+msgstr "Detalles"
+
+msgctxt "xgettext:x:"
+msgid "Discard the unsaved changes to this record?"
+msgstr "¿Quiere descartar los cambios no guardados de este registro?"
+
+msgctxt "xgettext:x:"
+msgid "Documentation"
+msgstr "Documentación"
+
+msgctxt "xgettext:x:"
+msgid "Documentation is available when nantic_connection is installed."
+msgstr "La documentación está disponible cuando nantic_connection está instalado."
+
+msgctxt "xgettext:x:"
+msgid "Domains"
+msgstr "Dominios"
+
+msgctxt "xgettext:x:"
+msgid "Don't show again"
+msgstr "No volver a mostrar"
+
+msgctxt "xgettext:x:"
+msgid "Download"
+msgstr "Descargar"
+
+msgctxt "xgettext:x:"
+msgid "Duplicate"
+msgstr "Duplicar"
+
+msgctxt "xgettext:x:"
+msgid "Encoding"
+msgstr "Codificación"
+
+msgctxt "xgettext:x:"
+msgid "Enter a name for the export"
+msgstr "Introduzca un nombre para la exportación"
+
+msgctxt "xgettext:x:"
+msgid "Expand field"
+msgstr "Desplegar el campo"
+
+msgctxt "xgettext:x:"
+msgid "Expand node"
+msgstr "Expandir el nodo"
+
+msgctxt "xgettext:x:"
+msgid "Export"
+msgstr "Exportación"
+
+msgctxt "xgettext:x:"
+msgid "Export Name"
+msgstr "Nombre de la exportación"
+
+msgctxt "xgettext:x:"
+msgid "False"
+msgstr "Falso"
+
+msgctxt "xgettext:x:"
+msgid "Favorites"
+msgstr "Favoritos"
+
+msgctxt "xgettext:x:"
+msgid "Fields Selected"
+msgstr "Campos seleccionados"
+
+msgctxt "xgettext:x:"
+msgid "File to Import"
+msgstr "Fichero a importar"
+
+msgctxt "xgettext:x:"
+msgid "Filters"
+msgstr "Filtros"
+
+msgctxt "xgettext:x:"
+msgid "Find"
+msgstr "Buscar"
+
+msgctxt "xgettext:x:"
+msgid "From"
+msgstr "Desde"
+
+msgctxt "xgettext:x:"
+msgid "Global search"
+msgstr "Búsqueda global"
+
+msgctxt "xgettext:x:"
+msgid "Help"
+msgstr "Ayuda"
+
+msgctxt "xgettext:x:"
+msgid "Help and Updates"
+msgstr "Ayuda y actualizaciones"
+
+msgctxt "xgettext:x:"
+msgid "Ignore search limit"
+msgstr "Ignorar el límite de búsqueda"
+
+msgctxt "xgettext:x:"
+msgid "Image actions"
+msgstr "Acciones de la imagen"
+
+msgctxt "xgettext:x:"
+msgid "Import"
+msgstr "Importe"
+
+msgctxt "xgettext:x:"
+msgid "Increment"
+msgstr "Aumentar"
+
+msgctxt "xgettext:x:"
+msgid "Install nantic_connection to enable the integrated assistant."
+msgstr "Instale nantic_connection para activar el asistente integrado."
+
+msgctxt "xgettext:x:"
+msgid "Invalid column field"
+msgstr "El campo de columna no es válido"
+
+msgctxt "xgettext:x:"
+msgid "Invalid column occurrences"
+msgstr "Las apariciones de columna no son válidas"
+
+msgctxt "xgettext:x:"
+msgid "Invalid column width"
+msgstr "El ancho de columna no es válido"
+
+msgctxt "xgettext:x:"
+msgid "Invalid column widths"
+msgstr "Los anchos de columna no son válidos"
+
+msgctxt "xgettext:x:"
+msgid "Latest"
+msgstr "Últimas"
+
+msgctxt "xgettext:x:"
+msgid "Lines to Skip"
+msgstr "Líneas a omitir"
+
+msgctxt "xgettext:x:"
+msgid "Listed Records"
+msgstr "Registros listados"
+
+msgctxt "xgettext:x:"
+msgid "Logout"
+msgstr "Cerrar sesión"
+
+msgctxt "xgettext:x:"
+msgid "Manage..."
+msgstr "Gestionar..."
+
+msgctxt "xgettext:x:"
+msgid "Menu"
+msgstr "Menús"
+
+msgctxt "xgettext:x:"
+msgid "Message"
+msgstr "Mensaje"
+
+msgctxt "xgettext:x:"
+msgid "Month"
+msgstr "Mes"
+
+msgctxt "xgettext:x:"
+msgid "NaNs"
+msgstr "NaNs"
+
+msgctxt "xgettext:x:"
+msgid "NaNs and goblins"
+msgstr "NaNs y duendes"
+
+msgctxt "xgettext:x:"
+msgid "New"
+msgstr "Nuevo"
+
+msgctxt "xgettext:x:"
+msgid "New conversation"
+msgstr "Conversación nueva"
+
+msgctxt "xgettext:x:"
+msgid "New event"
+msgstr "Evento nuevo"
+
+msgctxt "xgettext:x:"
+msgid "New event on %(date)s"
+msgstr "Evento nuevo el %(date)s"
+
+msgctxt "xgettext:x:"
+msgid "New record"
+msgstr "Registro nuevo"
+
+msgctxt "xgettext:x:"
+msgid "Next"
+msgstr "Próximo"
+
+msgctxt "xgettext:x:"
+msgid "Next page"
+msgstr "Página siguiente"
+
+msgctxt "xgettext:x:"
+msgid "Next record"
+msgstr "Registro siguiente"
+
+msgctxt "xgettext:x:"
+msgid "No actions"
+msgstr "No hay acciones"
+
+msgctxt "xgettext:x:"
+msgid "No attachments"
+msgstr "No hay adjuntos"
+
+msgctxt "xgettext:x:"
+msgid "No bookmarks"
+msgstr "No hay marcadores"
+
+msgctxt "xgettext:x:"
+msgid "No documentation found."
+msgstr "No se ha encontrado documentación."
+
+msgctxt "xgettext:x:"
+msgid "No events"
+msgstr "No hay eventos"
+
+msgctxt "xgettext:x:"
+msgid "No favorites yet"
+msgstr "Todavía no hay favoritos"
+
+msgctxt "xgettext:x:"
+msgid "No matching records"
+msgstr "No hay registros coincidentes"
+
+msgctxt "xgettext:x:"
+msgid "No notifications at this time"
+msgstr "No hay notificaciones en este momento"
+
+msgctxt "xgettext:x:"
+msgid "No optional columns"
+msgstr "No hay columnas opcionales"
+
+msgctxt "xgettext:x:"
+msgid "No record selected"
+msgstr "No se ha seleccionado ningún registro"
+
+msgctxt "xgettext:x:"
+msgid "No records"
+msgstr "No hay registros"
+
+msgctxt "xgettext:x:"
+msgid "No results"
+msgstr "No hay resultados"
+
+msgctxt "xgettext:x:"
+msgid "No side panel"
+msgstr "Sin panel lateral"
+
+msgctxt "xgettext:x:"
+msgid "No tasks yet"
+msgstr "Todavía no hay tareas"
+
+msgctxt "xgettext:x:"
+msgid "No updates available."
+msgstr "No hay actualizaciones disponibles."
+
+msgctxt "xgettext:x:"
+msgid "Notebook pages"
+msgstr "Páginas del cuaderno"
+
+msgctxt "xgettext:x:"
+msgid "Notes"
+msgstr "Notas"
+
+msgctxt "xgettext:x:"
+msgid "Notification"
+msgstr "Notificación"
+
+msgctxt "xgettext:x:"
+msgid "OK"
+msgstr "Aceptar"
+
+msgctxt "xgettext:x:"
+msgid "Only one-to-many fields can be expanded for import"
+msgstr "Solo se pueden desplegar campos uno-a-muchos para importar"
+
+msgctxt "xgettext:x:"
+msgid "Open"
+msgstr "Abrir"
+
+msgctxt "xgettext:x:"
+msgid "Open attachment"
+msgstr "Abrir adjunto"
+
+msgctxt "xgettext:x:"
+msgid "Open link"
+msgstr "Abrir el enlace"
+
+msgctxt "xgettext:x:"
+msgid "Open tabs"
+msgstr "Pestañas abiertas"
+
+msgctxt "xgettext:x:"
+msgid "Open the record"
+msgstr "Abrir el registro"
+
+msgctxt "xgettext:x:"
+msgid "Open tickets"
+msgstr "Abrir los tiques"
+
+msgctxt "xgettext:x:"
+msgid "Optional columns"
+msgstr "Columnas opcionales"
+
+msgctxt "xgettext:x:"
+msgid "Page %(page)d"
+msgstr "Página %(page)d"
+
+msgctxt "xgettext:x:"
+msgid "Page title"
+msgstr "Título de la página"
+
+msgctxt "xgettext:x:"
+msgid "Password"
+msgstr "Contraseña"
+
+msgctxt "xgettext:x:"
+msgid "Pending"
+msgstr "Pendientes"
+
+msgctxt "xgettext:x:"
+msgid "Persistent draft"
+msgstr "Borrador persistente"
+
+msgctxt "xgettext:x:"
+msgid "Predefined Exports"
+msgstr "Exportaciones predefinidas"
+
+msgctxt "xgettext:x:"
+msgid "Preferences"
+msgstr "Preferencias"
+
+msgctxt "xgettext:x:"
+msgid "Preferences are not open"
+msgstr "Las preferencias no están abiertas"
+
+msgctxt "xgettext:x:"
+msgid "Preferences require all open tabs to be closed."
+msgstr "Para abrir las preferencias se deben cerrar todas las pestañas abiertas."
+
+msgctxt "xgettext:x:"
+msgid "Preview"
+msgstr "Vista previa"
+
+msgctxt "xgettext:x:"
+msgid "Previous"
+msgstr "Anterior"
+
+msgctxt "xgettext:x:"
+msgid "Previous page"
+msgstr "Página anterior"
+
+msgctxt "xgettext:x:"
+msgid "Previous record"
+msgstr "Registro anterior"
+
+msgctxt "xgettext:x:"
+msgid "Print"
+msgstr "Imprimir"
+
+msgctxt "xgettext:x:"
+msgid "Quote Char"
+msgstr "Carácter de comillas"
+
+msgctxt "xgettext:x:"
+msgid "Record navigation"
+msgstr "Navegación de registros"
+
+msgctxt "xgettext:x:"
+msgid "Record pages"
+msgstr "Páginas de registros"
+
+msgctxt "xgettext:x:"
+msgid "Records"
+msgstr "Registros"
+
+msgctxt "xgettext:x:"
+msgid "Relate"
+msgstr "Relacionado"
+
+msgctxt "xgettext:x:"
+msgid "Relation actions"
+msgstr "Acciones de la relación"
+
+msgctxt "xgettext:x:"
+msgid "Reload now: the unfinished value stays here."
+msgstr "Recargue ahora: el valor sin terminar permanecerá aquí."
+
+msgctxt "xgettext:x:"
+msgid "Reload/Undo"
+msgstr "Recargar/Deshacer"
+
+msgctxt "xgettext:x:"
+msgid "Remote assistance"
+msgstr "Asistencia remota"
+
+msgctxt "xgettext:x:"
+msgid "Remove"
+msgstr "Eliminar"
+
+msgctxt "xgettext:x:"
+msgid "Remove %(menu)s from favorites"
+msgstr "Eliminar %(menu)s de favoritos"
+
+msgctxt "xgettext:x:"
+msgid "Remove from favorites"
+msgstr "Eliminar de favoritos"
+
+msgctxt "xgettext:x:"
+msgid "Remove this bookmark"
+msgstr "Eliminar de las búsquedas favoritas"
+
+msgctxt "xgettext:x:"
+msgid "Removing related records is not allowed"
+msgstr "No se permite quitar registros relacionados"
+
+msgctxt "xgettext:x:"
+msgid "Reorder"
+msgstr "Reordenar"
+
+msgctxt "xgettext:x:"
+msgid "Reordering related records is not allowed"
+msgstr "No está permitido reordenar los registros relacionados"
+
+msgctxt "xgettext:x:"
+msgid "Resize"
+msgstr "Redimensionar"
+
+msgctxt "xgettext:x:"
+msgid "Resize %(column)s column"
+msgstr "Redimensionar la columna %(column)s"
+
+msgctxt "xgettext:x:"
+msgid "Resource actions"
+msgstr "Acciones del recurso"
+
+msgctxt "xgettext:x:"
+msgid "Revisions"
+msgstr "Revisiones"
+
+msgctxt "xgettext:x:"
+msgid "Save"
+msgstr "Ahorrar"
+
+msgctxt "xgettext:x:"
+msgid "Save As..."
+msgstr "Guardar como..."
+
+msgctxt "xgettext:x:"
+msgid "Save Export"
+msgstr "Guardar exportación"
+
+msgctxt "xgettext:x:"
+msgid "Save and close"
+msgstr "Guardar y cerrar"
+
+msgctxt "xgettext:x:"
+msgid "Save and continue"
+msgstr "Guardar y continuar"
+
+msgctxt "xgettext:x:"
+msgid "Save and switch"
+msgstr "Guardar y cambiar"
+
+msgctxt "xgettext:x:"
+msgid "Save as"
+msgstr "Guardar como"
+
+msgctxt "xgettext:x:"
+msgid "Save validates the record and writes the changes to Tryton."
+msgstr "Guardar valida el registro y escribe los cambios en Tryton."
+
+msgctxt "xgettext:x:"
+msgid "Scan"
+msgstr "Escanear"
+
+msgctxt "xgettext:x:"
+msgid "Scan or enter a code"
+msgstr "Escanee o introduzca un código"
+
+msgctxt "xgettext:x:"
+msgid "Search"
+msgstr "Buscar"
+
+msgctxt "xgettext:x:"
+msgid "Search %(model)s"
+msgstr "Buscar %(model)s"
+
+msgctxt "xgettext:x:"
+msgid "Search a record"
+msgstr "Buscar un registro"
+
+msgctxt "xgettext:x:"
+msgid "Search documentation"
+msgstr "Buscar documentación"
+
+msgctxt "xgettext:x:"
+msgid "Search documentation…"
+msgstr "Buscar documentación…"
+
+msgctxt "xgettext:x:"
+msgid "Search for records before adding a bookmark"
+msgstr "Busque registros antes de añadir un marcador"
+
+msgctxt "xgettext:x:"
+msgid "Search records"
+msgstr "Buscar registros"
+
+msgctxt "xgettext:x:"
+msgid "Search words"
+msgstr "Buscar palabras"
+
+msgctxt "xgettext:x:"
+msgid "Search 🔍︎"
+msgstr "Busca 🔍︎"
+
+msgctxt "xgettext:x:"
+msgid "Search 🔍︎ or chat with the assistant✦"
+msgstr "Busca 🔍︎ o conversa con el asistente✦"
+
+msgctxt "xgettext:x:"
+msgid "Search…"
+msgstr "Buscar…"
+
+msgctxt "xgettext:x:"
+msgid "Select"
+msgstr "Seleccionar"
+
+msgctxt "xgettext:x:"
+msgid "Select %(record)s"
+msgstr "Selecciona %(record)s"
+
+msgctxt "xgettext:x:"
+msgid "Select a predefined export"
+msgstr "Seleccione una exportación predefinida"
+
+msgctxt "xgettext:x:"
+msgid "Select a saved record first"
+msgstr "Seleccione primero un registro guardado"
+
+msgctxt "xgettext:x:"
+msgid "Select all records"
+msgstr "Seleccionar todos los registros"
+
+msgctxt "xgettext:x:"
+msgid "Select at least one field"
+msgstr "Seleccione al menos un campo"
+
+msgctxt "xgettext:x:"
+msgid "Select record"
+msgstr "Seleccionar el registro"
+
+msgctxt "xgettext:x:"
+msgid "Selected Records"
+msgstr "Registros seleccionados"
+
+msgctxt "xgettext:x:"
+msgid "Selected record actions"
+msgstr "Acciones de los registros seleccionados"
+
+msgctxt "xgettext:x:"
+msgid "Send"
+msgstr "Enviar"
+
+msgctxt "xgettext:x:"
+msgid "Show active records"
+msgstr "Mostrar registros activos"
+
+msgctxt "xgettext:x:"
+msgid "Show inactive records"
+msgstr "Mostrar registros inactivos"
+
+msgctxt "xgettext:x:"
+msgid "Side panel"
+msgstr "Panel lateral"
+
+msgctxt "xgettext:x:"
+msgid "Sign in"
+msgstr "Iniciar sesión"
+
+msgctxt "xgettext:x:"
+msgid "Sign in with your Tryton account."
+msgstr "Inicie sesión con su cuenta de Tryton."
+
+msgctxt "xgettext:x:"
+msgid "Speech recognition is not available"
+msgstr "El reconocimiento de voz no está disponible"
+
+msgctxt "xgettext:x:"
+msgid "Speech to text"
+msgstr "Conversión de voz a texto"
+
+msgctxt "xgettext:x:"
+msgid "Start a conversation. The active model, record, selection, domain and language are sent as context."
+msgstr "Inicie una conversación. El modelo activo, el registro, la selección, el dominio y el idioma se envían como contexto."
+
+msgctxt "xgettext:x:"
+msgid "Start or select a conversation first"
+msgstr "Inicie o seleccione primero una conversación"
+
+msgctxt "xgettext:x:"
+msgid "Start with a NaN"
+msgstr "Iniciar con un NaN"
+
+msgctxt "xgettext:x:"
+msgid "Support"
+msgstr "Soporte"
+
+msgctxt "xgettext:x:"
+msgid "Support tickets are available when nantic_connection is installed."
+msgstr "Los tiques de soporte están disponibles cuando nantic_connection está instalado."
+
+msgctxt "xgettext:x:"
+msgid "Switch"
+msgstr "Cambiar"
+
+msgctxt "xgettext:x:"
+msgid "Switch light/dark mode"
+msgstr "Cambiar el modo claro/oscuro"
+
+msgctxt "xgettext:x:"
+msgid "Switch view"
+msgstr "Cambiar de vista"
+
+msgctxt "xgettext:x:"
+msgid "Switch without saving"
+msgstr "Cambiar sin guardar"
+
+msgctxt "xgettext:x:"
+msgid "Task component"
+msgstr "Componente de tareas"
+
+msgctxt "xgettext:x:"
+msgid "Text to speech did not return audio"
+msgstr "La conversión de texto a voz no ha devuelto audio"
+
+msgctxt "xgettext:x:"
+msgid "Text to speech is not available"
+msgstr "La conversión de texto a voz no está disponible"
+
+msgctxt "xgettext:x:"
+msgid "The CSV file could not be decoded with %(encoding)s"
+msgstr "No se ha podido descodificar el fichero CSV con %(encoding)s"
+
+msgctxt "xgettext:x:"
+msgid "The CSV file is empty"
+msgstr "El archivo CSV está vacío"
+
+msgctxt "xgettext:x:"
+msgid "The assistant needs confirmation to continue."
+msgstr "El asistente necesita confirmación para continuar."
+
+msgctxt "xgettext:x:"
+msgid "The field \"%(field)s\" is read-only"
+msgstr "El campo \"%(field)s\" es de solo lectura"
+
+msgctxt "xgettext:x:"
+msgid "The first CSV row must contain field names"
+msgstr "La primera fila del CSV debe contener nombres de campos"
+
+msgctxt "xgettext:x:"
+msgid "The related record is already saved"
+msgstr "El registro relacionado ya está guardado"
+
+msgctxt "xgettext:x:"
+msgid "This action opens an external address."
+msgstr "Esta acción abre una dirección externa."
+
+msgctxt "xgettext:x:"
+msgid "This help resource is not installed"
+msgstr "Este recurso de ayuda no está instalado"
+
+msgctxt "xgettext:x:"
+msgid "This page uses no Tryton XML view. Dominate renders its custom components, HTMX updates fragments and the same workspace stores every draft."
+msgstr "Esta página no utiliza ninguna vista XML de Tryton. Dominate renderiza los componentes personalizados, HTMX actualiza los fragmentos y el mismo espacio de trabajo guarda todos los borradores."
+
+msgctxt "xgettext:x:"
+msgid "This record is read-only"
+msgstr "Este registro es de solo lectura"
+
+msgctxt "xgettext:x:"
+msgid "This relation field is read-only"
+msgstr "Este campo de relación es de solo lectura"
+
+msgctxt "xgettext:x:"
+msgid "This relation is not readable"
+msgstr "Esta relación no se puede leer"
+
+msgctxt "xgettext:x:"
+msgid "This tree can not be reordered"
+msgstr "Este árbol no se puede reordenar"
+
+msgctxt "xgettext:x:"
+msgid "To"
+msgstr "Hasta"
+
+msgctxt "xgettext:x:"
+msgid "Today"
+msgstr "Hoy"
+
+msgctxt "xgettext:x:"
+msgid "Toggle assistant voice"
+msgstr "Activar o desactivar la voz del asistente"
+
+msgctxt "xgettext:x:"
+msgid "Toggle task"
+msgstr "Activar o desactivar la tarea"
+
+msgctxt "xgettext:x:"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "xgettext:x:"
+msgid "Track tickets created from the assistant and add comments without losing your current workspace."
+msgstr "Siga los tiques creados desde el asistente y añada comentarios sin perder el espacio de trabajo actual."
+
+msgctxt "xgettext:x:"
+msgid "True"
+msgstr "Verdadero"
+
+msgctxt "xgettext:x:"
+msgid "Tryton menu"
+msgstr "Menú de Tryton"
+
+msgctxt "xgettext:x:"
+msgid "URL Export"
+msgstr "URL de exportación"
+
+msgctxt "xgettext:x:"
+msgid "Undelete"
+msgstr "Recuperar"
+
+msgctxt "xgettext:x:"
+msgid "Unknown CSV field \"%(field)s\""
+msgstr "Campo CSV \"%(field)s\" desconocido"
+
+msgctxt "xgettext:x:"
+msgid "Unknown CSV operation"
+msgstr "Operación CSV desconocida"
+
+msgctxt "xgettext:x:"
+msgid "Unknown column header \"%(header)s\""
+msgstr "Cabecera de columna \"%(header)s\" desconocida"
+
+msgctxt "xgettext:x:"
+msgid "Unknown conversation"
+msgstr "No se ha encontrado: conversación"
+
+msgctxt "xgettext:x:"
+msgid "Unknown demo action"
+msgstr "No se ha encontrado: acción de demostración"
+
+msgctxt "xgettext:x:"
+msgid "Unknown demo task"
+msgstr "No se ha encontrado: tarea de demostración"
+
+msgctxt "xgettext:x:"
+msgid "Unknown documentation action"
+msgstr "No se ha encontrado: acción de documentación"
+
+msgctxt "xgettext:x:"
+msgid "Unknown favorite action"
+msgstr "No se ha encontrado: acción de favoritos"
+
+msgctxt "xgettext:x:"
+msgid "Unknown help resource"
+msgstr "No se ha encontrado: recurso de ayuda"
+
+msgctxt "xgettext:x:"
+msgid "Unknown help section"
+msgstr "No se ha encontrado: sección de ayuda"
+
+msgctxt "xgettext:x:"
+msgid "Unknown leave action"
+msgstr "No se ha encontrado: acción de salida"
+
+msgctxt "xgettext:x:"
+msgid "Unknown menu action"
+msgstr "No se ha encontrado: acción de menú"
+
+msgctxt "xgettext:x:"
+msgid "Unknown menu item"
+msgstr "No se ha encontrado: elemento de menú"
+
+msgctxt "xgettext:x:"
+msgid "Unknown notification"
+msgstr "No se ha encontrado: notificación"
+
+msgctxt "xgettext:x:"
+msgid "Unknown preference record"
+msgstr "No se ha encontrado: registro de preferencias"
+
+msgctxt "xgettext:x:"
+msgid "Unknown preferences page"
+msgstr "No se ha encontrado: página de preferencias"
+
+msgctxt "xgettext:x:"
+msgid "Unknown record"
+msgstr "No se ha encontrado: registro"
+
+msgctxt "xgettext:x:"
+msgid "Unknown related record"
+msgstr "No se ha encontrado: registro relacionado"
+
+msgctxt "xgettext:x:"
+msgid "Unknown relation column"
+msgstr "Columna de relación desconocida"
+
+msgctxt "xgettext:x:"
+msgid "Unknown relation field"
+msgstr "No se ha encontrado: campo de relación"
+
+msgctxt "xgettext:x:"
+msgid "Unknown shell action"
+msgstr "No se ha encontrado: acción de la interfaz"
+
+msgctxt "xgettext:x:"
+msgid "Unknown state component %s"
+msgstr "No se ha encontrado: componente de estado %s"
+
+msgctxt "xgettext:x:"
+msgid "Unknown tab"
+msgstr "No se ha encontrado: pestaña"
+
+msgctxt "xgettext:x:"
+msgid "Unknown tab %s"
+msgstr "No se ha encontrado: pestaña %s"
+
+msgctxt "xgettext:x:"
+msgid "Unknown tree drop position"
+msgstr "No se ha encontrado: posición de destino del árbol"
+
+msgctxt "xgettext:x:"
+msgid "Unknown version change"
+msgstr "Cambio de versión desconocido"
+
+msgctxt "xgettext:x:"
+msgid "Unknown version change action"
+msgstr "Acción de cambio de versión desconocida"
+
+msgctxt "xgettext:x:"
+msgid "Unknown x2many action"
+msgstr "No se ha encontrado: acción x2many"
+
+msgctxt "xgettext:x:"
+msgid "Unread updates"
+msgstr "Actualizaciones no leídas"
+
+msgctxt "xgettext:x:"
+msgid "Unsaved"
+msgstr "Sin guardar"
+
+msgctxt "xgettext:x:"
+msgid "Unsaved changes"
+msgstr "Cambios sin guardar"
+
+msgctxt "xgettext:x:"
+msgid "Unsupported tab type"
+msgstr "El tipo de pestaña no es compatible"
+
+msgctxt "xgettext:x:"
+msgid "Update"
+msgstr "Actualizar"
+
+msgctxt "xgettext:x:"
+msgid "Updates"
+msgstr "Actualizaciones"
+
+msgctxt "xgettext:x:"
+msgid "Use locale format"
+msgstr "Utilizar el formato local"
+
+msgctxt "xgettext:x:"
+msgid "User"
+msgstr "Usuario"
+
+msgctxt "xgettext:x:"
+msgid "User and notifications"
+msgstr "Usuario y notificaciones"
+
+msgctxt "xgettext:x:"
+msgid "User menu"
+msgstr "Menú del usuario"
+
+msgctxt "xgettext:x:"
+msgid "Version changes"
+msgstr "Cambios de versión"
+
+msgctxt "xgettext:x:"
+msgid "Version changes require nantic_connection."
+msgstr "Los cambios de versión requieren nantic_connection."
+
+msgctxt "xgettext:x:"
+msgid "View logs"
+msgstr "Ver los registros"
+
+msgctxt "xgettext:x:"
+msgid "Week"
+msgstr "Semana"
+
+msgctxt "xgettext:x:"
+msgid "What do you want to do?"
+msgstr "¿Qué quieres hacer?"
+
+msgctxt "xgettext:x:"
+msgid "Window actions"
+msgstr "Acciones de la ventana"
+
+msgctxt "xgettext:x:"
+msgid "Wizard has no current view"
+msgstr "El asistente no tiene ninguna vista actual"
+
+msgctxt "xgettext:x:"
+msgid "You"
+msgstr "Tú"
+
+msgctxt "xgettext:x:"
+msgid "You are not allowed to import records"
+msgstr "No tiene permiso para importar registros"
+
+msgctxt "xgettext:x:"
+msgid "You must select an import file first."
+msgstr "Primero debe seleccionar un fichero de importación."
+
+msgctxt "xgettext:x:"
+msgid "close this tab"
+msgstr "cerrar esta pestaña"
+
+msgctxt "xgettext:x:"
+msgid "create another record"
+msgstr "crear otro registro"
+
+msgctxt "xgettext:x:"
+msgid "open another record"
+msgstr "abrir otro registro"
+
+msgctxt "xgettext:x:"
+msgid "open preferences"
+msgstr "abrir las preferencias"
+
+msgctxt "xgettext:x:"
+msgid "switch view"
+msgstr "cambiar de vista"

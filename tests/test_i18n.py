@@ -9,6 +9,7 @@ from trytond.modules.cassini.i18n import (
     JAVASCRIPT_SOURCES, message_id, translate)
 from trytond.modules.cassini.engine import COMMON_SEARCH_FIELDS
 from trytond.modules.cassini.state import WORKSPACE_SESSION_UNIQUE
+from trytond.modules.xgettext import _
 from trytond.pool import Pool
 from trytond.tests import test_tryton
 from trytond.transaction import Transaction
@@ -48,6 +49,22 @@ class TranslationTestCase(unittest.TestCase):
             if record.attrib.get('model') == 'ir.message'
             }
 
+    def xgettext_sources(self):
+        sources = set()
+        for path in MODULE_ROOT.glob('*.py'):
+            tree = ast.parse(path.read_text())
+            for node in ast.walk(tree):
+                if not (
+                        isinstance(node, ast.Call)
+                        and isinstance(node.func, ast.Name)
+                        and node.func.id == '_'
+                        and node.args):
+                    continue
+                self.assertIsInstance(node.args[0], ast.Constant)
+                self.assertIsInstance(node.args[0].value, str)
+                sources.add(node.args[0].value)
+        return sources
+
     def test_all_interface_sources_are_messages(self):
         messages = self.messages()
         expected = {
@@ -58,17 +75,20 @@ class TranslationTestCase(unittest.TestCase):
 
     def test_all_messages_are_translated(self):
         messages = self.messages()
+        xgettext_sources = self.xgettext_sources()
         for language in ('ca', 'es'):
             catalog = polib.pofile(
                 str(MODULE_ROOT / 'locale' / (language + '.po')))
             translations = {
-                entry.msgctxt: entry.msgstr
+                (entry.msgctxt, entry.msgid)
                 for entry in catalog
                 if entry.msgctxt and entry.msgstr
                 }
-            for identifier in messages:
+            for identifier, source in messages.items():
                 context = 'model:ir.message,text:' + identifier
-                self.assertIn(context, translations)
+                self.assertIn((context, source), translations)
+            for source in xgettext_sources:
+                self.assertIn(('xgettext:x:', source), translations)
 
 
 class RuntimeTranslationTestCase(unittest.TestCase):
@@ -90,6 +110,10 @@ class RuntimeTranslationTestCase(unittest.TestCase):
                 str(MODULE_ROOT / 'locale' / (language + '.po')))
             with Transaction().set_context(language=language):
                 self.assertEqual(translate('Search'), expected)
+                self.assertEqual(
+                    _('Contextual documentation'),
+                    'Documentació contextual'
+                    if language == 'ca' else 'Documentación contextual')
 
 
 if __name__ == '__main__':

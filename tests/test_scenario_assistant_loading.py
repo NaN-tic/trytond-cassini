@@ -277,6 +277,8 @@ class TestAssistantLoading(WebTestCase):
             'button', name='New conversation')
         nan_toggle = page.get_by_role(
             'button', name='Choose a NaN')
+        self.assertEqual(new_conversation.bounding_box()['width'], 40)
+        self.assertEqual(nan_toggle.bounding_box()['width'], 18)
         self.assertLessEqual(
             abs(
                 new_conversation.bounding_box()['x']
@@ -288,12 +290,44 @@ class TestAssistantLoading(WebTestCase):
             'menuitem', name='Default')).to_be_visible()
         nan_toggle.click()
 
+        conversations = page.get_by_role(
+            'button', name='Conversations', exact=True)
+        expect(conversations.locator('img')).to_have_attribute(
+            'src', '/cassini-icons/tryton-history.svg')
+        self.assertEqual(conversations.bounding_box()['width'], 40)
+        self.assertEqual(
+            round(
+                conversations.bounding_box()['x']
+                - nan_toggle.bounding_box()['x']
+                - nan_toggle.bounding_box()['width']),
+            6)
+        self.assertEqual(conversations.evaluate(
+            '''element =>
+                element.nextElementSibling.getAttribute('aria-label')'''),
+            'NaNs and goblins')
+        goblins = page.get_by_role(
+            'button', name='NaNs and goblins', exact=True)
+        self.assertEqual(
+            round(
+                goblins.bounding_box()['x']
+                - conversations.bounding_box()['x']
+                - conversations.bounding_box()['width']),
+            6)
+        expect(page.locator('.vs-conversation-select')).to_have_count(0)
+        with page.expect_response(
+                lambda response:
+                '/help/resource/conversations' in response.url):
+            conversations.click()
+        expect(page.locator(
+            '.vs-tab', has_text='Conversations')).to_be_visible()
+        expect(page.locator('.vs-active-panel').get_by_text(
+            'Markdown conversation', exact=True)).to_be_visible()
+
         with page.expect_response(
                 lambda response: '/help/resource/agents' in response.url):
-            page.get_by_role(
-                'button', name='NaNs and goblins').click()
+            goblins.click()
         expect(page.locator(
-            '.vs-tab', has_text='NaNs and goblins')).to_be_visible()
+            '.vs-tab', has_text='NaNs & Goblins')).to_be_visible()
 
         page.get_by_label('Message').fill('Show the loading indicator')
         with page.expect_response(
@@ -332,6 +366,126 @@ class TestAssistantLoading(WebTestCase):
             user_message.evaluate(
                 'element => getComputedStyle(element).backgroundColor'),
             'rgba(0, 0, 0, 0)')
+
+        with page.expect_response(
+                lambda response:
+                '/help/section/documentation' in response.url):
+            page.get_by_role(
+                'button', name='Documentation', exact=True).click()
+        documentation_actions = page.locator(
+            '[data-help-section="documentation"] '
+            '.vs-help-heading-actions')
+        expect(documentation_actions.locator(
+            ':scope > .vs-help-heading-group')).to_have_count(1)
+        contextual = documentation_actions.get_by_role(
+            'button', name='Contextual documentation', exact=True)
+        search_words = documentation_actions.get_by_role(
+            'button', name='Search words', exact=True)
+        expect(contextual.locator('img')).to_have_attribute(
+            'src', '/cassini-help-icons/target-documentation.svg')
+        expect(search_words.locator('img')).to_have_attribute(
+            'src', '/cassini-icons/tryton-search.svg')
+        toolbar_button = page.locator(
+            '.vs-active-panel .vs-toolbar .vs-icon-button').first
+        toolbar_colors = toolbar_button.evaluate(
+            '''element => ({
+                background: getComputedStyle(element).backgroundColor,
+                color: getComputedStyle(element).color,
+            })''')
+        for help_button in (contextual, search_words):
+            self.assertEqual(help_button.evaluate(
+                '''element => ({
+                    background: getComputedStyle(element).backgroundColor,
+                    color: getComputedStyle(element).color,
+                })'''), toolbar_colors)
+        self.assertLessEqual(
+            abs(
+                contextual.bounding_box()['x']
+                + contextual.bounding_box()['width']
+                - search_words.bounding_box()['x']),
+            1)
+        with page.expect_response(
+                lambda response:
+                '/help/documentation/search-mode' in response.url):
+            search_words.click()
+        expect(page.get_by_label('Search documentation')).to_be_visible()
+        with page.expect_response(
+                lambda response:
+                '/help/documentation/target' in response.url):
+            page.get_by_role(
+                'button', name='Contextual documentation',
+                exact=True).click()
+        expect(page.get_by_label(
+            'Search documentation')).to_have_count(0)
+
+        with page.expect_response(
+                lambda response: '/help/section/updates' in response.url):
+            page.get_by_role(
+                'button', name='Updates', exact=True).click()
+        update_actions = page.locator(
+            '[data-help-section="updates"] .vs-help-heading-actions')
+        update_groups = update_actions.locator(
+            ':scope > .vs-help-heading-group')
+        expect(update_groups).to_have_count(2)
+        pending = update_actions.get_by_role(
+            'button', name='Pending', exact=True)
+        latest = update_actions.get_by_role(
+            'button', name='Latest', exact=True)
+        all_updates = update_actions.get_by_role(
+            'button', name='All updates', exact=True)
+        expect(pending.locator('img')).to_have_attribute(
+            'src', '/cassini-help-icons/email-24px.svg')
+        expect(latest.locator('img')).to_have_attribute(
+            'src', '/cassini-help-icons/hourglass_arrow_down-24px.svg')
+        expect(all_updates.locator('img')).to_have_attribute(
+            'src', '/cassini-icons/tryton-history.svg')
+        self.assertLessEqual(
+            abs(
+                pending.bounding_box()['x']
+                + pending.bounding_box()['width']
+                - latest.bounding_box()['x']),
+            1)
+        self.assertEqual(
+            round(
+                update_groups.nth(1).bounding_box()['x']
+                - update_groups.first.bounding_box()['x']
+                - update_groups.first.bounding_box()['width']),
+            6)
+        expect(pending).to_have_class(
+            'vs-help-heading-button vs-help-heading-button-active')
+        with page.expect_response(
+                lambda response: '/help/updates?filter=latest' in response.url):
+            latest.click()
+        expect(page.get_by_role(
+            'button', name='Latest', exact=True)).to_have_class(
+                'vs-help-heading-button vs-help-heading-button-active')
+        with page.expect_response(
+                lambda response:
+                '/help/resource/updates' in response.url):
+            page.get_by_role(
+                'button', name='All updates', exact=True).click()
+        expect(page.locator(
+            '.vs-tab', has_text='My Notifications')).to_be_visible()
+
+        with page.expect_response(
+                lambda response: '/help/section/tickets' in response.url):
+            page.get_by_role(
+                'button', name='Support', exact=True).click()
+        support_actions = page.locator(
+            '[data-help-section="tickets"] .vs-help-heading-actions')
+        expect(support_actions.get_by_role('button')).to_have_count(1)
+        assistance = support_actions.get_by_role(
+            'button', name='Remote assistance', exact=True)
+        expect(assistance.locator('img')).to_have_attribute(
+            'src', '/cassini-help-icons/support_agent-24px.svg')
+        expect(assistance).to_have_attribute('data-help-cobrowse', 'true')
+        with page.expect_response(
+                lambda response:
+                '/help/resource/tickets' in response.url):
+            page.get_by_role(
+                'button', name='Open tickets', exact=True).click()
+        expect(page.locator(
+            '.vs-tab', has_text='NaN-tic Tickets')).to_be_visible()
 
         panel_controls.get_by_role(
             'button', name='Menu', exact=True).click()

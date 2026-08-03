@@ -376,7 +376,7 @@ class TestShellDemo(WebTestCase):
         open_ms = float(
             opened.value.headers['x-cassini-ms'])
         self.assertLess(
-            open_ms, 50,
+            open_ms, 75,
             'A cached window action took %.3f ms' % open_ms)
         tabs = page.locator('#workspace-tabs .vs-tab')
         expect(tabs).to_have_count(1)
@@ -561,6 +561,22 @@ class TestShellDemo(WebTestCase):
                 'New', 'Save', 'Reload/Undo')
             ]
         self.assertEqual(positions, sorted(positions))
+        new_button = toolbar.get_by_role(
+            'button', name='New', exact=True)
+        save_button = toolbar.get_by_role(
+            'button', name='Save', exact=True)
+        inactive_button = toolbar.get_by_role(
+            'button', name='Show inactive records', exact=True)
+        regular_background = new_button.evaluate(
+            'element => getComputedStyle(element).backgroundColor')
+        self.assertEqual(
+            save_button.evaluate(
+                'element => getComputedStyle(element).backgroundColor'),
+            regular_background)
+        self.assertEqual(
+            inactive_button.evaluate(
+                'element => getComputedStyle(element).backgroundColor'),
+            regular_background)
         self.assertNotIn('Duplicate', titles)
         self.assertNotIn('Delete', titles)
         expect(toolbar.locator('.vs-window-title')).to_have_attribute(

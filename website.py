@@ -9,8 +9,6 @@ from trytond.transaction import Transaction
 from werkzeug.utils import redirect
 from werkzeug.wrappers import Response
 
-from .i18n import lazy_translate
-
 _CACHE = (
     VoyagerCache('cassini.cache', duration=CACHE_TIMEOUT)
     if CACHE_ENABLED else None)
@@ -91,7 +89,7 @@ class Site(metaclass=PoolMeta):
     @classmethod
     def __setup__(cls):
         super().__setup__()
-        cls.type.selection.append(('cassini', lazy_translate('Cassini')))
+        cls.type.selection.append(('cassini', 'Cassini'))
 
     def get_cache(self, session, request):
         if self.type == 'cassini':
