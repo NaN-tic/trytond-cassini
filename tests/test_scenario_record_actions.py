@@ -105,6 +105,11 @@ class TestRecordActions(WebTestCase):
             'background-color', 'rgb(255, 255, 255)')
         expect(page.locator('#workspace-tabs .vs-tab-active')).to_have_css(
             'background-color', 'rgb(232, 239, 235)')
+        main_box = page.locator('.vs-main').bounding_box()
+        panel_box = page.locator('#active-panel').bounding_box()
+        self.assertAlmostEqual(
+            panel_box['y'] + panel_box['height'],
+            main_box['y'] + main_box['height'], delta=1)
         table_top = page.locator('.vs-table-wrap').bounding_box()['y']
         toolbar_height = page.locator('.vs-toolbar').bounding_box()['height']
         window_menu.locator('.vs-window-title').click()

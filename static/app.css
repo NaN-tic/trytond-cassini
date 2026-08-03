@@ -435,7 +435,7 @@ a {
     min-width: 0;
     min-height: 0;
     overflow: auto;
-    padding: 0 1.15rem 1.15rem;
+    padding: 0 1.15rem;
 }
 
 .vs-main:has(.vs-active-panel-empty) {
@@ -759,9 +759,11 @@ button.vs-menu-group:focus-visible {
 }
 
 .vs-workspace {
+    display: flex;
     height: 100%;
     min-width: 0;
     min-height: 100%;
+    flex-direction: column;
 }
 
 .vs-tabs {
@@ -859,6 +861,7 @@ button.vs-menu-group:focus-visible {
 }
 
 .vs-active-panel {
+    flex: 1 0 auto;
     min-height: 24rem;
     padding: 1rem;
     border: 1px solid var(--vs-line);
