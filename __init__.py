@@ -121,6 +121,7 @@ def register():
         app.WizardStep,
         app.ReportDownload,
         app.DownloadBinary,
+        app.DownloadX2ManyBinary,
         app.StateComponent,
         app.UpdateStateComponent,
         module='cassini', type_='model')

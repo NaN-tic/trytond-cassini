@@ -2657,6 +2657,20 @@ class SaoEngine:
         self.save()
         return tab, count
 
+    @staticmethod
+    def binary_download_response(content, filename):
+        """Build a download response for a binary field value."""
+        if not isinstance(content, bytes):
+            content = bytes(content) if isinstance(
+                content, (bytearray, memoryview)) else b''
+        filename = secure_filename(str(filename)) or 'binary'
+        mimetype = mimetypes.guess_type(filename)[0]
+        response = Response(
+            content, content_type=mimetype or 'application/octet-stream')
+        response.headers['Content-Disposition'] = (
+            'attachment; filename="%s"' % filename)
+        return response
+
     def binary_response(self, tab_id, record_key, field_name):
         tab = self._tab(tab_id, kind='window')
         record = tab['records'][record_key]
@@ -2675,14 +2689,8 @@ class SaoEngine:
                     filename_field = node.attrib.get('filename')
                     if filename_field:
                         break
-        filename = values.get(filename_field) or field_name
-        filename = secure_filename(str(filename)) or field_name
-        mimetype = mimetypes.guess_type(filename)[0]
-        response = Response(
-            content, content_type=mimetype or 'application/octet-stream')
-        response.headers['Content-Disposition'] = (
-            'attachment; filename="%s"' % filename)
-        return response
+        return self.binary_download_response(
+            content, values.get(filename_field) or field_name)
 
     def state_token(self):
         raw = json.dumps(

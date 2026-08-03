@@ -5384,15 +5384,20 @@ class UpdateX2ManyField(SaoEndpoint):
                 relation_definition, child_attributes)[0]:
             raise ValueError(_('This relation field is read-only'))
 
+        child_definition = dict(relation_definition)
+        child_definition.update(child_attributes)
         request = current_request()
+        uploaded = request.files.get('value') if request else None
+        clearing_binary = (
+            child_field._type == 'binary' and self.value == '')
         raw_values = request.form.getlist('value') if request else []
         raw_value = (
+            uploaded.read()
+            if uploaded and child_field._type == 'binary' else
             raw_values
             if relation_definition.get('type') in {
                 'many2many', 'one2many', 'multiselection'}
             else self.value)
-        child_definition = dict(relation_definition)
-        child_definition.update(child_attributes)
         parsed = self.engine.parse_value(
             child_field, raw_value, child_definition)
         record_values = self.engine._record_values(
@@ -5400,6 +5405,15 @@ class UpdateX2ManyField(SaoEndpoint):
         relation_instance = Relation(row.get('id'), **record_values)
         before = encode_value(relation_instance._default_values)
         setattr(relation_instance, self.child, parsed)
+        filename_field = (
+            child_attributes.get('filename')
+            or relation_definition.get('filename'))
+        if (
+                filename_field in Relation._fields
+                and (uploaded or clearing_binary)):
+            setattr(
+                relation_instance, filename_field,
+                uploaded.filename if uploaded else None)
         relation_instance.on_change({self.child})
         dependent = self.engine._dependent_fields(
             relation_view, {self.child})
@@ -6604,6 +6618,69 @@ class DownloadBinary(SaoEndpoint):
     def render(self):
         return self.engine.binary_response(
             self.tab, self.record, self.field)
+
+
+class DownloadX2ManyBinary(SaoEndpoint):
+    'Download Cassini X2Many Binary'
+    __name__ = 'cassini.download.x2many.binary'
+    _url = (
+        '/tab/<string:tab>/record/<string:record>/'
+        'field/<string:field>/x2many/<string:item>/binary/<string:child>')
+
+    tab = fields.Char('Tab')
+    record = fields.Char('Record')
+    field = fields.Char('Field')
+    item = fields.Char('Item')
+    child = fields.Char('Child Field')
+
+    @handle_endpoint_errors
+    def render(self):
+        (
+            _tab, stored, view, renderer, _Parent, parent_field, _endpoint,
+            ) = relation_source(
+                self.engine, self.tab, self.record, self.field)
+        definition = view.get('fields', {}).get(self.field, {})
+        attributes = field_attributes(view, self.field)
+        values = decode_value(stored.get('values', {}))
+        relation_values = list(values.get(self.field) or [])
+        modes = (
+            ['tree']
+            if parent_field._type == 'many2many' else [
+                mode.strip() for mode in attributes.get(
+                    'mode', 'tree,form').split(',')
+                if mode.strip() in {'tree', 'form'}])
+        if not modes:
+            modes = ['tree']
+        state = stored.setdefault(
+            'x2many', {}).setdefault(self.field, {
+                'view': modes[0], 'current': None, 'deleted': []})
+        relation_view, rows = renderer.x2many_rows(
+            definition, attributes, relation_values, state,
+            state.get('view', modes[0]))
+        row = next((row for row in rows if row['key'] == self.item), None)
+        if not row or row.get('deleted'):
+            raise ValueError(_('Unknown related record'))
+        Relation = Pool().get(definition['relation'])
+        relation_definition = relation_view.get(
+            'fields', {}).get(self.child)
+        binary_field = Relation._fields.get(self.child)
+        if (
+                not relation_definition
+                or not binary_field
+                or binary_field._type != 'binary'):
+            raise ValueError(_('Unknown binary field'))
+        content = row['values'].get(self.child)
+        if not isinstance(content, bytes) and row.get('id'):
+            content = getattr(Relation(row['id']), self.child) or b''
+        child_attributes = field_attributes(relation_view, self.child)
+        filename_field = (
+            child_attributes.get('filename')
+            or relation_definition.get('filename'))
+        filename = row['values'].get(filename_field)
+        if not filename and filename_field and row.get('id'):
+            filename = getattr(Relation(row['id']), filename_field, None)
+        return self.engine.binary_download_response(
+            content, filename or self.child)
 
 
 class StateComponent(SaoEndpoint):

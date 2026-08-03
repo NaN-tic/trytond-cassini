@@ -383,6 +383,12 @@ class WidgetRenderer:
         if self.endpoint == 'preferences':
             PreferenceBinary = self.pool.get('cassini.preference.binary')
             return PreferenceBinary.url(field=name)
+        if self.endpoint == 'x2many':
+            Download = self.pool.get('cassini.download.x2many.binary')
+            origin = self.tab['relation_origin']
+            return Download.url(
+                tab=self.tab['id'], record=origin['record'],
+                field=origin['field'], item=self.record['key'], child=name)
         return None
 
     def common_attributes(
@@ -788,7 +794,8 @@ class WidgetRenderer:
             size = self.binary_size(value)
             href = self.binary_href(name, value)
             binary_name = (
-                'value' if self.endpoint in {'record', 'wizard'} else name)
+                'value'
+                if self.endpoint in {'record', 'wizard', 'x2many'} else name)
             if widget == 'image':
                 try:
                     width = max(24, int(attributes.get('width', 300)))
@@ -825,7 +832,7 @@ class WidgetRenderer:
                                 cls='vs-image-toolbar',
                                 role='group',
                                 aria_label=_('Image actions')):
-                            if value and href:
+                            if size and href:
                                 with a(
                                         href=href,
                                         cls='vs-icon-button',
@@ -833,7 +840,7 @@ class WidgetRenderer:
                                         aria_label=_('Save as'),
                                         download=filename or None):
                                     icon('download')
-                            elif not readonly:
+                            elif not size and not readonly:
                                 with label(
                                         cls=(
                                             'vs-icon-button '
@@ -905,14 +912,13 @@ class WidgetRenderer:
                                     aria_label=_('Save as'),
                                     download=filename or None):
                                 icon('download')
-                        if not readonly:
+                        if not size and not readonly:
                             with label(
                                     cls=(
                                         'vs-icon-button '
                                         'vs-file-select'),
                                     title=_('Select'),
                                     aria_label=_('Select'),
-                                    hidden=bool(href) or None,
                                     data_binary_select='true'):
                                 input_(
                                     id=field_id + '-input',

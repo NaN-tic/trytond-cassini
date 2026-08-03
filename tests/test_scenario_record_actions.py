@@ -259,9 +259,49 @@ class TestRecordActions(WebTestCase):
             '.vs-x2many-content .vs-row')
         attachment_row_count = attachment_rows.count()
         attachment_actions.get_by_role(
+            'button', name='Switch', exact=True).click()
+        attachment_binary = attachment_dialog.locator(
+            '.vs-x2many-form [data-field="data"]').first
+        expect(attachment_binary.get_by_role(
+            'link', name='Save as', exact=True)).to_be_visible()
+        expect(attachment_binary.locator(
+            '[data-binary-select]')).to_have_count(0)
+        download_link = attachment_binary.get_by_role(
+            'link', name='Save as', exact=True)
+        with page.expect_download() as download_info:
+            download_link.click()
+        self.assertEqual(
+            download_info.value.suggested_filename,
+            download_link.get_attribute('download'))
+        with page.expect_response(
+                lambda response: '/x2many/' in response.url
+                and '/field/data' in response.url):
+            attachment_binary.get_by_role(
+                'button', name='Clear', exact=True).click()
+        expect(attachment_binary.locator(
+            '[data-binary-size]')).to_have_value('')
+        expect(attachment_binary.locator(
+            '[data-binary-select]')).to_be_visible()
+        with page.expect_response(
+                lambda response: '/x2many/' in response.url
+                and '/field/data' in response.url):
+            attachment_binary.locator('input[type="file"]').set_input_files({
+                'name': 'replacement.txt',
+                'mimeType': 'text/plain',
+                'buffer': b'Replacement attachment',
+                })
+        expect(attachment_binary.locator(
+            '[data-binary-size]')).to_have_value('22B')
+        expect(attachment_binary.get_by_role(
+            'link', name='Save as', exact=True)).to_have_attribute(
+                'download', 'replacement.txt')
+        attachment_actions.get_by_role(
+            'button', name='Switch', exact=True).click()
+        attachment_actions.get_by_role(
             'button', name='New', exact=True).click()
         expect(attachment_rows).to_have_count(attachment_row_count + 1)
-        expect(attachment_rows.last.get_by_role('textbox')).to_be_visible()
+        expect(attachment_rows.last.locator(
+            'input:not([readonly])').first).to_be_visible()
         attachment_dialog.get_by_role(
             'button', name='Cancel', exact=True).click()
 

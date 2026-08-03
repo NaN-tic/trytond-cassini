@@ -566,7 +566,7 @@ class TestViewsWidgets(WebTestCase):
                 'download', 'beta.txt')
         expect(binary.get_by_role(
             'button', name='Clear', exact=True)).to_be_visible()
-        expect(binary.locator('[data-binary-select]')).to_be_hidden()
+        expect(binary.locator('[data-binary-select]')).to_have_count(0)
         filename = binary.locator('[data-binary-filename]')
         with page.expect_response(
                 lambda response: '/field/binary_filename' in response.url):
@@ -602,6 +602,7 @@ class TestViewsWidgets(WebTestCase):
                 'download', 'updated.txt')
         expect(binary.get_by_role(
             'button', name='Clear', exact=True)).to_be_visible()
+        expect(binary.locator('[data-binary-select]')).to_have_count(0)
         reference = page.locator('[data-field="reference_value"]')
         expect(reference.locator('[data-reference-model]')).to_have_value(
             'res.group')
