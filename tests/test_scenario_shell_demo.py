@@ -416,6 +416,8 @@ class TestShellDemo(WebTestCase):
                 const buttonStyle = getComputedStyle(button);
                 return {
                     navBorderBottom: navStyle.borderBottomWidth,
+                    navBackground: navStyle.backgroundColor,
+                    navOverflowY: navStyle.overflowY,
                     activeBorderLeft: activeStyle.borderLeftWidth,
                     activeBorderRight: activeStyle.borderRightWidth,
                     activeBorderBottom: activeStyle.borderBottomWidth,
@@ -423,6 +425,8 @@ class TestShellDemo(WebTestCase):
                 };
             }''')
         self.assertEqual(domain_geometry['navBorderBottom'], '1px')
+        self.assertEqual(domain_geometry['navBackground'], 'rgb(23, 33, 31)')
+        self.assertEqual(domain_geometry['navOverflowY'], 'hidden')
         self.assertEqual(domain_geometry['activeBorderLeft'], '1px')
         self.assertEqual(domain_geometry['activeBorderRight'], '1px')
         self.assertEqual(domain_geometry['activeBorderBottom'], '0px')

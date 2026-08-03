@@ -92,6 +92,7 @@ class TestViewsWidgets(WebTestCase):
                                     {'name': 'Beta Child Two'},
                                     ])],
                         'one2one_value': second_group.id,
+                        'reference_value': str(first_group),
                         'selection_value': 'draft',
                         'time_value': time(10, 30),
                         },
@@ -523,6 +524,8 @@ class TestViewsWidgets(WebTestCase):
         switch.click()
         expect(page.locator(
             '.vs-screen > .vs-table-wrap > .vs-table')).to_be_visible()
+        expect(page.locator(
+            '.vs-table .vs-hierarchy-toggle-placeholder')).to_have_count(0)
         expect(page.locator('.vs-view-switcher')).to_have_count(0)
         switch = page.get_by_label('Switch view')
         expect(switch).to_have_attribute('data-next-view', 'form')
@@ -613,6 +616,7 @@ class TestViewsWidgets(WebTestCase):
         expect(character_label).to_have_count(1)
         expect(character_label).to_have_class(
             'vs-standalone-label vs-label-required')
+        expect(character_label).to_have_css('font-size', '14px')
         expect(page.locator(
             '[data-field="char_value"] > .vs-label')).to_have_count(0)
         email_label = page.locator(

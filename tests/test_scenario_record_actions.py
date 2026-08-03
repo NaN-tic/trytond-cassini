@@ -49,6 +49,9 @@ class TestRecordActions(WebTestCase):
                         'name': 'Cassini Record Actions',
                         'action': str(action),
                         }])
+            Group.create([{
+                        'name': 'Cassini Empty Attachment Group',
+                        }])
             group, = Group.create([{'name': 'Cassini Action Group'}])
             Attachment.create([{
                         'name': 'cassini-action.txt',
@@ -92,6 +95,16 @@ class TestRecordActions(WebTestCase):
             'aria-label', 'Window actions: Cassini Record Actions')
         expect(page.locator('.vs-window-heading-label')).to_have_text(
             'Cassini Record Actions')
+        expect(page.locator('.vs-toolbar')).to_have_css(
+            'border-bottom-width', '0px')
+        expect(page.locator('.vs-toolbar')).to_have_css(
+            'background-color', 'rgb(232, 239, 235)')
+        expect(page.locator('.vs-search-toolbar')).to_have_css(
+            'border-top-width', '0px')
+        expect(page.locator('.vs-search-toolbar')).to_have_css(
+            'background-color', 'rgb(255, 255, 255)')
+        expect(page.locator('#workspace-tabs .vs-tab-active')).to_have_css(
+            'background-color', 'rgb(232, 239, 235)')
         table_top = page.locator('.vs-table-wrap').bounding_box()['y']
         toolbar_height = page.locator('.vs-toolbar').bounding_box()['height']
         window_menu.locator('.vs-window-title').click()
@@ -107,6 +120,20 @@ class TestRecordActions(WebTestCase):
             page.locator('.vs-toolbar').bounding_box()['height'],
             toolbar_height, delta=1)
         window_menu.locator('.vs-window-title').click()
+
+        empty_group = page.get_by_text(
+            'Cassini Empty Attachment Group', exact=True)
+        empty_group.click()
+        empty_attachments = page.locator('details.vs-attachment-popup')
+        empty_attachments.locator('summary').click()
+        empty_preview = empty_attachments.get_by_role(
+            'menuitem', name='Preview', exact=True)
+        expect(empty_preview).to_be_enabled()
+        empty_preview.click()
+        preview = page.locator('aside.vs-attachment-preview')
+        expect(preview).to_contain_text('No attachments')
+        preview.get_by_role('button', name='Close', exact=True).click()
+
         group_row = group_name.locator('xpath=ancestor::tr')
         group_position = group_row.evaluate(
             'row => Array.from(row.parentElement.children).indexOf(row) + 1')
@@ -209,9 +236,7 @@ class TestRecordActions(WebTestCase):
         expect(attachment_dialog).to_contain_text(
             'Attachments (Cassini Action Group)')
         expect(attachment_dialog.get_by_role(
-            'group', name='Resource actions')).to_be_visible()
-        expect(attachment_dialog.get_by_role(
-            'button', name='New', exact=True)).to_be_enabled()
+            'group', name='Resource actions')).to_have_count(0)
         attachment_dialog.get_by_role(
             'button', name='Cancel', exact=True).click()
 
@@ -223,7 +248,7 @@ class TestRecordActions(WebTestCase):
         expect(note_dialog).to_contain_text(
             'Notes (Cassini Action Group)')
         expect(note_dialog.get_by_role(
-            'button', name='New', exact=True)).to_be_enabled()
+            'group', name='Resource actions')).to_have_count(0)
         note_dialog.get_by_role(
             'button', name='Cancel', exact=True).click()
 

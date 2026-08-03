@@ -54,7 +54,7 @@
 }
 
 [data-theme="dark"] .vs-toolbar {
-    background: var(--vs-panel);
+    background: var(--vs-panel-soft);
 }
 
 [data-theme="dark"] .vs-sidebar {
@@ -795,6 +795,11 @@ button.vs-menu-group:focus-visible {
     background: var(--vs-panel);
 }
 
+.vs-tabs .vs-tab-active {
+    border-color: var(--vs-panel-soft);
+    background: var(--vs-panel-soft);
+}
+
 .vs-tab-title,
 .vs-local-tab-title,
 .vs-tab-close {
@@ -1066,8 +1071,8 @@ button.vs-menu-group:focus-visible {
     top: 0;
     margin: -1rem -1rem 1rem;
     padding: .7rem 1rem;
-    border-bottom: 1px solid var(--vs-line);
-    background: var(--vs-panel);
+    border-bottom: 0;
+    background: var(--vs-panel-soft);
     overflow: visible;
 }
 
@@ -1403,15 +1408,17 @@ button.vs-menu-group:focus-visible {
 
 .vs-search-toolbar {
     display: flex;
-    min-width: 100%;
-    width: 100%;
-    flex: 0 0 100%;
+    margin: 0 -3rem -.7rem -1rem;
+    min-width: calc(100% + 4rem);
+    width: calc(100% + 4rem);
+    flex: 0 0 calc(100% + 4rem);
     flex-wrap: nowrap;
     order: 20;
     gap: .45rem;
     align-items: center;
-    padding-top: .65rem;
-    border-top: 1px solid var(--vs-line);
+    padding: .65rem 1rem .7rem;
+    border-top: 0;
+    background: var(--vs-panel);
 }
 
 .vs-search-toolbar > .vs-filter-popup {
@@ -1620,11 +1627,14 @@ button.vs-menu-group:focus-visible {
 }
 
 .vs-domain-tabs {
-    width: 100%;
-    flex-basis: 100%;
+    width: calc(100% + 4rem);
+    flex-basis: calc(100% + 4rem);
     order: 30;
-    margin: .2rem 0 -.75rem;
-    padding: 0 .15rem;
+    margin: 0 -3rem -.7rem -1rem;
+    padding: .65rem 1rem .7rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: var(--vs-panel);
 }
 
 .vs-toolbar-group {
@@ -1908,7 +1918,7 @@ button.vs-menu-group:focus-visible {
     align-items: center;
     margin-bottom: .28rem;
     color: var(--vs-muted);
-    font-size: .78rem;
+    font-size: 14px;
     font-weight: 400;
 }
 

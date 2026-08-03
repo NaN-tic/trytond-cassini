@@ -3585,8 +3585,9 @@ class AttachmentPreview(SaoEndpoint):
                 ])
         if tab.get('attachment_preview'):
             tab.pop('attachment_preview')
-        elif attachments:
-            tab['attachment_preview'] = attachments[0].id
+        else:
+            tab['attachment_preview'] = (
+                attachments[0].id if attachments else True)
         self.engine.save()
         return screen_response(self.engine, tab)
 

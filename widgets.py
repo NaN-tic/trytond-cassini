@@ -168,9 +168,6 @@ class WidgetRenderer:
                 rules.append('min-width: %spx' % attributes['width'])
             if str(attributes.get('height', '')).isdigit():
                 rules.append('min-height: %spx' % attributes['height'])
-            if str(attributes.get('xexpand', '1')).lower() in {
-                    '0', 'false', 'no'}:
-                rules.extend(['min-width:0', 'min-inline-size:0'])
             if str(attributes.get('xfill', '1')).lower() in {
                     '0', 'false', 'no'}:
                 try:

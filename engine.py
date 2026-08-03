@@ -237,11 +237,9 @@ class SaoEngine:
                 }
         if resource == 'logs':
             return self.open_action(action, data)
-        related = self._open_window(
-            action, data, None, reuse=False)
+        related = self._open_window(action, data, None, reuse=False)
         related['relation_modal'] = True
         related['return_tab'] = tab['id']
-        related['resource_modal'] = resource
         if not tab.get('access', {}).get('write', True):
             related['access']['create'] = False
             related['access']['write'] = False

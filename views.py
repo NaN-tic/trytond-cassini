@@ -236,10 +236,7 @@ class ViewRenderer:
         return grid
 
     def relation_dialog_header(self, tab):
-        DeleteRecords = self.pool.get('cassini.delete.records')
-        NewRecord = self.pool.get('cassini.new.record')
         SelectNeighbor = self.pool.get('cassini.select.neighbor')
-        SwitchView = self.pool.get('cassini.switch.view')
         current = tab.get('current_record')
         record_order = tab.get('record_order', [])
         position = (
@@ -248,51 +245,6 @@ class ViewRenderer:
             and current in record_order else 0)
         with header(cls='vs-relation-dialog-header') as header_:
             h2(tab['title'], cls='vs-relation-dialog-title')
-            if tab.get('resource_modal'):
-                access = tab.get('access', {})
-                view_types = tab.get('view_types', [])
-                current_view = tab.get('view_type')
-                next_view = (
-                    view_types[
-                        (view_types.index(current_view) + 1)
-                        % len(view_types)]
-                    if current_view in view_types and view_types else '')
-                with div(
-                        cls='vs-relation-dialog-resource-actions',
-                        role='group',
-                        aria_label=_('Resource actions')):
-                    with button(
-                            type='button', cls='vs-icon-button',
-                            title=_('New'),
-                            aria_label=_('New'),
-                            disabled=not access.get('create', True) or None,
-                            hx_post=NewRecord.url(tab=tab['id']),
-                            hx_target='#screen-' + tab['id'],
-                            hx_swap='outerHTML'):
-                        icon('create')
-                    with button(
-                            type='button', cls='vs-icon-button',
-                            title=_('Delete'),
-                            aria_label=_('Delete'),
-                            disabled=(
-                                not current
-                                or not access.get('delete', True) or None),
-                            hx_confirm=_(
-                                'Delete the selected records?'),
-                            hx_post=DeleteRecords.url(tab=tab['id']),
-                            hx_target='#screen-' + tab['id'],
-                            hx_swap='outerHTML'):
-                        icon('delete')
-                    with button(
-                            type='button', cls='vs-icon-button',
-                            title=_('Switch view'),
-                            aria_label=_('Switch view'),
-                            disabled=len(view_types) < 2 or None,
-                            hx_post=SwitchView.url(
-                                tab=tab['id'], view=next_view),
-                            hx_target='#screen-' + tab['id'],
-                            hx_swap='outerHTML'):
-                        icon('switch')
             if tab.get('relation_navigation'):
                 with div(
                         cls='vs-relation-navigation',
@@ -904,7 +856,6 @@ class ViewRenderer:
                                             'vs-popup-item '
                                             'vs-popup-item-icon'),
                                         role='menuitem',
-                                        disabled=not attachments or None,
                                         hx_post=AttachmentPreview.url(
                                             tab=tab['id']),
                                         hx_target='#screen-' + tab['id'],
@@ -1901,10 +1852,7 @@ class ViewRenderer:
                                         if cell_visual else None)):
                                     if node.tag == 'field':
                                         name = node.attrib['name']
-                                        with div(
-                                                cls=(
-                                                    'vs-tree-cell '
-                                                    'vs-hierarchy-cell')):
+                                        with div(cls='vs-tree-cell'):
                                             toggle = None
                                             if (name == first_field
                                                     and has_children):
@@ -2027,14 +1975,14 @@ class ViewRenderer:
                                                                 affix_attributes))
                                                         if tag is not None:
                                                             content.add(tag)
-                                            cell_depth = (
-                                                depth
-                                                if name == first_field else 0)
-                                            HierarchyWidget.row(
-                                                content, toggle, cell_depth,
-                                                is_expanded,
-                                                extra_class=(
-                                                    'vs-tree-hierarchy'))
+                                            if (name == first_field
+                                                    and view.get(
+                                                        'field_childs')):
+                                                HierarchyWidget.row(
+                                                    content, toggle, depth,
+                                                    is_expanded,
+                                                    extra_class=(
+                                                        'vs-tree-hierarchy'))
                                     elif not embedded:
                                         attributes = dict(node.attrib)
                                         readonly, _required, invisible = (
@@ -2210,8 +2158,6 @@ class ViewRenderer:
             '0', 'false', 'no'}
         if xexpand and xfill:
             rules.append('width:100%')
-        elif not xexpand:
-            rules.extend(['min-width:0', 'min-inline-size:0'])
         if 'xalign' in attributes:
             try:
                 xalign = float(attributes.get('xalign', 0))
