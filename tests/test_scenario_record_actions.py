@@ -156,8 +156,12 @@ class TestRecordActions(WebTestCase):
         expect(attachment_popup.locator(
             '.vs-resource-badge')).to_have_text('3')
         attachment_popup.locator('summary').click()
-        attachment_popup.get_by_role(
-            'menuitem', name='Preview', exact=True).click()
+        preview_menu_item = attachment_popup.get_by_role(
+            'menuitem', name='Preview', exact=True)
+        expect(preview_menu_item.locator(
+            '.vs-attachment-preview-toggle')).to_have_class(
+                'vs-attachment-preview-toggle')
+        preview_menu_item.click()
         preview = page.locator('aside.vs-attachment-preview')
         expect(preview).to_be_visible()
         expect(preview.get_by_role(
@@ -174,6 +178,21 @@ class TestRecordActions(WebTestCase):
         expect(preview.locator(
             '.vs-attachment-preview-toolbar')).to_have_css(
                 'justify-content', 'center')
+        close_button = preview.get_by_role('button', name='Close', exact=True)
+        self.assertGreater(
+            close_button.bounding_box()['x'],
+            preview.locator(
+                '.vs-attachment-preview-navigation').bounding_box()['x'])
+        attachment_popup.locator('summary').click()
+        expect(attachment_popup.get_by_role(
+            'menuitem', name='Preview', exact=True).locator(
+                '.vs-attachment-preview-toggle')).to_have_class(
+                    'vs-attachment-preview-toggle '
+                    'vs-attachment-preview-toggle-active')
+        expect(attachment_popup.get_by_role(
+            'menuitem', name='Preview', exact=True).locator(
+                '.vs-attachment-preview-toggle')).to_have_css(
+                    'background-color', 'rgb(31, 109, 93)')
         expect(preview.locator(
             '.vs-attachment-preview-count')).to_have_text('1/3')
         preview.get_by_role('button', name='Next', exact=True).click()

@@ -160,7 +160,8 @@ class ViewRenderer:
                             hx_swap='outerHTML'):
                         icon('forward')
                 with button(
-                        type='button', cls='vs-icon-button',
+                        type='button', cls=(
+                            'vs-icon-button vs-attachment-preview-close'),
                         title=_('Close'), aria_label=_('Close'),
                         hx_post=AttachmentPreview.url(tab=tab['id']),
                         hx_target='#screen-' + tab['id'], hx_swap='outerHTML'):
@@ -910,6 +911,16 @@ class ViewRenderer:
                                         hx_swap='outerHTML'):
                                     icon('open')
                                     span(_('Preview'))
+                                    span(
+                                        cls=(
+                                            'vs-attachment-preview-toggle%s'
+                                            % (
+                                                ' '
+                                                'vs-attachment-preview-toggle-active'
+                                                if tab.get(
+                                                    'attachment_preview')
+                                                else '')),
+                                        aria_hidden='true')
                                 with button(
                                         type='button',
                                         cls=(
