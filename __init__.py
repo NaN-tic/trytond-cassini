@@ -55,6 +55,7 @@ def register():
         app.AttachmentData,
         app.AttachmentPreview,
         app.AttachmentPreviewNavigate,
+        app.ReferenceAutocomplete,
         app.ActivateTab,
         app.CloseTab,
         app.ResolveUnsavedChanges,

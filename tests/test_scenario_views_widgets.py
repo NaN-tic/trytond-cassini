@@ -541,6 +541,11 @@ class TestViewsWidgets(WebTestCase):
         for widget_name in widget_names:
             expect(page.locator(
                     f'[data-widget="{widget_name}"]')).to_be_visible()
+        reference = page.locator('[data-field="reference_value"]')
+        expect(reference.locator('[data-reference-model]')).to_have_value(
+            'res.group')
+        expect(reference.locator('[data-reference-input]')).to_have_value(
+            'Widget Group One')
         form_link = page.locator(
             '.vs-link-button', has_text='Cassini Widget Link')
         expect(form_link).to_be_visible()

@@ -26,6 +26,32 @@
     let qzPrintQueue = Promise.resolve();
     let pendingColumnPopup = null;
 
+    document.addEventListener("change", event => {
+        const model = event.target.closest?.("[data-reference-model]");
+        if (!model) return;
+        const widget = model.closest("[data-reference-widget]");
+        const input = widget?.querySelector("[data-reference-input]");
+        const hidden = widget?.querySelector("[data-reference-hidden]");
+        if (!hidden) return;
+        input.value = "";
+        hidden.value = "";
+        htmx.trigger(hidden, "change");
+    });
+
+    document.addEventListener("click", event => {
+        const choice = event.target.closest?.("[data-reference-choice]");
+        if (!choice) return;
+        const widget = choice.closest("[data-reference-widget]");
+        const model = widget?.querySelector("[data-reference-model]");
+        const input = widget?.querySelector("[data-reference-input]");
+        const hidden = widget?.querySelector("[data-reference-hidden]");
+        if (!model || !input || !hidden) return;
+        event.preventDefault();
+        input.value = choice.dataset.referenceTitle;
+        hidden.value = model.value + "," + choice.dataset.referenceChoice;
+        htmx.trigger(hidden, "change");
+    });
+
     function easterSundayDate(year) {
         const a = year % 19;
         const b = (year / 100) | 0;

@@ -4339,6 +4339,60 @@ class RelationAutocomplete(SaoEndpoint):
             input_id=field_id + '-input')
 
 
+class ReferenceAutocomplete(SaoEndpoint):
+    'Autocomplete a Cassini Reference'
+    __name__ = 'cassini.reference.autocomplete'
+    _url = (
+        '/tab/<string:tab>/record/<string:record>/'
+        'field/<string:field>/reference-autocomplete')
+
+    tab = fields.Char('Tab')
+    record = fields.Char('Record')
+    field = fields.Char('Field')
+    model = fields.Char('Model')
+    query = fields.Char('Query')
+
+    @handle_endpoint_errors
+    def render(self):
+        (
+            _tab, _stored, view, renderer,
+            _Parent, field, _endpoint,
+            ) = relation_source(
+                self.engine, self.tab, self.record, self.field)
+        definition = view['fields'][self.field]
+        models = {
+            str(model): label
+            for model, label in renderer.selection(definition)
+            if model}
+        if self.model not in models:
+            return html_response(div(
+                id=dom_id(
+                    'field', self.tab, self.record, self.field)
+                + '-suggestions', cls='vs-relation-completion',
+                role='listbox'))
+        ModelAccess = Pool().get('ir.model.access')
+        if not ModelAccess.get_access([self.model])[self.model]['read']:
+            raise ValueError(_('This relation is not readable'))
+        choices = []
+        if (self.query or '').strip():
+            choices = [
+                (value['id'], value['name'])
+                for value in Pool().get(self.model).autocomplete(
+                    self.query.strip(), [], 20)
+                if value.get('id')]
+        suggestion_id = dom_id(
+            'field', self.tab, self.record, self.field) + '-suggestions'
+        with div(
+                id=suggestion_id, cls='vs-relation-completion',
+                role='listbox') as suggestions:
+            for record_id, title in choices:
+                button(
+                    title, type='button', cls='vs-relation-option',
+                    role='option', data_reference_choice=record_id,
+                    data_reference_title=title)
+        return html_response(suggestions)
+
+
 class RelationSearch(SaoEndpoint):
     'Search and Select a Cassini Relation'
     __name__ = 'cassini.relation.search'

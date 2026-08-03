@@ -700,9 +700,46 @@ class WidgetRenderer:
             return control
 
         if widget == 'reference':
-            common['placeholder'] = 'model,id'
-            return input_(
-                type='text', value=stringify(value), **common)
+            model, record_id = (str(value).split(',', 1) + [''])[:2] \
+                if value else ('', '')
+            title = ''
+            if model and record_id.isdigit():
+                try:
+                    title = self.pool.get(model)(int(record_id)).rec_name
+                except KeyError:
+                    pass
+            suggestions_id = field_id + '-suggestions'
+            ReferenceAutocomplete = self.pool.get(
+                'cassini.reference.autocomplete')
+            with div(cls='vs-reference', data_reference_widget='true') as control:
+                with select(
+                        name='model', cls='vs-input vs-reference-model',
+                        disabled=readonly or None,
+                        aria_label=definition.get('string') or name,
+                        data_reference_model='true'):
+                    option('', value='', selected=not model or None)
+                    for choice, label_ in self.selection(definition):
+                        option(label_, value=choice,
+                            selected=choice == model or None)
+                input_(
+                    type='text', name='query', value=title,
+                    autocomplete='off', disabled=readonly or None,
+                    cls='vs-input vs-reference-entry',
+                    data_reference_input='true',
+                    hx_post=ReferenceAutocomplete.url(
+                        tab=self.tab['id'], record=self.record['key'],
+                        field=name),
+                    hx_trigger='input changed delay:250ms',
+                    hx_target='#' + suggestions_id, hx_swap='outerHTML',
+                    hx_sync='this:replace', hx_include='closest .vs-reference')
+                hidden = dict(common)
+                hidden['id'] = field_id + '-value'
+                input_(type='hidden', value=stringify(value),
+                    data_reference_hidden='true', **hidden)
+                with div(id=suggestions_id, cls='vs-relation-completion',
+                        role='listbox'):
+                    pass
+            return control
 
         if widget in self.x2many_widgets:
             return self.x2many(
@@ -1753,4 +1790,7 @@ class WidgetRenderer:
                     data_relation_open='true',
                     data_open_tab_url=OpenResource.url(
                         model=relation, record=relation_id))
-        return span(stringify(value), cls='vs-value')
+        return span(
+            stringify(value),
+            cls='vs-value%s' % (
+                ' vs-temporal-value' if widget in self.date_widgets else ''))

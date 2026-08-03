@@ -1990,6 +1990,22 @@ input.vs-input[type="checkbox"] {
     cursor: pointer;
 }
 
+.vs-reference {
+    display: flex;
+    min-width: 0;
+    gap: .45rem;
+}
+
+.vs-reference-model {
+    width: min(12rem, 40%);
+    flex: 0 1 12rem;
+}
+
+.vs-reference-entry {
+    min-width: 0;
+    flex: 1;
+}
+
 textarea.vs-input {
     min-height: 6.5rem;
     resize: vertical;
@@ -2613,6 +2629,15 @@ textarea.vs-input {
 
 .vs-tree-content > .vs-value {
     min-width: 0;
+}
+
+.vs-tree-content:has(.vs-temporal-value),
+.vs-tree-content:has([data-widget="date"]),
+.vs-tree-content:has([data-widget="time"]),
+.vs-tree-content:has([data-widget="datetime"]),
+.vs-tree-content:has([data-widget="timestamp"]) {
+    justify-content: flex-start;
+    text-align: left;
 }
 
 .vs-tree-relation-link {
