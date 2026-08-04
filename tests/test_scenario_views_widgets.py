@@ -773,11 +773,14 @@ class TestViewsWidgets(WebTestCase):
                     activeBackground: activeStyle.backgroundColor,
                     activeBorderBottom: activeStyle.borderBottomWidth,
                     activeBorderLeft: activeStyle.borderLeftWidth,
+                    activeLeft: activeBox.left,
                     listZIndex: listStyle.zIndex,
                     navBottom: navBox.bottom,
                     navBorderBottom: navStyle.borderBottomWidth,
                     navLineBackground: navLineStyle.backgroundColor,
                     navLineHeight: navLineStyle.height,
+                    navPaddingLeft: navStyle.paddingLeft,
+                    pageLeft: pageBox.left,
                     pageTop: pageBox.top,
                     pageBackground: pageStyle.backgroundColor,
                     pageBorderLeft: pageStyle.borderLeftWidth,
@@ -789,6 +792,9 @@ class TestViewsWidgets(WebTestCase):
         self.assertLessEqual(abs(
             notebook_geometry['pageTop']
             - notebook_geometry['navBottom']), 1)
+        self.assertLessEqual(abs(
+            notebook_geometry['activeLeft']
+            - notebook_geometry['pageLeft']), 1)
         self.assertEqual(notebook_geometry['activeBorderBottom'], '0px')
         self.assertEqual(notebook_geometry['activeBorderLeft'], '1px')
         self.assertEqual(
@@ -796,6 +802,7 @@ class TestViewsWidgets(WebTestCase):
             notebook_geometry['pageBackground'])
         self.assertEqual(notebook_geometry['listZIndex'], '1')
         self.assertEqual(notebook_geometry['navBorderBottom'], '0px')
+        self.assertEqual(notebook_geometry['navPaddingLeft'], '0px')
         self.assertEqual(notebook_geometry['navLineHeight'], '1px')
         self.assertNotEqual(
             notebook_geometry['navLineBackground'],
