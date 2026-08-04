@@ -21,6 +21,7 @@ JAVASCRIPT_SOURCES = (
     'Duplicate',
     'Failed to copy selected records to the clipboard.',
     'Global search',
+    'Global search or start a new assistant conversation',
     'Global shortcuts',
     'Keyboard shortcuts',
     'New',

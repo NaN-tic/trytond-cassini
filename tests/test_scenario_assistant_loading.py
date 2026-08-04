@@ -468,6 +468,9 @@ class TestAssistantLoading(WebTestCase):
             'dialog', name='Keyboard shortcuts')
         expect(shortcuts_dialog).to_be_visible()
         expect(shortcuts_dialog.get_by_text(
+            'Global search or start a new assistant conversation',
+            exact=True)).to_be_visible()
+        expect(shortcuts_dialog.get_by_text(
             'Cycle side panel', exact=True)).to_be_visible()
         shortcuts_dialog.get_by_role('button', name='Close').click()
         toolbar_button = page.locator(

@@ -931,6 +931,10 @@ def unsaved_changes_response(engine, tab, action, parameters=None):
             _('create another record'),
             _('Continue without saving'),
             _('Save and continue')),
+        'duplicate': (
+            _('duplicate this record'),
+            _('Duplicate without saving'),
+            _('Save and duplicate')),
         'select-neighbor': (
             _('open another record'),
             _('Continue without saving'),
@@ -3832,7 +3836,7 @@ class ResolveUnsavedChanges(SaoEndpoint):
     @handle_endpoint_errors
     def render(self):
         if self.action not in {
-                'close-tab', 'new-record',
+                'close-tab', 'new-record', 'duplicate',
                 'select-neighbor', 'switch-view', 'open-preferences'}:
             raise ValueError(_('Unknown leave action'))
         if self.decision not in {'discard', 'save'}:
@@ -3857,6 +3861,8 @@ class ResolveUnsavedChanges(SaoEndpoint):
                 render=False).continue_after_closing_tabs(engine)
         elif self.action == 'new-record':
             engine.new_record(self.tab)
+        elif self.action == 'duplicate':
+            engine.duplicate(self.tab)
         elif self.action == 'select-neighbor':
             engine.select_neighbor(self.tab, self.direction)
         else:
@@ -5946,9 +5952,14 @@ class DuplicateRecord(SaoEndpoint):
 
     @handle_endpoint_errors
     def render(self):
-        self.engine.duplicate(self.tab)
-        tab = self.engine.interface.get_tab(self.tab)
-        return screen_response(self.engine, tab)
+        engine = self.engine
+        tab = engine.interface.get_tab(self.tab)
+        if has_unsaved_changes(tab):
+            return unsaved_changes_response(
+                engine, tab, 'duplicate')
+        engine.duplicate(self.tab)
+        tab = engine.interface.get_tab(self.tab)
+        return screen_response(engine, tab)
 
 
 class ReloadTab(SaoEndpoint):

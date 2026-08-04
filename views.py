@@ -365,6 +365,9 @@ class ViewRenderer:
             next_view = view_types[(view_index + 1) % len(view_types)]
         else:
             next_view = view_types[0] if view_types else ''
+        search_view = next((
+                view_type for view_type in view_types
+                if view_type in {'tree', 'calendar', 'list-form'}), '')
         dirty_records = [
             item for item in tab.get('records', {}).values()
             if item.get('dirty')]
@@ -467,6 +470,14 @@ class ViewRenderer:
         with div(
                 id='toolbar-' + tab['id'],
                 cls='vs-toolbar') as toolbar:
+            if search_view and search_view != tab.get('view_type'):
+                button(
+                    type='button', hidden=True,
+                    data_search_view_switch='true',
+                    hx_post=SwitchView.url(
+                        tab=tab['id'], view=search_view),
+                    hx_target='#screen-' + tab['id'],
+                    hx_swap='outerHTML')
             window_heading = div(cls='vs-window-heading')
             with window_heading:
                 with details(

@@ -64,6 +64,9 @@
         <record model="ir.message" id="msg_global_search_a2b8a166">
             <field name="text">Global search</field>
         </record>
+        <record model="ir.message" id="msg_global_search_or_start_a_new_assistant_conversat_ba037822">
+            <field name="text">Global search or start a new assistant conversation</field>
+        </record>
         <record model="ir.message" id="msg_global_shortcuts_e73da767">
             <field name="text">Global shortcuts</field>
         </record>

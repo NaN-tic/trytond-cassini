@@ -86,6 +86,10 @@ msgctxt "model:ir.message,text:msg_global_search_a2b8a166"
 msgid "Global search"
 msgstr "Cerca global"
 
+msgctxt "model:ir.message,text:msg_global_search_or_start_a_new_assistant_conversat_ba037822"
+msgid "Global search or start a new assistant conversation"
+msgstr "Cerca global o inicia una conversa nova amb l'assistent"
+
 msgctxt "model:ir.message,text:msg_global_shortcuts_e73da767"
 msgid "Global shortcuts"
 msgstr "Dreceres globals"
@@ -1923,6 +1927,10 @@ msgid "Duplicate"
 msgstr "Duplicar"
 
 msgctxt "xgettext:x:"
+msgid "Duplicate without saving"
+msgstr "Duplica sense desar"
+
+msgctxt "xgettext:x:"
 msgid "Encoding"
 msgstr "Codificació"
 
@@ -2353,6 +2361,10 @@ msgstr "Desa i tanca"
 msgctxt "xgettext:x:"
 msgid "Save and continue"
 msgstr "Desa i continua"
+
+msgctxt "xgettext:x:"
+msgid "Save and duplicate"
+msgstr "Desa i duplica"
 
 msgctxt "xgettext:x:"
 msgid "Save and switch"
@@ -2821,6 +2833,10 @@ msgstr "tancar aquesta pestanya"
 msgctxt "xgettext:x:"
 msgid "create another record"
 msgstr "crear un altre registre"
+
+msgctxt "xgettext:x:"
+msgid "duplicate this record"
+msgstr "duplicar aquest registre"
 
 msgctxt "xgettext:x:"
 msgid "open another record"

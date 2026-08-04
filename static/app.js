@@ -165,11 +165,12 @@
             key: "r", ctrl: true, shift: true, scope: "tab"},
         {shortcut: "Ctrl+P", label: tr("Print"), action: "print",
             key: "p", ctrl: true, scope: "tab"},
-        {shortcut: "Alt+Shift+Tab", label: tr("Previous tab"),
-            action: "previous-tab", key: "tab", alt: true, shift: true,
+        {shortcut: "Alt+PageUp", label: tr("Previous tab"),
+            action: "previous-tab", key: "pageup", alt: true,
             scope: "global"},
-        {shortcut: "Alt+Tab", label: tr("Next tab"), action: "next-tab",
-            key: "tab", alt: true, scope: "global"},
+        {shortcut: "Alt+PageDown", label: tr("Next tab"),
+            action: "next-tab", key: "pagedown", alt: true,
+            scope: "global"},
         {shortcut: "Ctrl+K", label: tr("Global search"),
             action: "global-search", key: "k", ctrl: true,
             scope: "global"},
@@ -800,9 +801,15 @@
             for (const definition of shortcutDefinitions.filter(
                     item => item.scope === scope)) {
                 const term = document.createElement("dt");
-                term.textContent = (
-                    definition.action === "help" && hasAssistantPanel() ?
-                        tr("Cycle side panel") : definition.label);
+                if (definition.action === "help" && hasAssistantPanel()) {
+                    term.textContent = tr("Cycle side panel");
+                } else if (definition.action === "global-search" &&
+                        hasAssistantPanel()) {
+                    term.textContent = tr(
+                        "Global search or start a new assistant conversation");
+                } else {
+                    term.textContent = definition.label;
+                }
                 const description = document.createElement("dd");
                 const key = document.createElement("kbd");
                 key.textContent = definition.shortcut;
@@ -912,10 +919,8 @@
                 return true;
             }
             const switchView = screen.querySelector(
-                ".vs-toolbar-actions " +
-                "[data-shortcut-action='switch']");
-            if (switchView && ["tree", "calendar", "list-form"].includes(
-                    switchView.dataset.nextView)) {
+                "[data-search-view-switch]");
+            if (switchView) {
                 focusSearchAfterSwap = true;
                 switchView.click();
                 return true;
@@ -2854,14 +2859,9 @@
                 document.querySelector(".vs-modal-backdrop")) {
             return;
         }
-        if (event.target.closest?.(
-                "input, textarea, select, [contenteditable='true']") &&
-                !["help", "accesskeys"].includes(definition.action)) {
-            return;
-        }
-        if (activateShortcut(definition.action)) {
-            event.preventDefault();
-        }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        activateShortcut(definition.action);
     });
     document.addEventListener("change", function (event) {
         const input = event.target.closest("[data-relation-input]");
