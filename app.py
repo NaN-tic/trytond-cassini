@@ -1088,6 +1088,9 @@ class PageLayout(SaoComponent):
                             url.pathname + url.search + url.hash);
                     }
                 }());"""))
+            link(
+                rel='icon', type='image/png',
+                href='/cassini-icons/tryton-icon.png')
             link(rel='stylesheet', href=STATIC + '/tailwind-output.css')
             link(rel='stylesheet', href=STATIC + '/app.css')
             link(

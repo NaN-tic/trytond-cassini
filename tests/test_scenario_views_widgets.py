@@ -359,6 +359,8 @@ class TestViewsWidgets(WebTestCase):
         page.goto(
             f'{self.base_url}/{self.database}/cassini/',
             wait_until='domcontentloaded')
+        expect(page.locator('link[rel="icon"]')).to_have_attribute(
+            'href', '/cassini-icons/tryton-icon.png')
         page.locator('#username').fill(self.user)
         page.locator('#password').fill(self.password)
         page.get_by_role('button', name='Sign in').click()
