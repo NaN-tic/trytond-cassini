@@ -417,13 +417,18 @@ class TestShellDemo(WebTestCase):
                 const toolbarBox = toolbar.getBoundingClientRect();
                 const contentBox = toolbar.nextElementSibling
                     .getBoundingClientRect();
+                const header = toolbar.nextElementSibling.querySelector(
+                    '.vs-table th');
                 const navStyle = getComputedStyle(element);
+                const navLineStyle = getComputedStyle(element, '::after');
                 const activeStyle = getComputedStyle(active);
                 const buttonStyle = getComputedStyle(button);
                 return {
                     activeBottom: activeBox.bottom,
+                    activeBackground: activeStyle.backgroundColor,
                     contentTop: contentBox.top,
                     navBorderBottom: navStyle.borderBottomWidth,
+                    navLineHeight: navLineStyle.height,
                     navBackground: navStyle.backgroundColor,
                     navBottom: navBox.bottom,
                     navRight: navBox.right,
@@ -432,15 +437,20 @@ class TestShellDemo(WebTestCase):
                     activeBorderRight: activeStyle.borderRightWidth,
                     activeBorderBottom: activeStyle.borderBottomWidth,
                     buttonBorderLeft: buttonStyle.borderLeftWidth,
+                    headerBackground: getComputedStyle(header).backgroundColor,
                     toolbarRight: toolbarBox.right,
                 };
             }''')
-        self.assertEqual(domain_geometry['navBorderBottom'], '1px')
+        self.assertEqual(domain_geometry['navBorderBottom'], '0px')
+        self.assertEqual(domain_geometry['navLineHeight'], '1px')
         self.assertEqual(domain_geometry['navBackground'], 'rgb(23, 33, 31)')
         self.assertEqual(domain_geometry['navOverflowY'], 'hidden')
         self.assertEqual(domain_geometry['activeBorderLeft'], '1px')
         self.assertEqual(domain_geometry['activeBorderRight'], '1px')
         self.assertEqual(domain_geometry['activeBorderBottom'], '0px')
+        self.assertEqual(
+            domain_geometry['activeBackground'],
+            domain_geometry['headerBackground'])
         self.assertEqual(domain_geometry['buttonBorderLeft'], '0px')
         self.assertLessEqual(abs(
             domain_geometry['activeBottom']
@@ -648,6 +658,11 @@ class TestShellDemo(WebTestCase):
         self.assertGreater(
             search_toolbar.bounding_box()['width'],
             toolbar.bounding_box()['width'] * .8)
+        self.assertLessEqual(abs(
+            search_toolbar.bounding_box()['x']
+            + search_toolbar.bounding_box()['width']
+            - (toolbar.bounding_box()['x']
+                + toolbar.bounding_box()['width'])), 1)
         search_controls = [
             search_toolbar.locator('.vs-filter-popup > summary'),
             search_toolbar.get_by_placeholder('Search', exact=True),

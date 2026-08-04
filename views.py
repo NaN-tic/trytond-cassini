@@ -1070,11 +1070,7 @@ class ViewRenderer:
                 if (PYSONEncoder().encode(bookmark[2])
                     == PYSONEncoder().encode(search_domain))), None)
 
-        with div(
-                cls='vs-search-toolbar',
-                style=(
-                    'display:flex;min-width:100%;width:100%;'
-                    'flex:0 0 100%;order:20')) as search_toolbar:
+        with div(cls='vs-search-toolbar') as search_toolbar:
             with details(cls='vs-popup vs-filter-popup'):
                 with summary(
                         cls='vs-icon-button',

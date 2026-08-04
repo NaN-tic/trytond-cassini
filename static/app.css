@@ -1432,9 +1432,9 @@ button.vs-menu-group:focus-visible {
 .vs-search-toolbar {
     display: flex;
     margin: 0 -3rem -.7rem -1rem;
-    min-width: calc(100% + 4rem);
-    width: calc(100% + 4rem);
-    flex: 0 0 calc(100% + 4rem);
+    min-width: calc(100% + 2rem);
+    width: calc(100% + 2rem);
+    flex: 0 0 calc(100% + 2rem);
     flex-wrap: nowrap;
     order: 20;
     gap: .45rem;
@@ -1650,14 +1650,37 @@ button.vs-menu-group:focus-visible {
 }
 
 .vs-domain-tabs {
+    position: relative;
     width: calc(100% + 2rem);
     flex-basis: calc(100% + 2rem);
     order: 30;
     margin: 0 -3rem -1.7rem -1rem;
     padding: .65rem 1rem 0;
+    border-bottom: 0;
     overflow-x: auto;
     overflow-y: hidden;
     background: var(--vs-panel);
+}
+
+.vs-domain-tabs::after {
+    position: absolute;
+    z-index: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 1px;
+    background: var(--vs-line);
+    content: '';
+}
+
+.vs-domain-tabs .vs-tab-list {
+    position: relative;
+    z-index: 1;
+}
+
+.vs-domain-tabs .vs-local-tab-active {
+    border-bottom: 0;
+    background: var(--vs-panel-soft);
 }
 
 .vs-toolbar-group {
@@ -2614,6 +2637,7 @@ textarea.vs-input {
 }
 
 .vs-table th {
+    padding-block: 3px;
     position: sticky;
     z-index: 2;
     top: 0;
