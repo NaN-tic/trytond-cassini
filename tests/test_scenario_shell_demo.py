@@ -411,17 +411,28 @@ class TestShellDemo(WebTestCase):
                     '.vs-local-tab-active');
                 const button = active.querySelector(
                     '.vs-local-tab-title');
+                const activeBox = active.getBoundingClientRect();
+                const navBox = element.getBoundingClientRect();
+                const toolbar = element.closest('.vs-toolbar');
+                const toolbarBox = toolbar.getBoundingClientRect();
+                const contentBox = toolbar.nextElementSibling
+                    .getBoundingClientRect();
                 const navStyle = getComputedStyle(element);
                 const activeStyle = getComputedStyle(active);
                 const buttonStyle = getComputedStyle(button);
                 return {
+                    activeBottom: activeBox.bottom,
+                    contentTop: contentBox.top,
                     navBorderBottom: navStyle.borderBottomWidth,
                     navBackground: navStyle.backgroundColor,
+                    navBottom: navBox.bottom,
+                    navRight: navBox.right,
                     navOverflowY: navStyle.overflowY,
                     activeBorderLeft: activeStyle.borderLeftWidth,
                     activeBorderRight: activeStyle.borderRightWidth,
                     activeBorderBottom: activeStyle.borderBottomWidth,
                     buttonBorderLeft: buttonStyle.borderLeftWidth,
+                    toolbarRight: toolbarBox.right,
                 };
             }''')
         self.assertEqual(domain_geometry['navBorderBottom'], '1px')
@@ -431,6 +442,15 @@ class TestShellDemo(WebTestCase):
         self.assertEqual(domain_geometry['activeBorderRight'], '1px')
         self.assertEqual(domain_geometry['activeBorderBottom'], '0px')
         self.assertEqual(domain_geometry['buttonBorderLeft'], '0px')
+        self.assertLessEqual(abs(
+            domain_geometry['activeBottom']
+            - domain_geometry['navBottom']), 1)
+        self.assertLessEqual(abs(
+            domain_geometry['contentTop']
+            - domain_geometry['navBottom']), 1)
+        self.assertLessEqual(abs(
+            domain_geometry['navRight']
+            - domain_geometry['toolbarRight']), 1)
         page.locator('#main-menu').get_by_role(
             'button', name='Dynamic Selections', exact=True).click()
         expect(tabs).to_have_count(2)
@@ -926,4 +946,4 @@ class TestShellDemo(WebTestCase):
         self.assertGreater(icon_filter.locator('option').count(), 1)
         page.reload(wait_until='domcontentloaded')
         expect(page.get_by_role(
-            'button', name='Icon', exact=True)).to_be_visible()
+                'button', name='Icon', exact=True)).to_be_visible()

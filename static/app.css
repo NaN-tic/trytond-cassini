@@ -1650,11 +1650,11 @@ button.vs-menu-group:focus-visible {
 }
 
 .vs-domain-tabs {
-    width: calc(100% + 4rem);
-    flex-basis: calc(100% + 4rem);
+    width: calc(100% + 2rem);
+    flex-basis: calc(100% + 2rem);
     order: 30;
-    margin: 0 -3rem -.7rem -1rem;
-    padding: .65rem 1rem .7rem;
+    margin: 0 -3rem -1.7rem -1rem;
+    padding: .65rem 1rem 0;
     overflow-x: auto;
     overflow-y: hidden;
     background: var(--vs-panel);

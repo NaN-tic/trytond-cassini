@@ -1002,7 +1002,10 @@ class ViewRenderer:
 
             domains = decode_value(tab.get('domain_tabs', []))
             domain_counts = decode_value(tab.get('domain_counts', []))
-            if domains:
+            if (
+                    domains
+                    and tab.get('view_type') in {
+                        'tree', 'calendar', 'list-form'}):
                 with nav(
                         cls=(
                             'vs-domain-tabs vs-local-tabs '
