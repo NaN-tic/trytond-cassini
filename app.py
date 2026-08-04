@@ -36,7 +36,8 @@ from .i18n import javascript_translations
 from .state import (
     Fragment, FragmentResponse, current_request, decode_value, encode_value,
     normalize_htmx_markup, render_state_component)
-from .views import ViewRenderer, WorkspaceRenderer, parse_architecture
+from .views import (
+    ViewRenderer, WorkspaceRenderer, form_accesskey, parse_architecture)
 from .website import cassini_session_id
 from .widgets import HierarchyWidget, WidgetRenderer, dom_id
 
@@ -87,6 +88,102 @@ def field_attributes(view, name):
     if attributes is not None:
         return attributes
     return {}
+
+
+def field_layout_attributes(view, name):
+    """Return field attributes including its current form-grid position."""
+    root = parse_architecture(view)
+
+    def find(node, columns):
+        columns = ViewRenderer.form_columns(node, columns)
+        mnemonics = {}
+        for child in node:
+            if child.tag != 'label' or not child.attrib.get('name'):
+                continue
+            definition = view.get('fields', {}).get(
+                child.attrib['name'], {})
+            text = (
+                child.attrib.get('string')
+                or definition.get('string')
+                or child.attrib['name'])
+            mnemonics[child.attrib['name']] = form_accesskey(text)
+
+        grid_column = 1
+        grid_row = 1
+        for child in node:
+            attributes = dict(child.attrib)
+            if child.tag == 'label':
+                attributes.setdefault('xexpand', '0')
+                attributes.setdefault('xalign', '1.0')
+                attributes.setdefault('yalign', '0.5')
+            if child.tag in {'notebook', 'hpaned', 'vpaned'}:
+                attributes.setdefault('colspan', '4')
+            if child.tag == 'newline':
+                grid_column = 1
+                grid_row += 1
+                continue
+            try:
+                colspan = max(1, int(attributes.get('colspan', 1)))
+            except (TypeError, ValueError):
+                colspan = 1
+            colspan = min(columns, colspan)
+            if grid_column + colspan > columns + 1:
+                grid_column = 1
+                grid_row += 1
+            attributes['_grid_column'] = '%d / %d' % (
+                grid_column, grid_column + colspan)
+            attributes['_grid_row'] = '%d / %d' % (
+                grid_row, grid_row + 1)
+            grid_column += colspan
+            if child.tag == 'field' and attributes.get('name') == name:
+                attributes['_accesskey'] = mnemonics.get(name)
+                attributes['_columns'] = columns
+                attributes['_layout_style'] = ViewRenderer.form_layout_style(
+                    attributes, columns)
+                return attributes
+            if child.tag in {'group', 'page', 'hpaned', 'vpaned'}:
+                nested_columns = attributes.get('col', 4)
+                found = find(child, nested_columns)
+                if found is not None:
+                    return found
+            elif child.tag == 'notebook':
+                for page in child:
+                    if page.tag != 'page':
+                        continue
+                    found = find(page, page.attrib.get('col', 4))
+                    if found is not None:
+                        return found
+        return None
+
+    attributes = find(root, root.attrib.get('col', 4))
+    if attributes is not None:
+        return attributes
+    return {}
+
+
+def form_state_fields(view):
+    """Return form fields and those carrying a non-empty states PYSON."""
+    root = parse_architecture(view)
+    field_names = list(dict.fromkeys(
+            node.attrib['name']
+            for node in root.iter('field')
+            if node.attrib.get('name') in view.get('fields', {})))
+    state_fields = set()
+    for name in field_names:
+        definition = view['fields'][name]
+        attributes = field_attributes(view, name)
+        states = (
+            definition.get('states')
+            if definition.get('states') is not None
+            else attributes.get('states'))
+        if isinstance(states, str):
+            try:
+                states = json.loads(states)
+            except ValueError:
+                pass
+        if states:
+            state_fields.add(name)
+    return field_names, state_fields
 
 
 def relation_source(engine, tab_id, record_key, field_name):
@@ -5499,16 +5596,33 @@ class UpdateX2ManyField(SaoEndpoint):
             updated_renderer = WidgetRenderer(
                 relation_tab, updated_row, relation_view,
                 editable=True, endpoint='x2many')
-            for name in child_changes:
-                if name == self.child or name not in relation_view.get(
-                        'fields', {}):
-                    continue
+            field_names, state_fields = form_state_fields(relation_view)
+            changed_state_fields = set()
+            for name in state_fields:
+                definition = relation_view['fields'][name]
+                attributes = field_attributes(relation_view, name)
+                if child_renderer.states(
+                        definition, attributes) != updated_renderer.states(
+                            definition, attributes):
+                    changed_state_fields.add(name)
+            visible_changed = [
+                name for name in child_changes
+                if name in field_names and name != self.child]
+            for name in field_names:
+                if (
+                        name in changed_state_fields
+                        and name not in visible_changed):
+                    visible_changed.append(name)
+            for name in visible_changed:
                 fragments.append(Fragment(
                         dom_id(
                             'field', self.tab,
                             updated_row['dom_key'], name),
                         updated_renderer.render(
-                            name, field_attributes(relation_view, name))))
+                            name,
+                            (field_layout_attributes(relation_view, name)
+                             if name in state_fields else
+                             field_attributes(relation_view, name)))))
         else:
             fragments.append(Fragment(
                     dom_id('field', self.tab, self.record, self.field),
@@ -5545,6 +5659,10 @@ class UpdateField(SaoEndpoint):
         uploaded = request.files.get('value') if request else None
         tab = self.engine.interface.get_tab(self.tab)
         view = decode_value(tab['view'])
+        previous_record = dict(tab['records'][self.record])
+        previous_record['values'] = decode_value(
+            previous_record.get('values', {}))
+        previous_renderer = WidgetRenderer(tab, previous_record, view)
         definition = view.get('fields', {}).get(self.field, {})
         attributes = field_attributes(view, self.field)
         filename_field = (
@@ -5574,11 +5692,25 @@ class UpdateField(SaoEndpoint):
         view_definition = self.engine.interface.get_tab(self.tab)['view']
         view_definition = decode_value(view_definition)
         renderer = WidgetRenderer(tab, stored, view_definition)
+        root = parse_architecture(view_definition)
+        field_names, state_fields = form_state_fields(view_definition)
+        changed_state_fields = set()
+        for name in state_fields:
+            definition = view_definition['fields'][name]
+            attributes = field_attributes(view_definition, name)
+            if previous_renderer.states(
+                    definition, attributes) != renderer.states(
+                        definition, attributes):
+                changed_state_fields.add(name)
         visible_changed = [
             name for name in changed
-            if name in view_definition.get('fields', {})
-            ]
-        root = parse_architecture(view_definition)
+            if name in field_names]
+        # A modification can alter any PYSON expression.  Evaluate every
+        # state and refresh the fields whose invisible, readonly or required
+        # value changed.
+        for name in field_names:
+            if name in changed_state_fields and name not in visible_changed:
+                visible_changed.append(name)
         for node in root.iter('field'):
             binary_name = node.attrib.get('name')
             if (
@@ -5604,7 +5736,9 @@ class UpdateField(SaoEndpoint):
             | WidgetRenderer.numeric_widgets
             | WidgetRenderer.date_widgets)
         if preserve_self:
-            if self.field in visible_changed:
+            if (
+                    self.field in visible_changed
+                    and self.field not in changed_state_fields):
                 visible_changed.remove(self.field)
         else:
             if self.field in visible_changed:
@@ -5617,7 +5751,10 @@ class UpdateField(SaoEndpoint):
             fragments.append(Fragment(
                     target,
                     renderer.render(
-                        name, field_attributes(view_definition, name))))
+                        name,
+                        (field_layout_attributes(view_definition, name)
+                         if name in state_fields else
+                         field_attributes(view_definition, name)))))
         notices = decode_value(tab.get('notice', []))
         if notices:
             with div(

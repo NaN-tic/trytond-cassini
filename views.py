@@ -2357,7 +2357,12 @@ class ViewRenderer:
                     'fields', {}).get(attributes.get('name'), {})
                 readonly, _required, invisible = renderer.states(
                     definition, attributes)
-                if invisible:
+                if invisible and not (
+                        child.tag == 'label'
+                        and index + 1 < len(node)
+                        and node[index + 1].tag == 'field'
+                        and node[index + 1].attrib.get('name')
+                        == attributes.get('name')):
                     continue
                 state_readonly = state_readonly or readonly
             if child.tag == 'field':

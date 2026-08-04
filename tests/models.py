@@ -1,5 +1,6 @@
 from trytond.model import ModelSQL, ModelView, fields
 from trytond.pool import Pool
+from trytond.pyson import Bool, Eval
 
 
 class Monetary(fields.Numeric):
@@ -128,6 +129,40 @@ class Widget(ModelSQL, ModelView):
             'type': 'babi.action.dashboard',
             'dashboard': dashboard.id,
             }
+
+
+class PysonState(ModelSQL, ModelView):
+    'Cassini Test PYSON State'
+    __name__ = 'cassini.test.pyson_state'
+
+    street_value = fields.Function(
+        fields.Text('Street'), 'on_change_with_street_value',
+        setter='set_street_value')
+    street_unstructured = fields.Text('Street Unstructured')
+    street_name_value = fields.Char(
+        'Street Name',
+        states={
+            'invisible': (
+                Eval('street_unstructured') & ~Eval('street_name_value')),
+            })
+    street_number_value = fields.Char(
+        'Street Number',
+        states={'readonly': Bool(Eval('street_unstructured'))})
+    street_area_value = fields.Char(
+        'Street Area',
+        states={'required': Bool(Eval('street_unstructured'))})
+
+    @fields.depends('street_value', 'street_unstructured')
+    def on_change_street_value(self):
+        self.street_unstructured = self.street_value
+
+    @fields.depends('street_unstructured')
+    def on_change_with_street_value(self, name=None):
+        return self.street_unstructured
+
+    @classmethod
+    def set_street_value(cls, records, name, value):
+        cls.write(records, {'street_unstructured': value})
 
 
 class WidgetGroup(ModelSQL):

@@ -2467,6 +2467,14 @@ textarea.vs-input {
     display: none !important;
 }
 
+.vs-standalone-label:has(+ .vs-field.vs-hidden) {
+    display: none;
+}
+
+.vs-standalone-label:has(+ .vs-field .vs-input[required]) {
+    font-weight: 700;
+}
+
 .vs-group,
 .vs-notebook,
 .vs-page {

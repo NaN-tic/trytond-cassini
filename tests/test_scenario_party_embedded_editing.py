@@ -90,6 +90,32 @@ class TestPartyEmbeddedEditing(WebTestCase):
             address_name.fill('Edited Embedded Address')
         expect(address_name).to_have_value('Edited Embedded Address')
 
+        street_name = addresses.locator(
+            '.vs-x2many-form [data-field="street_name"]')
+        expect(street_name).to_be_visible()
+        building_name = addresses.locator(
+            '.vs-x2many-form [data-field="building_name"]')
+        with page.expect_response(
+                lambda response: '/x2many/' in response.url
+                and response.url.endswith('/field/building_name')):
+            building_name.locator('input').fill('Main Building')
+            building_name.locator('input').blur()
+        street = addresses.locator(
+            '.vs-x2many-form [data-field="street"] textarea')
+        with page.expect_response(
+                lambda response: '/x2many/' in response.url
+                and response.url.endswith('/field/street')):
+            street.fill('Main Street')
+            street.blur()
+        expect(street_name).to_be_hidden()
+        expect(building_name).to_be_visible()
+        with page.expect_response(
+                lambda response: '/x2many/' in response.url
+                and response.url.endswith('/field/building_name')):
+            building_name.locator('input').fill('')
+            building_name.locator('input').blur()
+        expect(building_name).to_be_hidden()
+
         contacts = page.locator('[data-field="contact_mechanisms"]')
         expect(contacts.locator(
             'col[data-column-field="party"]')).to_have_count(0)
