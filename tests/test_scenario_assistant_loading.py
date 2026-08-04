@@ -103,6 +103,17 @@ class TestAssistantLoading(WebTestCase):
 
     @browser()
     def test(self, page: Page):
+        def press_f1():
+            global_search.focus()
+            global_search.dispatch_event('keydown', {
+                    'key': 'F1',
+                    'code': 'F1',
+                    'altKey': False,
+                    'ctrlKey': False,
+                    'shiftKey': False,
+                    'metaKey': False,
+                    })
+
         page.goto(
             f'{self.base_url}/{self.database}/cassini/',
             wait_until='domcontentloaded')
@@ -130,7 +141,28 @@ class TestAssistantLoading(WebTestCase):
             'button', name='Menu', exact=True)).to_be_visible()
         expect(panel_controls.get_by_role(
             'button', name='Help', exact=True)).to_be_visible()
+        no_panel = panel_controls.get_by_role(
+            'button', name='No side panel')
+        menu_panel = panel_controls.get_by_role(
+            'button', name='Menu', exact=True)
+        help_panel = panel_controls.get_by_role(
+            'button', name='Help', exact=True)
         global_search = page.get_by_label('Global search')
+        expect(no_panel).to_have_attribute('aria-pressed', 'true')
+        with page.expect_response(
+                lambda response: response.url.endswith('/shell/menu')):
+            press_f1()
+        expect(menu_panel).to_have_attribute('aria-pressed', 'true')
+        with page.expect_response(
+                lambda response: response.url.endswith('/shell/help')):
+            press_f1()
+        expect(help_panel).to_have_attribute('aria-pressed', 'true')
+        with page.expect_response(
+                lambda response: response.url.endswith('/shell/none')):
+            press_f1()
+        expect(no_panel).to_have_attribute('aria-pressed', 'true')
+        expect(page.get_by_role(
+            'dialog', name='Keyboard shortcuts')).to_have_count(0)
         logo = page.get_by_role('img', name='NaN-tic')
         expect(logo).to_be_visible()
         self.assertGreater(
@@ -418,6 +450,10 @@ class TestAssistantLoading(WebTestCase):
             'button', name='Contextual documentation', exact=True)
         search_words = documentation_actions.get_by_role(
             'button', name='Search words', exact=True)
+        keyboard_shortcuts = documentation_actions.get_by_role(
+            'button', name='Keyboard shortcuts', exact=True)
+        expect(keyboard_shortcuts.locator('kbd')).to_have_text('F1')
+        expect(keyboard_shortcuts.locator('img')).to_have_count(0)
         expect(contextual.locator('img')).to_have_attribute(
             'src', '/cassini-help-icons/target-documentation.svg')
         expect(search_words.locator('img')).to_have_attribute(
@@ -427,6 +463,13 @@ class TestAssistantLoading(WebTestCase):
         expect(contextual).to_have_attribute('aria-pressed', 'true')
         expect(search_words).to_have_class('vs-help-heading-button')
         expect(search_words).to_have_attribute('aria-pressed', 'false')
+        keyboard_shortcuts.click()
+        shortcuts_dialog = page.get_by_role(
+            'dialog', name='Keyboard shortcuts')
+        expect(shortcuts_dialog).to_be_visible()
+        expect(shortcuts_dialog.get_by_text(
+            'Cycle side panel', exact=True)).to_be_visible()
+        shortcuts_dialog.get_by_role('button', name='Close').click()
         toolbar_button = page.locator(
             '.vs-active-panel .vs-toolbar .vs-icon-button').first
         toolbar_colors = toolbar_button.evaluate(

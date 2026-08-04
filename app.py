@@ -15,7 +15,7 @@ from xml.etree import ElementTree
 import dominate
 from dominate.tags import (
     a, article, aside, br, button, details, div, form, h1, h2, h3, h4,
-    header, img, input_, label, li, link, main, meta, nav, option, p,
+    header, img, input_, kbd, label, li, link, main, meta, nav, option, p,
     script, section, select, span, strong, summary, textarea, ul)
 from dominate.util import raw
 from trytond.exceptions import (
@@ -32,7 +32,7 @@ from werkzeug.wrappers import Response
 
 from .engine import SaoEngine
 from .icons import fullscreen_icon, icon, theme_icon
-from .i18n import javascript_translations
+from .i18n import javascript_translations, translate
 from .state import (
     Fragment, FragmentResponse, current_request, decode_value, encode_value,
     normalize_htmx_markup, render_state_component)
@@ -2177,6 +2177,15 @@ class HelpPanel(SaoEndpoint):
                                 alt='', aria_hidden='true', cls='vs-icon')
                         else:
                             icon('search')
+            with button(
+                    type='button',
+                    cls=(
+                        'vs-help-heading-button '
+                        'vs-help-heading-separated'),
+                    title=translate('Keyboard shortcuts'),
+                    aria_label=translate('Keyboard shortcuts'),
+                    data_shortcut_help='true'):
+                kbd('F1', cls='vs-shortcut-key-icon', aria_hidden='true')
         elif identifier == 'updates':
             HelpUpdates = Pool().get('cassini.help.updates')
             HelpResource = Pool().get('cassini.help.resource')

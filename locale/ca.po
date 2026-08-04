@@ -66,6 +66,10 @@ msgctxt "model:ir.message,text:msg_created_by_5d73cc30"
 msgid "Created by"
 msgstr "Usuari de creació"
 
+msgctxt "model:ir.message,text:msg_cycle_side_panel_3f6f39b7"
+msgid "Cycle side panel"
+msgstr "Canvia el panell lateral"
+
 msgctxt "model:ir.message,text:msg_delete_f6fdbe48"
 msgid "Delete"
 msgstr "Suprimeix"

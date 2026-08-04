@@ -3033,6 +3033,17 @@ textarea.vs-input {
     height: 24px;
 }
 
+.vs-shortcut-key-icon {
+    padding: .2rem .25rem;
+    border: 1px solid currentColor;
+    border-radius: .2rem;
+    box-shadow: 0 1px 0 currentColor;
+    font-family: inherit;
+    font-size: .72rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
 .vs-help-heading-group > .vs-help-heading-button:not(:first-child) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;

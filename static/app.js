@@ -800,7 +800,9 @@
             for (const definition of shortcutDefinitions.filter(
                     item => item.scope === scope)) {
                 const term = document.createElement("dt");
-                term.textContent = definition.label;
+                term.textContent = (
+                    definition.action === "help" && hasAssistantPanel() ?
+                        tr("Cycle side panel") : definition.label);
                 const description = document.createElement("dd");
                 const key = document.createElement("kbd");
                 key.textContent = definition.shortcut;
@@ -830,6 +832,28 @@
         return true;
     }
 
+    function hasAssistantPanel() {
+        return Boolean(document.querySelector(
+            "[data-panel-option='help']"));
+    }
+
+    function cycleShellPanel() {
+        const app = document.getElementById("cassini");
+        if (!app || !hasAssistantPanel()) {
+            return false;
+        }
+        const states = ["none", "menu", "help"];
+        const current = states.indexOf(app.dataset.panel);
+        const next = states[current < 0 ? 0 : (current + 1) % states.length];
+        const button = app.querySelector(
+            `[data-panel-option="${next}"]`);
+        if (!button || button.disabled) {
+            return false;
+        }
+        button.click();
+        return true;
+    }
+
     function matchesShortcut(event, definition) {
         return event.key.toLowerCase() === definition.key &&
             event.ctrlKey === Boolean(definition.ctrl) &&
@@ -855,7 +879,7 @@
 
     function activateShortcut(action) {
         if (action === "help") {
-            return showShortcutHelp();
+            return cycleShellPanel() || showShortcutHelp();
         }
         if (action === "accesskeys") {
             document.documentElement.classList.toggle("vs-accesskeys");
@@ -2824,14 +2848,15 @@
         if (event.defaultPrevented || event.isComposing || event.repeat) {
             return;
         }
-        if (event.target.closest?.(
-                "input, textarea, select, [contenteditable='true']")) {
-            return;
-        }
         const definition = shortcutDefinitions.find(
             item => matchesShortcut(event, item));
         if (!definition ||
                 document.querySelector(".vs-modal-backdrop")) {
+            return;
+        }
+        if (event.target.closest?.(
+                "input, textarea, select, [contenteditable='true']") &&
+                !["help", "accesskeys"].includes(definition.action)) {
             return;
         }
         if (activateShortcut(definition.action)) {
@@ -3096,6 +3121,11 @@
         }
     });
     document.addEventListener("click", function (event) {
+        const shortcutHelp = event.target.closest("[data-shortcut-help]");
+        if (shortcutHelp) {
+            showShortcutHelp();
+            return;
+        }
         const upload = event.target.closest("[data-help-upload]");
         if (upload) {
             chatFileInput(upload)?.click();

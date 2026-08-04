@@ -15,6 +15,7 @@ JAVASCRIPT_SOURCES = (
     'Confirm action',
     'Continue',
     'Could not save the column widths.',
+    'Cycle side panel',
     'Delete',
     'Direct printing failed: %(error)s',
     'Duplicate',
