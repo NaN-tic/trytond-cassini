@@ -1422,6 +1422,45 @@
         }
     }
 
+    function openURLs(detail) {
+        const urls = detail && detail.urls ? detail.urls : [];
+        for (const url of urls) {
+            window.open(url, "_blank", "noreferrer,noopener");
+        }
+    }
+
+    async function shareTab(button) {
+        const url = new URL(
+            button.dataset.shareUrl || window.location.href,
+            window.location.href).href;
+        const data = {
+            title: button.dataset.shareTitle || document.title,
+            url: url,
+        };
+        if (navigator.share) {
+            try {
+                await navigator.share(data);
+                return;
+            } catch (error) {
+                if (error.name === "AbortError") {
+                    return;
+                }
+            }
+        }
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(url);
+            return;
+        }
+        const input = document.createElement("textarea");
+        input.value = url;
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.append(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+    }
+
     function scheduleNoticeDismissal() {
         const host = document.getElementById("notifications");
         const notice = host && host.lastElementChild;
@@ -2680,6 +2719,13 @@
                 popup.open = false;
             }
         }
+        const share = event.target.closest("[data-share-tab]");
+        if (share) {
+            event.preventDefault();
+            shareTab(share).catch(error => {
+                showClientNotice(error.message, true);
+            });
+        }
         const toolbarPopupItem = event.target.closest(
             "[data-open-toolbar-popup]");
         if (toolbarPopupItem) {
@@ -3540,8 +3586,9 @@
         if (!action || action.matches("input, textarea, select")) {
             return;
         }
+        const screenOwner = action.dataset.screenOwner;
         const owner = action.closest(".vs-screen, .vs-wizard") ||
-            document.getElementById(action.dataset.screenOwner || "");
+            (screenOwner ? document.getElementById(screenOwner) : null);
         if (!owner) {
             return;
         }
@@ -3639,6 +3686,10 @@
     window.addEventListener("DOMContentLoaded", function () {
         document.addEventListener("voyager-download", function (event) {
             startDownloads(event.detail && (
+                event.detail.value || event.detail));
+        });
+        document.addEventListener("cassini-open-url", function (event) {
+            openURLs(event.detail && (
                 event.detail.value || event.detail));
         });
         window.htmx.config.historyCacheSize = 0;

@@ -9,7 +9,7 @@ import re
 import uuid
 from datetime import date, datetime, time
 from functools import wraps
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 from xml.etree import ElementTree
 
 import dominate
@@ -30,7 +30,7 @@ from trytond.transaction import Transaction
 from werkzeug.utils import redirect
 from werkzeug.wrappers import Response
 
-from .engine import SaoEngine
+from .engine import SaoEngine, decode_shared_tab, menu_action_url
 from .icons import fullscreen_icon, icon, theme_icon
 from .i18n import javascript_translations
 from .state import (
@@ -64,6 +64,23 @@ def optional_model(name):
 def is_htmx_request():
     request = current_request()
     return bool(request and request.headers.get('HX-Request'))
+
+
+def login_redirect_target(target):
+    """Allow login to return only to an internal shared-tab URL."""
+    Shell = Pool().get('cassini.shell')
+    if not target or not isinstance(target, str):
+        return Shell.url()
+    parsed = urlsplit(target)
+    if parsed.scheme or parsed.netloc or parsed.query or parsed.fragment:
+        return Shell.url()
+    payload = parsed.path.rsplit('/', 1)[-1]
+    if (not payload
+            or re.fullmatch(r'[A-Za-z0-9_-]+', payload) is None):
+        return Shell.url()
+    ShareTab = Pool().get('cassini.share.tab')
+    expected = ShareTab.url(payload=payload)
+    return expected if parsed.path == expected else Shell.url()
 
 
 def field_attributes(view, name):
@@ -338,6 +355,14 @@ def screen_and_close_modal_response(engine, tab):
 
 def workspace_response(
         engine, headers=None, extra_fragments=None, all_out_of_band=False):
+    headers = dict(headers or {})
+    if engine.open_urls:
+        triggers = json.loads(headers.get('HX-Trigger', '{}'))
+        triggers['cassini-open-url'] = {
+            'urls': list(engine.open_urls),
+            }
+        engine.open_urls.clear()
+        headers['HX-Trigger'] = json.dumps(triggers)
     fragments = [
         Fragment(
             'workspace',
@@ -1243,6 +1268,7 @@ class LoginForm(SaoComponent):
     challenge_type = fields.Char('Challenge Type')
     username = fields.Char('User')
     password = fields.Char('Password')
+    next = fields.Char('Next')
 
     def render(self):
         Login = Pool().get('cassini.login')
@@ -1259,6 +1285,8 @@ class LoginForm(SaoComponent):
                 with form(
                         method='post', action=Login.url(),
                         cls='vs-login-form'):
+                    if self.next:
+                        input_(type='hidden', name='next', value=self.next)
                     if self.challenge:
                         input_(
                             type='hidden', name='username',
@@ -1316,6 +1344,28 @@ class LoginPage(SaoEndpoint):
         return layout.render_page(LoginForm().tag(), 'Sign in — Tryton')
 
 
+class ShareLogin(SaoEndpoint):
+    'Cassini Shared Tab Login Page'
+    __name__ = 'cassini.share.login'
+    _url = '/login/share/<string:payload>'
+
+    payload = fields.Char('Payload')
+
+    @handle_endpoint_errors
+    def render(self):
+        decode_shared_tab(self.payload)
+        ShareTab = Pool().get('cassini.share.tab')
+        target = ShareTab.url(payload=self.payload)
+        if self.session.system_user:
+            return redirect(target)
+        pool = Pool()
+        PageLayout = pool.get('cassini.page.layout')
+        LoginForm = pool.get('cassini.login.form')
+        layout = PageLayout(render=False)
+        return layout.render_page(
+            LoginForm(next=target).tag(), 'Sign in — Tryton')
+
+
 class Login(SaoEndpoint):
     'Cassini Login'
     __name__ = 'cassini.login'
@@ -1323,17 +1373,19 @@ class Login(SaoEndpoint):
 
     username = fields.Char('User')
     password = fields.Char('Password')
+    next = fields.Char('Next')
 
     def render(self):
+        target = login_redirect_target(self.next)
         if self.session.system_user:
-            return redirect(Pool().get('cassini.shell').url())
+            return redirect(target)
         User = Pool().get('res.user')
         Session = Pool().get('ir.session')
         request = current_request()
         parameters = {
             name: value
             for name, value in request.form.items()
-            if name != 'username'
+            if name not in {'username', 'next'}
             }
         try:
             user_id = User.get_login(
@@ -1348,7 +1400,8 @@ class Login(SaoEndpoint):
                     challenge_message=exception.message,
                     challenge_type=exception.type,
                     username=self.username,
-                    password=self.password).tag(),
+                    password=self.password,
+                    next=(target if self.next else None)).tag(),
                 'Verify sign in — Tryton')
         except RateLimitException:
             PageLayout = Pool().get('cassini.page.layout')
@@ -1357,14 +1410,17 @@ class Login(SaoEndpoint):
             return layout.render_page(
                 LoginForm(
                     error='Too many sign-in attempts. Try again later.',
-                    username=self.username).tag(),
+                    username=self.username,
+                    next=(target if self.next else None)).tag(),
                 'Sign in — Tryton')
         if not user_id:
             PageLayout = Pool().get('cassini.page.layout')
             LoginForm = Pool().get('cassini.login.form')
             layout = PageLayout(render=False)
             return layout.render_page(
-                LoginForm(error='The user or password is incorrect.').tag(),
+                LoginForm(
+                    error='The user or password is incorrect.',
+                    next=(target if self.next else None)).tag(),
                 'Sign in — Tryton')
         with Transaction().set_user(user_id):
             token = Session.new()
@@ -1374,7 +1430,7 @@ class Login(SaoEndpoint):
         self.session.set_system_user(user_id)
         Workspace = Pool().get('cassini.workspace')
         Workspace.get(self.session, User(user_id))
-        response = redirect(Pool().get('cassini.shell').url())
+        response = redirect(target, code=303 if self.next else 302)
         add_auth_cookies(
             response, Transaction().database.name,
             self.username or '', str(user_id), token)
@@ -3017,14 +3073,22 @@ class Menu(SaoEndpoint):
             with div(cls='vs-tree-content') as content:
                 if menu.action_keywords:
                     with div(cls='vs-menu-entry'):
-                        with button(
+                        action_url = menu_action_url(menu)
+                        action_tag = (
+                            a(
+                                href=action_url,
+                                target='_blank',
+                                rel='noreferrer noopener')
+                            if action_url else
+                            button(
                                 type='button',
-                                cls='vs-menu-action vs-value',
-                                title=menu.name,
                                 hx_post=OpenMenu.url(menu=menu.id),
                                 hx_target='#workspace',
                                 hx_swap='outerHTML',
-                                hx_push_url='true'):
+                                hx_push_url='true'))
+                        action_tag['class'] = 'vs-menu-action vs-value'
+                        action_tag['title'] = menu.name
+                        with action_tag:
                             with span(cls='vs-menu-item-label'):
                                 if menu.icon:
                                     icon(
@@ -3359,6 +3423,7 @@ class GlobalSearch(SaoEndpoint):
     def render_results(self):
         OpenMenu = Pool().get('cassini.open.menu')
         OpenResource = Pool().get('cassini.open.resource')
+        Menu = Pool().get('ir.ui.menu')
         results = []
         if self.query and self.session.system_user:
             Model = Pool().get('ir.model')
@@ -3374,17 +3439,26 @@ class GlobalSearch(SaoEndpoint):
                         with li():
                             if model == 'ir.ui.menu':
                                 endpoint = OpenMenu.url(menu=id_)
+                                action_url = menu_action_url(Menu(id_))
                             else:
                                 endpoint = OpenResource.url(
                                     model=model, record=id_)
-                            with button(
+                                action_url = None
+                            result = (
+                                a(
+                                    href=action_url,
+                                    target='_blank',
+                                    rel='noreferrer noopener')
+                                if action_url else
+                                button(
                                     type='button',
-                                    cls='vs-search-result',
-                                    data_global_search_result='true',
                                     hx_post=endpoint,
                                     hx_target='#workspace',
                                     hx_swap='outerHTML',
-                                    hx_push_url='true'):
+                                    hx_push_url='true'))
+                            result['class'] = 'vs-search-result'
+                            result['data-global-search-result'] = 'true'
+                            with result:
                                 if icon_name:
                                     icon(
                                         icon_name.removeprefix('tryton-'),
@@ -3403,6 +3477,7 @@ class GlobalSearch(SaoEndpoint):
             placeholder = _('Search 🔍︎')
         GlobalSearchResults = Pool().get(
             'cassini.global.search.results')
+        Menu = Pool().get('ir.ui.menu')
         with div(
                 id='global-search', cls='vs-global-search',
                 data_dismissible_popup_container='true') as search:
@@ -3421,14 +3496,22 @@ class GlobalSearch(SaoEndpoint):
                         Favorite.get(), key=lambda item: item[1])
                     if favorites:
                         for menu_id, name, _icon_name in favorites:
-                            with button(
+                            action_url = menu_action_url(Menu(menu_id))
+                            favorite = (
+                                a(
+                                    href=action_url,
+                                    target='_blank',
+                                    rel='noreferrer noopener')
+                                if action_url else
+                                button(
                                     type='button',
-                                    cls='vs-popup-item',
-                                    role='menuitem',
                                     hx_post=OpenMenu.url(menu=menu_id),
                                     hx_target='#workspace',
                                     hx_swap='outerHTML',
-                                    hx_push_url='true'):
+                                    hx_push_url='true'))
+                            favorite['class'] = 'vs-popup-item'
+                            favorite['role'] = 'menuitem'
+                            with favorite:
                                 icon('star')
                                 span(name)
                     else:
@@ -3500,9 +3583,9 @@ class OpenMenu(SaoEndpoint):
         if isinstance(tab, Response):
             return tab
         if tab is None:
-            return html_response(
-                Pool().get('cassini.shell')(
-                    render=False).render_app())
+            return workspace_response(engine, {
+                    'HX-Push-Url': active_workspace_url(engine),
+                    })
         ActivateTab = Pool().get('cassini.activate.tab')
         return workspace_response(engine, {
                 'HX-Push-Url': ActivateTab.url(tab=tab['id'])})
@@ -3610,12 +3693,35 @@ class OpenAction(SaoEndpoint):
         if isinstance(tab, Response):
             return tab
         if tab is None:
-            return html_response(
-                Pool().get('cassini.shell')(
-                    render=False).render_app())
+            return workspace_response(engine, {
+                    'HX-Push-Url': active_workspace_url(engine),
+                    })
         ActivateTab = Pool().get('cassini.activate.tab')
         return workspace_response(engine, {
                 'HX-Push-Url': ActivateTab.url(tab=tab['id'])})
+
+
+class ShareTab(SaoEndpoint):
+    'Open a Portable Cassini Tab'
+    __name__ = 'cassini.share.tab'
+    _url = '/share/<string:payload>'
+
+    payload = fields.Char('Payload')
+
+    @handle_endpoint_errors
+    def render(self):
+        if not self.session.system_user:
+            ShareLogin = Pool().get('cassini.share.login')
+            return redirect(ShareLogin.url(payload=self.payload))
+        values = decode_shared_tab(self.payload)
+        engine = self.engine
+        engine.open_shared_window(values)
+        if not is_htmx_request():
+            return Pool().get('cassini.shell')().tag()
+        return workspace_response(engine, {
+                'HX-Push-Url': Pool().get(
+                    'cassini.share.tab').url(payload=self.payload),
+                })
 
 
 class OpenRelated(SaoEndpoint):

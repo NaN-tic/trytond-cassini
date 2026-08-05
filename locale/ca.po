@@ -226,6 +226,10 @@ msgctxt "field:cassini.load.tree.records,tab:"
 msgid "Tab"
 msgstr "Pestanya"
 
+msgctxt "field:cassini.login,next:"
+msgid "Next"
+msgstr "Següent"
+
 msgctxt "field:cassini.login,password:"
 msgid "Password"
 msgstr "Contrasenya"
@@ -249,6 +253,10 @@ msgstr "Tipus de repte"
 msgctxt "field:cassini.login.form,error:"
 msgid "Error"
 msgstr "Error"
+
+msgctxt "field:cassini.login.form,next:"
+msgid "Next"
+msgstr "Següent"
 
 msgctxt "field:cassini.login.form,password:"
 msgid "Password"
@@ -649,6 +657,14 @@ msgstr "Revisió"
 msgctxt "field:cassini.set.revision,tab:"
 msgid "Tab"
 msgstr "Pestanya"
+
+msgctxt "field:cassini.share.login,payload:"
+msgid "Payload"
+msgstr "Contingut"
+
+msgctxt "field:cassini.share.tab,payload:"
+msgid "Payload"
+msgstr "Contingut"
 
 msgctxt "field:cassini.shell.control,action:"
 msgid "Action"
@@ -1482,6 +1498,14 @@ msgctxt "model:cassini.set.revision,string:"
 msgid "Cassini Set Revision"
 msgstr "Revisió del conjunt de Cassini"
 
+msgctxt "model:cassini.share.login,string:"
+msgid "Cassini Share Login"
+msgstr "Inici de sessió per compartir del Cassini"
+
+msgctxt "model:cassini.share.tab,string:"
+msgid "Cassini Share Tab"
+msgstr "Pestanya compartida del Cassini"
+
 msgctxt "model:cassini.shell,string:"
 msgid "Cassini Shell"
 msgstr "Interfície del Cassini"
@@ -2250,6 +2274,10 @@ msgid "Invalid decimal value"
 msgstr "El valor decimal no és vàlid"
 
 msgctxt "xgettext:x:"
+msgid "Invalid shared tab"
+msgstr "La pestanya compartida no és vàlida"
+
+msgctxt "xgettext:x:"
 msgid "Keyboard shortcuts"
 msgstr "Dreceres de teclat"
 
@@ -2433,6 +2461,10 @@ msgstr "D'acord"
 msgctxt "xgettext:x:"
 msgid "Only one-to-many fields can be expanded for import"
 msgstr "Només es poden desplegar camps un-a-molts per importar"
+
+msgctxt "xgettext:x:"
+msgid "Only window tabs can be shared"
+msgstr "Només es poden compartir pestanyes de finestra"
 
 msgctxt "xgettext:x:"
 msgid "Open"
@@ -2720,6 +2752,10 @@ msgid "Search…"
 msgstr "Cerca…"
 
 msgctxt "xgettext:x:"
+msgid "Share tab"
+msgstr "Comparteix la pestanya"
+
+msgctxt "xgettext:x:"
 msgid "See tickets"
 msgstr "Veure tiquets"
 
@@ -2925,6 +2961,10 @@ msgstr "No s'ha pogut transcriure l'àudio."
 msgctxt "xgettext:x:"
 msgid "The chart data is not valid."
 msgstr "Les dades del gràfic no són vàlides."
+
+msgctxt "xgettext:x:"
+msgid "The current filter is too large to share"
+msgstr "El filtre actual és massa gran per compartir-lo"
 
 #, python-format
 msgctxt "xgettext:x:"

@@ -552,6 +552,7 @@ a {
     text-overflow: ellipsis;
     white-space: nowrap;
     text-align: left;
+    text-decoration: none;
     gap: .45rem;
     align-items: center;
 }
@@ -816,6 +817,7 @@ button.vs-menu-group:focus-visible {
     color: var(--vs-ink);
     cursor: pointer;
     text-align: left;
+    text-decoration: none;
     white-space: nowrap;
 }
 
@@ -1043,6 +1045,7 @@ button.vs-menu-group:focus-visible {
     color: var(--vs-ink);
     cursor: pointer;
     text-align: left;
+    text-decoration: none;
 }
 
 .vs-welcome-favorite:hover,

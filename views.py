@@ -19,7 +19,8 @@ from trytond.pyson import PYSONEncoder
 from trytond.transaction import Transaction
 
 from .engine import (
-    RECORD_COUNT_LIMIT, combine_domains, evaluate, search_field_definitions)
+    RECORD_COUNT_LIMIT, combine_domains, encode_shared_tab, evaluate,
+    menu_action_url, search_field_definitions)
 from .icons import filter_icon, icon
 from .search import search_domain_parser
 from .state import decode_value
@@ -349,6 +350,7 @@ class ViewRenderer:
         AttachmentPreview = self.pool.get('cassini.attachment.preview')
         AttachmentUpload = self.pool.get('cassini.attachment.upload')
         RunToolbarAction = self.pool.get('cassini.toolbar.action')
+        ShareTab = self.pool.get('cassini.share.tab')
 
         current = tab.get('current_record')
         record = tab.get('records', {}).get(current) if current else None
@@ -461,12 +463,15 @@ class ViewRenderer:
                             record=current),
                         })
             for action in toolbar_data.get(category, []):
+                external = action.get('type') == 'ir.action.url'
                 items.append({
                         'title': action['name'],
                         'icon': action.get('icon'),
-                        'href': False,
-                        'url': RunToolbarAction.url(
-                            tab=tab['id'], action=action['id']),
+                        'href': external,
+                        'url': (
+                            action['url'] if external
+                            else RunToolbarAction.url(
+                                tab=tab['id'], action=action['id'])),
                         })
             return items
 
@@ -519,6 +524,18 @@ class ViewRenderer:
                     with div(
                             cls='vs-popup-menu vs-window-menu-list',
                             role='menu') as window_menu_list:
+                        with button(
+                                type='button',
+                                cls=(
+                                    'vs-popup-item '
+                                    'vs-popup-item-icon'),
+                                role='menuitem',
+                                data_share_tab='true',
+                                data_share_title=tab['title'],
+                                data_share_url=ShareTab.url(
+                                    payload=encode_shared_tab(tab))):
+                            icon('link')
+                            span(_('Share tab'))
                         with button(
                                 type='button',
                                 cls='vs-popup-item vs-popup-item-icon',
@@ -1008,11 +1025,18 @@ class ViewRenderer:
                                 if items:
                                     for item in items:
                                         if item.get('href'):
-                                            a(
-                                                item['title'],
-                                                href=item['url'],
-                                                cls='vs-popup-item',
-                                                role='menuitem')
+                                            with a(
+                                                    href=item['url'],
+                                                    target='_blank',
+                                                    rel='noreferrer noopener',
+                                                    cls=(
+                                                        'vs-popup-item '
+                                                        'vs-popup-item-icon'),
+                                                    role='menuitem'):
+                                                if item.get('icon'):
+                                                    icon(item['icon'].removeprefix(
+                                                            'tryton-'))
+                                                span(item['title'])
                                         else:
                                             with button(
                                                     type='button',
@@ -3522,17 +3546,26 @@ class WorkspaceRenderer:
                         data_welcome_search='true')
                 favorites = Favorite.get()
                 if favorites:
+                    Menu = self.pool.get('ir.ui.menu')
                     with nav(
                             cls='vs-welcome-favorites',
                             aria_label=text['favorites']):
                         for menu_id, name, _icon_name in favorites:
-                            with button(
+                            action_url = menu_action_url(Menu(menu_id))
+                            favorite = (
+                                a(
+                                    href=action_url,
+                                    target='_blank',
+                                    rel='noreferrer noopener')
+                                if action_url else
+                                button(
                                     type='button',
-                                    cls='vs-welcome-favorite',
                                     hx_post=OpenMenu.url(menu=menu_id),
                                     hx_target='#workspace',
                                     hx_swap='outerHTML',
-                                    hx_push_url='true'):
+                                    hx_push_url='true'))
+                            favorite['class'] = 'vs-welcome-favorite'
+                            with favorite:
                                 icon('star')
                                 span(name)
 

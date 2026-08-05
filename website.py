@@ -116,7 +116,9 @@ class Site(metaclass=PoolMeta):
                 }
             public = (
                 request.path in public_paths
-                or request.path.startswith(prefix + '/asset/'))
+                or request.path.startswith(prefix + '/asset/')
+                or request.path.startswith(prefix + '/share/')
+                or request.path.startswith(prefix + '/login/share/'))
             if not public and not authenticated_user:
                 login_url = prefix + '/login'
                 if request.headers.get('HX-Request'):

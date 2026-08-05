@@ -6,6 +6,7 @@ import json
 import math
 import mimetypes
 import uuid
+import zlib
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 from xml.etree import ElementTree
@@ -32,6 +33,63 @@ SUPPORTED_VIEWS = {'tree', 'form', 'list-form', 'calendar'}
 COMMON_SEARCH_FIELDS = SEARCH_COMMON_SEARCH_FIELDS
 TREE_RECORD_CHUNK_SIZE = 100
 RECORD_COUNT_LIMIT = 1000
+SHARED_TAB_VERSION = 1
+SHARED_TAB_MAX_LENGTH = 65536
+
+
+def encode_shared_tab(tab):
+    """Encode the portable state of a window tab for a share URL."""
+    if tab.get('kind') != 'window' or tab.get('relation_modal'):
+        raise ValueError(_('Only window tabs can be shared'))
+    names = (
+        'model', 'title', 'domain', 'context_domain', 'domain_tabs',
+        'active_domain', 'search_value', 'search', 'search_domain',
+        'search_filters', 'active_only', 'order', 'view_ids', 'view_types',
+        'view_type', 'limit')
+    values = {
+        name: tab.get(name)
+        for name in names
+        }
+    values['version'] = SHARED_TAB_VERSION
+    if tab.get('view_type') == 'form':
+        record = tab.get('records', {}).get(tab.get('current_record'))
+        if record and int(record.get('id') or 0) > 0:
+            values['res_id'] = int(record['id'])
+    raw = json.dumps(
+        values, ensure_ascii=False, separators=(',', ':')).encode()
+    if len(raw) > SHARED_TAB_MAX_LENGTH:
+        raise ValueError(_('The current filter is too large to share'))
+    compressed = zlib.compress(raw, level=9)
+    return base64.urlsafe_b64encode(compressed).rstrip(b'=').decode('ascii')
+
+
+def decode_shared_tab(payload):
+    """Decode and minimally validate portable window state."""
+    if not payload or len(payload) > SHARED_TAB_MAX_LENGTH * 2:
+        raise ValueError(_('Invalid shared tab'))
+    try:
+        encoded = payload.encode('ascii')
+        encoded += b'=' * (-len(encoded) % 4)
+        compressed = base64.b64decode(
+            encoded, altchars=b'-_', validate=True)
+        decompressor = zlib.decompressobj()
+        raw = decompressor.decompress(
+            compressed, SHARED_TAB_MAX_LENGTH + 1)
+        if (len(raw) > SHARED_TAB_MAX_LENGTH
+                or decompressor.unconsumed_tail
+                or decompressor.unused_data
+                or not decompressor.eof):
+            raise ValueError
+        values = json.loads(raw.decode())
+    except (
+            UnicodeError, ValueError, TypeError, json.JSONDecodeError,
+            zlib.error):
+        raise ValueError(_('Invalid shared tab'))
+    if (not isinstance(values, dict)
+            or values.get('version') != SHARED_TAB_VERSION
+            or not isinstance(values.get('model'), str)):
+        raise ValueError(_('Invalid shared tab'))
+    return values
 
 
 def evaluate(value, context, default=None):
@@ -54,11 +112,20 @@ def combine_domains(*domains):
     return ['AND', *domains]
 
 
+def menu_action_url(menu):
+    """Return the external URL configured as a menu action, if any."""
+    action = menu.action
+    if action and action.__name__ == 'ir.action.url':
+        return action.url
+    return None
+
+
 class SaoEngine:
     """Translate Tryton client semantics into a persistent state document."""
 
     def __init__(self, workspace):
         self.pool = Pool()
+        self.open_urls = []
         Workspace = self.pool.get('cassini.workspace')
         # HTMX requests from different parts of the same workspace may arrive
         # concurrently. ModelSQL.lock uses NOWAIT, which turns a normal overlap
@@ -401,12 +468,8 @@ class SaoEngine:
             tab = self._open_dashboard(
                 action, data, extra_context)
         elif action_type == 'ir.action.url':
-            tab = self.interface.add_tab({
-                    'kind': 'url',
-                    'title': action.get('name') or action.get('url'),
-                    'url': action.get('url'),
-                    'action': encode_value(action),
-                    })
+            self.open_urls.append(action['url'])
+            return None
         elif action_type == 'nantic.action.open_conversation':
             try:
                 Conversation = self.pool.get(
@@ -571,6 +634,154 @@ class SaoEngine:
                     'search_value', [])) == values['search_value']
             and decode_value(tab.get(
                     'domain_tabs', [])) == values['domain_tabs'])
+
+    def open_shared_window(self, values):
+        """Replace the workspace tabs with one portable shared window."""
+        model_name = values.get('model')
+        if not isinstance(model_name, str) or not model_name:
+            raise ValueError(_('Invalid shared tab'))
+        self.pool.get(model_name)
+
+        view_types = values.get('view_types')
+        view_ids = values.get('view_ids')
+        if not isinstance(view_types, list):
+            view_types = []
+        if not isinstance(view_ids, list):
+            view_ids = []
+        views = []
+        View = self.pool.get('ir.ui.view')
+        for index, view_type in enumerate(view_types):
+            if view_type not in SUPPORTED_VIEWS:
+                continue
+            view_id = view_ids[index] if index < len(view_ids) else None
+            if view_id is not None:
+                try:
+                    view_id = int(view_id)
+                except (TypeError, ValueError):
+                    view_id = None
+                if view_id and not View.search([
+                            ('id', '=', view_id),
+                            ('model', '=', model_name),
+                            ], limit=1):
+                    view_id = None
+            views.append((view_id, view_type))
+        if not views:
+            views = [(None, 'tree'), (None, 'form')]
+        view_ids = [view_id for view_id, _view_type in views]
+        view_types = [view_type for _view_id, view_type in views]
+        view_type = values.get('view_type')
+        if view_type not in view_types:
+            view_type = view_types[0]
+        view_id = view_ids[view_types.index(view_type)]
+
+        domain = decode_value(values.get('domain') or [])
+        context_domain = decode_value(values.get('context_domain') or [])
+        search_value = decode_value(values.get('search_value') or [])
+        search_domain = decode_value(values.get('search_domain') or [])
+        for value in (domain, context_domain, search_value, search_domain):
+            if not isinstance(value, list):
+                raise ValueError(_('Invalid shared tab'))
+        order = decode_value(values.get('order'))
+        if order is not None and not isinstance(order, list):
+            raise ValueError(_('Invalid shared tab'))
+        search_filters = decode_value(values.get('search_filters') or {})
+        if not isinstance(search_filters, dict):
+            raise ValueError(_('Invalid shared tab'))
+        domain_tabs = decode_value(values.get('domain_tabs') or [])
+        if not isinstance(domain_tabs, list):
+            raise ValueError(_('Invalid shared tab'))
+        domain_tabs = [
+            {
+                'name': str(domain_tab.get('name') or ''),
+                'domain': domain_tab.get('domain') or [],
+                'count': bool(domain_tab.get('count')),
+                }
+            for domain_tab in domain_tabs
+            if (isinstance(domain_tab, dict)
+                and isinstance(domain_tab.get('domain') or [], list))
+            ]
+        try:
+            active_domain = int(values.get('active_domain') or 0)
+        except (TypeError, ValueError):
+            active_domain = 0
+        if not 0 <= active_domain < len(domain_tabs):
+            active_domain = 0
+        try:
+            limit = int(values.get('limit') or RECORD_COUNT_LIMIT)
+        except (TypeError, ValueError):
+            limit = RECORD_COUNT_LIMIT
+        limit = max(1, min(limit, RECORD_COUNT_LIMIT))
+        try:
+            res_id = int(values.get('res_id') or 0) or None
+        except (TypeError, ValueError):
+            res_id = None
+        search = values.get('search') or ''
+        if not isinstance(search, str):
+            raise ValueError(_('Invalid shared tab'))
+        title = values.get('title') or model_name
+        if not isinstance(title, str):
+            title = model_name
+
+        for existing in list(self.interface.tabs):
+            if (existing.get('kind') == 'wizard'
+                    and not existing.get('ended')):
+                Wizard = self.pool.get(
+                    existing['wizard_name'], type='wizard')
+                Wizard.delete(existing['wizard_session'])
+        self.interface.data['tabs'] = []
+        self.interface.data['active_tab'] = None
+        self.interface.data['startup_actions'] = []
+        action = {
+            'id': None,
+            'name': title,
+            'type': 'ir.action.act_window',
+            'res_model': model_name,
+            'res_id': res_id,
+            'views': views,
+            'domains': [],
+            'pyson_domain': '[]',
+            'pyson_context': '{}',
+            'pyson_order': 'null',
+            'pyson_search_value': '[]',
+            'limit': limit,
+            }
+        tab = self.interface.add_tab({
+                'kind': 'window',
+                'title': title[:500],
+                'action_id': None,
+                'action': encode_value(action),
+                'model': model_name,
+                'res_id': res_id,
+                'context': encode_value({}),
+                'domain': encode_value(domain),
+                'context_domain': encode_value(context_domain),
+                'domain_tabs': encode_value(domain_tabs),
+                'domain_counts': encode_value([]),
+                'active_domain': active_domain,
+                'search_value': encode_value(search_value),
+                'order': encode_value(order),
+                'view_ids': view_ids,
+                'view_types': view_types,
+                'view_type': view_type,
+                'view_id': view_id,
+                'limit': limit,
+                'offset': 0,
+                'search': search[:20000],
+                'search_draft': search[:20000],
+                'search_domain': encode_value(search_domain),
+                'search_filters': encode_value(search_filters),
+                'active_only': bool(values.get('active_only', True)),
+                'records': {},
+                'record_order': [],
+                'selected': [],
+                'current_record': None,
+                'toolbar': {},
+                'pages': {},
+                'column_visibility': {},
+                })
+        self.load_tab(tab, ids=[res_id] if res_id else None)
+        self.save()
+        return tab
 
     def _open_window(self, action, data, extra_context, reuse=True):
         base_context = self.context(extra_context, data)
