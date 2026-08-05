@@ -44,12 +44,14 @@ def encode_shared_tab(tab):
     names = (
         'model', 'title', 'domain', 'context_domain', 'domain_tabs',
         'active_domain', 'search_value', 'search', 'search_domain',
-        'search_filters', 'active_only', 'order', 'view_ids', 'view_types',
-        'view_type', 'limit')
+        'search_filters', 'active_only', 'order', 'default_order',
+        'view_ids', 'view_types', 'view_type', 'limit')
     values = {
         name: tab.get(name)
         for name in names
         }
+    values['default_order'] = tab.get(
+        'default_order', tab.get('order'))
     values['version'] = SHARED_TAB_VERSION
     if tab.get('view_type') == 'form':
         record = tab.get('records', {}).get(tab.get('current_record'))
@@ -684,6 +686,11 @@ class SaoEngine:
         order = decode_value(values.get('order'))
         if order is not None and not isinstance(order, list):
             raise ValueError(_('Invalid shared tab'))
+        default_order = decode_value(values.get('default_order'))
+        if default_order is not None and not isinstance(default_order, list):
+            raise ValueError(_('Invalid shared tab'))
+        if 'default_order' not in values:
+            default_order = order
         search_filters = decode_value(values.get('search_filters') or {})
         if not isinstance(search_filters, dict):
             raise ValueError(_('Invalid shared tab'))
@@ -760,6 +767,7 @@ class SaoEngine:
                 'active_domain': active_domain,
                 'search_value': encode_value(search_value),
                 'order': encode_value(order),
+                'default_order': encode_value(default_order),
                 'view_ids': view_ids,
                 'view_types': view_types,
                 'view_type': view_type,
@@ -824,6 +832,8 @@ class SaoEngine:
             ]
         search_value = evaluate(
             action.get('pyson_search_value'), evaluation_context, [])
+        order = evaluate(
+            action.get('pyson_order'), evaluation_context, None)
         window = {
                 'kind': 'window',
                 'title': action.get('name') or action.get('res_model'),
@@ -838,9 +848,8 @@ class SaoEngine:
                 'domain_counts': encode_value([]),
                 'active_domain': 0,
                 'search_value': encode_value(search_value),
-                'order': encode_value(evaluate(
-                        action.get('pyson_order'),
-                        evaluation_context, None)),
+                'order': encode_value(order),
+                'default_order': encode_value(order),
                 'view_ids': view_ids,
                 'view_types': view_types,
                 'view_type': view_types[0],
@@ -1653,14 +1662,35 @@ class SaoEngine:
     def sort(self, tab_id, field_name):
         tab = self._tab(tab_id, kind='window')
         Model = self.pool.get(tab['model'])
-        if field_name not in Model._fields:
+        view = decode_value(tab.get('view', {}))
+        root = ElementTree.fromstring(view.get('arch') or '<form/>')
+        definition = view.get('fields', {}).get(field_name)
+        if (field_name not in Model._fields
+                or definition is None
+                or definition.get('sortable') is False
+                or not Model._fields[field_name].sortable(Model)
+                or root.tag != 'tree'
+                or root.attrib.get('sequence')
+                or view.get('field_childs')):
             raise ValueError(_('Unknown sort field'))
+        if 'default_order' not in tab:
+            tab['default_order'] = tab.get('order')
+        default_order = decode_value(tab.get('default_order'))
         order = decode_value(tab.get('order')) or []
-        if order and order[0][0] == field_name:
-            direction = 'DESC' if order[0][1].upper() == 'ASC' else 'ASC'
+        current_direction = None
+        if (len(order) == 1
+                and isinstance(order[0], (list, tuple))
+                and len(order[0]) >= 2
+                and order[0][0] == field_name):
+            current_direction = str(
+                order[0][1]).strip().split(' ', 1)[0].upper()
+        if current_direction == 'ASC':
+            order = [(field_name, 'DESC')]
+        elif current_direction == 'DESC':
+            order = default_order
         else:
-            direction = 'ASC'
-        tab['order'] = encode_value([(field_name, direction)])
+            order = [(field_name, 'ASC')]
+        tab['order'] = encode_value(order)
         tab['offset'] = 0
         self.load_tab(tab)
         self.save()

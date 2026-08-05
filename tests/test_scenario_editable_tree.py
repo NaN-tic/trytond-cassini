@@ -29,6 +29,7 @@ class TestEditableTree(WebTestCase):
                             '<tree editable="1">'
                             '<field name="name"/>'
                             '<field name="active"/>'
+                            '<field name="users"/>'
                             '</tree>'),
                         }])
             action, = ActionWindow.create([{
@@ -68,8 +69,63 @@ class TestEditableTree(WebTestCase):
         page.locator('#password').fill(self.password)
         page.get_by_role('button', name='Sign in').click()
         page.locator('[data-panel-option="menu"]').click()
-        page.get_by_role(
-            'button', name='Editable Groups', exact=True).click()
+        with page.expect_response(
+                lambda response: '/open/menu/' in response.url):
+            page.get_by_role(
+                'button', name='Editable Groups', exact=True).click()
+
+        name_sort = page.get_by_role('button', name='Name', exact=True)
+        name_header = page.locator(
+            '.vs-table th', has=page.get_by_role(
+                'button', name='Name', exact=True))
+        expect(name_header).not_to_have_attribute('aria-sort', 'ascending')
+        expect(name_header.locator('.vs-sort-indicator')).to_have_count(0)
+        expect(page.get_by_role(
+            'button', name='Users', exact=True)).to_have_count(0)
+        expect(page.locator(
+            '.vs-column-label .vs-sort-label',
+            has_text='Users')).to_be_visible()
+        names = page.locator('.vs-row [data-field="name"] input')
+        self.assertEqual([
+                value for value in names.evaluate_all(
+                    'elements => elements.map(element => element.value)')
+                if value.startswith('Editable ')
+                ], ['Editable Alpha', 'Editable Beta'])
+
+        with page.expect_response(
+                lambda response: response.url.endswith('/sort/name')):
+            name_sort.click()
+        expect(name_header).to_have_attribute('aria-sort', 'ascending')
+        expect(name_header.locator('.vs-sort-indicator')).to_have_attribute(
+            'src', '/cassini-icons/tryton-arrow-down.svg')
+        self.assertEqual([
+                value for value in names.evaluate_all(
+                    'elements => elements.map(element => element.value)')
+                if value.startswith('Editable ')
+                ], ['Editable Alpha', 'Editable Beta'])
+
+        with page.expect_response(
+                lambda response: response.url.endswith('/sort/name')):
+            name_sort.click()
+        expect(name_header).to_have_attribute('aria-sort', 'descending')
+        expect(name_header.locator('.vs-sort-indicator')).to_have_attribute(
+            'src', '/cassini-icons/tryton-arrow-up.svg')
+        self.assertEqual([
+                value for value in names.evaluate_all(
+                    'elements => elements.map(element => element.value)')
+                if value.startswith('Editable ')
+                ], ['Editable Beta', 'Editable Alpha'])
+
+        with page.expect_response(
+                lambda response: response.url.endswith('/sort/name')):
+            name_sort.click()
+        expect(name_header).not_to_have_attribute('aria-sort', 'ascending')
+        expect(name_header.locator('.vs-sort-indicator')).to_have_count(0)
+        self.assertEqual([
+                value for value in names.evaluate_all(
+                    'elements => elements.map(element => element.value)')
+                if value.startswith('Editable ')
+                ], ['Editable Alpha', 'Editable Beta'])
 
         alpha = page.locator(
             '.vs-row', has=page.locator(

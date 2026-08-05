@@ -2830,6 +2830,14 @@ textarea.vs-input {
     user-select: none;
 }
 
+.vs-sort-button,
+.vs-column-label {
+    display: inline-flex;
+    max-width: 100%;
+    gap: .25rem;
+    align-items: center;
+}
+
 .vs-sort-button {
     padding: 0;
     border: 0;
@@ -2839,6 +2847,18 @@ textarea.vs-input {
     font: inherit;
     letter-spacing: inherit;
     text-transform: inherit;
+}
+
+.vs-sort-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vs-sort-indicator {
+    width: .8rem;
+    min-width: .8rem;
+    height: .8rem;
 }
 
 .vs-column-selector,

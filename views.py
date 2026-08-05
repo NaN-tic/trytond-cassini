@@ -1598,6 +1598,16 @@ class ViewRenderer:
         all_buttons = [
             node for node in all_buttons
             if node in all_columns or node in multiple_buttons]
+        order = decode_value(tab.get('order')) or []
+        sort_field = None
+        sort_direction = None
+        if (len(order) == 1
+                and isinstance(order[0], (list, tuple))
+                and len(order[0]) >= 2):
+            direction = str(order[0][1]).strip().split(' ', 1)[0].upper()
+            if direction in {'ASC', 'DESC'}:
+                sort_field = order[0][0]
+                sort_direction = direction
         visibility = tab.get('column_visibility', {})
         SelectRecord = self.pool.get('cassini.select.record')
         SelectAll = self.pool.get('cassini.select.all.records')
@@ -1834,37 +1844,59 @@ class ViewRenderer:
                                         hx_include='this')
                         for node in columns:
                             if node.tag == 'field':
+                                name = node.attrib['name']
                                 definition = view.get('fields', {}).get(
-                                    node.attrib['name'], {})
-                                with th():
-                                    if embedded:
-                                        span(
-                                            node.attrib.get('string')
-                                            or definition.get('string')
-                                            or node.attrib['name'],
-                                            cls='vs-sort-button')
+                                    name, {})
+                                column_label = (
+                                    node.attrib.get('string')
+                                    or definition.get('string')
+                                    or name)
+                                column_sort = (
+                                    sort_direction
+                                    if name == sort_field else None)
+                                sortable = bool(
+                                    not embedded
+                                    and not sequence_field
+                                    and not view.get('field_childs')
+                                    and definition.get(
+                                        'sortable', True) is not False)
+                                if not sortable:
+                                    column_sort = None
+                                column_aria_sort = {
+                                    'ASC': 'ascending',
+                                    'DESC': 'descending',
+                                    }.get(column_sort)
+                                with th(aria_sort=column_aria_sort):
+                                    if not sortable:
+                                        with span(cls='vs-column-label'):
+                                            span(
+                                                column_label,
+                                                cls='vs-sort-label')
                                     else:
-                                        button(
-                                        node.attrib.get('string')
-                                        or definition.get('string')
-                                        or node.attrib['name'],
-                                        type='button',
-                                        cls='vs-sort-button',
-                                        hx_post=SortRecords.url(
-                                            tab=tab['id'],
-                                            field=node.attrib['name']),
-                                        hx_target=tree_target,
-                                        hx_swap='outerHTML')
+                                        with button(
+                                                type='button',
+                                                cls='vs-sort-button',
+                                                hx_post=SortRecords.url(
+                                                    tab=tab['id'],
+                                                    field=name),
+                                                hx_target=tree_target,
+                                                hx_swap='outerHTML'):
+                                            span(
+                                                column_label,
+                                                cls='vs-sort-label')
+                                            if column_sort:
+                                                icon(
+                                                    'arrow-down'
+                                                    if column_sort == 'ASC'
+                                                    else 'arrow-up',
+                                                    cls='vs-sort-indicator')
                                     span(
                                         '', cls='vs-column-resizer',
                                         role='separator',
                                         tabindex='0',
                                         aria_label=_(
                                             'Resize %(column)s column') % {
-                                            'column': (
-                                                node.attrib.get('string')
-                                                or definition.get('string')
-                                                or node.attrib['name'])},
+                                            'column': column_label},
                                         aria_orientation='vertical',
                                         data_column_resizer='true')
                             else:
