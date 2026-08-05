@@ -3003,7 +3003,7 @@ class SaoEngine:
         return tab, count
 
     @staticmethod
-    def binary_download_response(content, filename):
+    def binary_download_response(content, filename, inline=False):
         """Build a download response for a binary field value."""
         if not isinstance(content, bytes):
             content = bytes(content) if isinstance(
@@ -3013,10 +3013,14 @@ class SaoEngine:
         response = Response(
             content, content_type=mimetype or 'application/octet-stream')
         response.headers['Content-Disposition'] = (
-            'attachment; filename="%s"' % filename)
+            '%s; filename="%s"' % (
+                'inline' if inline else 'attachment', filename))
+        if inline:
+            response.headers['Cache-Control'] = 'no-store'
         return response
 
-    def binary_response(self, tab_id, record_key, field_name):
+    def binary_response(
+            self, tab_id, record_key, field_name, inline=False):
         tab = self._tab(tab_id, kind='window')
         record = tab['records'][record_key]
         values = decode_value(record['values'])
@@ -3037,7 +3041,8 @@ class SaoEngine:
                     if filename_field:
                         break
         return self.binary_download_response(
-            content, values.get(filename_field) or field_name)
+            content, values.get(filename_field) or field_name,
+            inline=inline)
 
     def state_token(self):
         raw = json.dumps(

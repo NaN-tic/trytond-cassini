@@ -2215,6 +2215,19 @@ input.vs-input[type="checkbox"] {
     height: 1rem;
 }
 
+.vs-document-widget,
+.vs-document-content {
+    width: 100%;
+    min-height: 50vh;
+}
+
+.vs-document-content {
+    display: block;
+    border: 0;
+    object-fit: scale-down;
+    object-position: center top;
+}
+
 .vs-reference {
     display: flex;
     min-width: 0;
@@ -2296,6 +2309,16 @@ textarea.vs-input {
 .vs-numeric-input {
     text-align: right;
     text-align: end;
+}
+
+.vs-numeric-widget {
+    width: 100%;
+    min-width: 0;
+}
+
+[data-numeric-editor][hidden],
+[data-numeric-display][hidden] {
+    display: none;
 }
 
 .vs-relation,

@@ -6969,11 +6969,12 @@ class DownloadBinary(SaoEndpoint):
     tab = fields.Char('Tab')
     record = fields.Char('Record')
     field = fields.Char('Field')
+    inline = fields.Boolean('Inline')
 
     @handle_endpoint_errors
     def render(self):
         return self.engine.binary_response(
-            self.tab, self.record, self.field)
+            self.tab, self.record, self.field, inline=self.inline)
 
 
 class DownloadX2ManyBinary(SaoEndpoint):
@@ -6988,6 +6989,7 @@ class DownloadX2ManyBinary(SaoEndpoint):
     field = fields.Char('Field')
     item = fields.Char('Item')
     child = fields.Char('Child Field')
+    inline = fields.Boolean('Inline')
 
     @handle_endpoint_errors
     def render(self):
@@ -7037,7 +7039,7 @@ class DownloadX2ManyBinary(SaoEndpoint):
         if not filename and filename_field and row.get('id'):
             filename = getattr(Relation(row['id']), filename_field, None)
         return self.engine.binary_download_response(
-            content, filename or self.child)
+            content, filename or self.child, inline=self.inline)
 
 
 class StateComponent(SaoEndpoint):

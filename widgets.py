@@ -1,12 +1,13 @@
 import base64
 import json
+import mimetypes
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from xml.etree import ElementTree
 
 from dominate.tags import (
-    a, button, div, img, input_, label, option, progress, select, span,
-    textarea, ul)
+    a, button, div, iframe, img, input_, label, object_, option, progress,
+    select, span, textarea, ul)
 from trytond.modules.xgettext import _
 from trytond.pool import Pool
 from trytond.pyson import PYSONDecoder
@@ -441,13 +442,14 @@ class WidgetRenderer:
         return '%s%sB' % (
             format(size, '.2f').rstrip('0').rstrip('.'), unit) if size else ''
 
-    def binary_href(self, name, value):
+    def binary_href(self, name, value, inline=False):
         if not self.binary_size(value):
             return None
         if self.endpoint == 'record':
             Download = self.pool.get('cassini.download.binary')
             return Download.url(
-                tab=self.tab['id'], record=self.record['key'], field=name)
+                tab=self.tab['id'], record=self.record['key'], field=name,
+                inline=inline)
         if self.endpoint == 'preferences':
             PreferenceBinary = self.pool.get('cassini.preference.binary')
             return PreferenceBinary.url(field=name)
@@ -456,7 +458,8 @@ class WidgetRenderer:
             origin = self.tab['relation_origin']
             return Download.url(
                 tab=self.tab['id'], record=origin['record'],
-                field=origin['field'], item=self.record['key'], child=name)
+                field=origin['field'], item=self.record['key'], child=name,
+                inline=inline)
         return None
 
     def common_attributes(
@@ -677,10 +680,50 @@ class WidgetRenderer:
                     display_value / Decimal(str(factor))
                     if isinstance(display_value, Decimal)
                     else display_value / factor)
-            common['cls'] += ' vs-numeric-input'
-            return input_(
-                type='number', step=step,
-                value=stringify(display_value), **common)
+            grouping = str(attributes.get('grouping', '1')).lower() not in {
+                '0', 'false', 'no'}
+            digits = self.evaluate(
+                attributes.get('digits', definition.get('digits')))
+            if isinstance(digits, (list, tuple)) and len(digits) > 1:
+                digits = digits[1]
+            elif widget == 'integer':
+                digits = 0
+            else:
+                digits = None
+            display_attributes = {
+                'id': common['id'],
+                'type': 'text',
+                'value': self.format_numeric(name, value, attributes),
+                'readonly': 'readonly' if readonly else None,
+                'cls': 'vs-input vs-numeric-input vs-numeric-display',
+                'placeholder': common.get('placeholder'),
+                'accesskey': common.get('accesskey'),
+                'autofocus': common.get('autofocus'),
+                'aria_required': common.get('aria_required'),
+                'data_numeric_display': 'true',
+                }
+            common.update({
+                    'id': field_id + '-editor',
+                    'cls': 'vs-input vs-numeric-input',
+                    'autofocus': None,
+                    'accesskey': None,
+                    'hidden': 'hidden',
+                    'data_numeric_editor': 'true',
+                    })
+            with div(
+                    cls='vs-numeric-widget',
+                    data_numeric_widget='true',
+                    data_numeric_kind=widget,
+                    data_numeric_grouping=str(grouping).lower(),
+                    data_numeric_digits=(
+                        stringify(digits) if digits is not None else None),
+                    data_numeric_editable=str(not readonly).lower()) as control:
+                input_(**display_attributes)
+                if not readonly:
+                    input_(
+                        type='number', step=step,
+                        value=stringify(display_value), **common)
+            return control
 
         if widget in self.date_widgets:
             return self.temporal_control(
@@ -916,10 +959,41 @@ class WidgetRenderer:
                 or getattr(self.Model._fields.get(name), 'filename', None))
             filename = self.values.get(filename_field)
             size = self.binary_size(value)
-            href = self.binary_href(name, value)
+            href = self.binary_href(name, value, inline=widget == 'document')
             binary_name = (
                 'value'
                 if self.endpoint in {'record', 'wizard', 'x2many'} else name)
+            if widget == 'document':
+                mimetype = mimetypes.guess_type(stringify(filename))[0]
+                style = []
+                for dimension in ('height', 'width'):
+                    try:
+                        pixels = int(attributes.get(dimension))
+                    except (TypeError, ValueError):
+                        continue
+                    style.append('%s:%dpx' % (dimension, pixels))
+                content_attributes = {
+                    'cls': 'vs-document-content',
+                    'style': ';'.join(style) or None,
+                    }
+                with div(cls='vs-document-widget') as control:
+                    if mimetype and mimetype.startswith('image/'):
+                        img(
+                            src=href or None,
+                            alt=filename or definition.get('string') or name,
+                            **content_attributes)
+                    elif mimetype == 'application/pdf':
+                        object_(
+                            data=href or None, type=mimetype,
+                            aria_label=(
+                                filename or definition.get('string') or name),
+                            **content_attributes)
+                    else:
+                        iframe(
+                            src=href or None, sandbox='',
+                            title=filename or definition.get('string') or name,
+                            **content_attributes)
+                return control
             if widget == 'image':
                 try:
                     width = max(24, int(attributes.get('width', 300)))

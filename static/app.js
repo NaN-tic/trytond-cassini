@@ -65,6 +65,22 @@
         }
     }
 
+    function activateNumericEditor(display, deferFocus=false) {
+        const widget = display?.closest("[data-numeric-widget]");
+        const editor = widget?.querySelector("[data-numeric-editor]");
+        if (!editor || editor.disabled || editor.readOnly) return false;
+        display.hidden = true;
+        editor.hidden = false;
+        if (deferFocus) {
+            window.setTimeout(() => {
+                if (editor.isConnected && !editor.hidden) editor.focus();
+            });
+        } else {
+            editor.focus();
+        }
+        return true;
+    }
+
     document.addEventListener("click", event => {
         const link = event.target.closest?.("[data-url-open]");
         if (!link) return;
@@ -2553,7 +2569,18 @@
         }
     });
 
+    document.addEventListener("pointerdown", function (event) {
+        const numericDisplay = event.target.closest?.(
+            "[data-numeric-display]");
+        if (activateNumericEditor(numericDisplay)) {
+            event.preventDefault();
+        }
+    });
+
     document.addEventListener("focusin", function (event) {
+        const numericDisplay = event.target.closest?.(
+            "[data-numeric-display]");
+        activateNumericEditor(numericDisplay, true);
         const search = event.target.closest("[data-search-autocomplete]");
         if (search) {
             updateSearchCompletion(search);
@@ -2566,6 +2593,32 @@
     });
 
     document.addEventListener("focusout", function (event) {
+        const numericEditor = event.target.closest?.(
+            "[data-numeric-editor]");
+        if (numericEditor && numericEditor.checkValidity()) {
+            const widget = numericEditor.closest("[data-numeric-widget]");
+            const display = widget?.querySelector("[data-numeric-display]");
+            if (display) {
+                const value = numericEditor.value;
+                if (!value || widget.dataset.numericKind === "timedelta") {
+                    display.value = value;
+                } else {
+                    const configuredDigits = widget.dataset.numericDigits;
+                    const fraction = value.match(/\.(\d+)/)?.[1].length || 0;
+                    const digits = configuredDigits === undefined
+                        ? fraction : Number(configuredDigits);
+                    display.value = new Intl.NumberFormat(
+                        document.documentElement.lang || undefined, {
+                            useGrouping:
+                                widget.dataset.numericGrouping !== "false",
+                            minimumFractionDigits: digits,
+                            maximumFractionDigits: digits,
+                        }).format(Number(value));
+                }
+                numericEditor.hidden = true;
+                display.hidden = false;
+            }
+        }
         const globalSearch = event.target.closest(
             "[data-global-search-input]");
         if (globalSearch) {
