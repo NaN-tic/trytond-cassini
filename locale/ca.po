@@ -1899,6 +1899,14 @@ msgid "Choose whether to save the changes"
 msgstr "Trieu si voleu desar els canvis"
 
 msgctxt "xgettext:x:"
+msgid "Click to see the number of records"
+msgstr "Feu clic per veure el nombre de registres"
+
+msgctxt "xgettext:x:"
+msgid "Click to see the number of pages"
+msgstr "Feu clic per veure el nombre de pàgines"
+
+msgctxt "xgettext:x:"
 msgid "Clear"
 msgstr "Netejar"
 

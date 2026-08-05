@@ -1820,6 +1820,17 @@ button.vs-menu-group:focus-visible {
     white-space: nowrap;
 }
 
+.vs-count-link {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: .15em;
+}
+
 .vs-icon-button,
 .vs-tree-menu {
     display: inline-grid;

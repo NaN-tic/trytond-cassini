@@ -70,6 +70,7 @@ def register():
         app.ApplySearchBookmark,
         app.ToggleActive,
         app.PageRecords,
+        app.CountRecords,
         app.LoadTreeRecords,
         app.NavigateCalendar,
         app.SetCalendarMode,

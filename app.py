@@ -4105,6 +4105,19 @@ class PageRecords(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
+class CountRecords(SaoEndpoint):
+    'Count All Cassini Records'
+    __name__ = 'cassini.count.records'
+    _url = '/tab/<string:tab>/records/count'
+
+    tab = fields.Char('Tab')
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = self.engine.count_records(self.tab)
+        return html_response(ViewRenderer(self.engine.interface).toolbar(tab))
+
+
 class LoadTreeRecords(SaoEndpoint):
     'Load More Cassini Tree Records'
     __name__ = 'cassini.load.tree.records'

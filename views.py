@@ -3,6 +3,7 @@ import calendar as month_calendar
 import mimetypes
 import re
 from datetime import date, datetime
+from decimal import Decimal, ROUND_HALF_UP
 from xml.etree import ElementTree
 
 from dominate.tags import (
@@ -17,7 +18,8 @@ from trytond.pool import Pool
 from trytond.pyson import PYSONEncoder
 from trytond.transaction import Transaction
 
-from .engine import combine_domains, evaluate, search_field_definitions
+from .engine import (
+    RECORD_COUNT_LIMIT, combine_domains, evaluate, search_field_definitions)
 from .icons import filter_icon, icon
 from .search import search_domain_parser
 from .state import decode_value
@@ -64,6 +66,23 @@ def form_accesskey(value):
         if character not in {'d', 'e', 'f', 'i', 'n', 't', 'w'}:
             return character
     return None
+
+
+def humanize(value):
+    """Format a number with Sao's decimal units and precision."""
+    value = Decimal(str(value))
+    units = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q']
+    unit = units[0]
+    for unit in units:
+        if abs(value) <= 1000:
+            break
+        value /= 1000
+    value = value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    language = Pool().get('ir.lang').get()
+    formatted = language.format_number(value, digits=2, grouping=False)
+    decimal_point = language.decimal_point or '.'
+    formatted = formatted.rstrip('0').rstrip(decimal_point)
+    return formatted + unit
 
 
 class ViewRenderer:
@@ -319,6 +338,7 @@ class ViewRenderer:
         SaveRecords = self.pool.get('cassini.save.records')
         ShowRevisions = self.pool.get('cassini.show.revisions')
         SelectNeighbor = self.pool.get('cassini.select.neighbor')
+        CountRecords = self.pool.get('cassini.count.records')
         SwitchView = self.pool.get('cassini.switch.view')
         SwitchDomain = self.pool.get('cassini.switch.domain')
         ExportRecords = self.pool.get('cassini.export.records')
@@ -343,17 +363,24 @@ class ViewRenderer:
         selected_count = len([
                 key for key in tab.get('selected', [])
                 if key in record_order])
-        loaded_count = int(tab.get('offset') or 0) + len(record_order)
+        offset = int(tab.get('offset') or 0)
+        limit = int(tab.get('limit') or RECORD_COUNT_LIMIT)
         total_count = int(tab.get('count') or len(record_order))
+        page_count = min(total_count, offset + limit)
         record_status = str(
-            int(tab.get('offset') or 0) + record_position
+            offset + record_position
             if record_position else '_')
         if selected_count > 1:
             record_status += '#%s' % selected_count
-        if loaded_count < total_count:
-            record_status += '@%s/%s' % (loaded_count, total_count)
+        if page_count < total_count:
+            record_status += '@%s/' % page_count
         else:
-            record_status += '/%s' % loaded_count
+            record_status += '/'
+        exact_count = None
+        if not tab.get('count_limited'):
+            record_status += humanize(total_count)
+            exact_count = self.pool.get('ir.lang').get().format_number(
+                total_count, digits=0, grouping=True)
         access = tab.get('access', {
                 'read': True, 'write': True,
                 'create': True, 'delete': True})
@@ -743,10 +770,23 @@ class ViewRenderer:
                                 hx_target='#screen-' + tab['id'],
                                 hx_swap='outerHTML'):
                             icon('back')
-                        span(
-                            record_status,
-                            cls='vs-relation-navigation-position '
-                                'vs-record-navigation-position')
+                        with span(
+                                cls='vs-relation-navigation-position '
+                                    'vs-record-navigation-position'):
+                            span(record_status, title=exact_count)
+                            if tab.get('count_limited'):
+                                button(
+                                    '+1k',
+                                    type='button',
+                                    cls=(
+                                        'vs-count-link '
+                                        'vs-record-count-link'),
+                                    aria_label='+1k',
+                                    title=_(
+                                        'Click to see the number of records'),
+                                    hx_post=CountRecords.url(tab=tab['id']),
+                                    hx_target='#toolbar-' + tab['id'],
+                                    hx_swap='outerHTML')
                         with button(
                                 type='button', cls='vs-icon-button',
                                 title=_('Next record'),
@@ -1224,10 +1264,13 @@ class ViewRenderer:
         return control
 
     def search_pagination(self, tab):
+        CountRecords = self.pool.get('cassini.count.records')
         PageRecords = self.pool.get('cassini.page.records')
         offset = int(tab.get('offset') or 0)
         limit = int(tab.get('limit') or 1000)
         count = int(tab.get('count') or len(tab.get('record_order', [])))
+        current_page = offset // limit + 1 if count else 0
+        page_count = (count + limit - 1) // limit if count else 0
         with nav(
                 cls='vs-page-navigation',
                 aria_label=_('Record pages')) as pagination:
@@ -1241,11 +1284,25 @@ class ViewRenderer:
                     hx_target='#screen-' + tab['id'],
                     hx_swap='outerHTML'):
                 icon('back')
-            span(
-                '%d/%d' % (
-                    offset // limit + 1 if count else 0,
-                    (count + limit - 1) // limit if count else 0),
-                cls='vs-page-navigation-position')
+            if tab.get('count_limited'):
+                with span(cls='vs-page-navigation-position'):
+                    span('%s/' % humanize(current_page))
+                    button(
+                        '+%s' % humanize(current_page),
+                        type='button',
+                        cls='vs-count-link vs-page-count-link',
+                        aria_label='+%s' % humanize(current_page),
+                        title=_('Click to see the number of pages'),
+                        hx_post=CountRecords.url(tab=tab['id']),
+                        hx_target='#toolbar-' + tab['id'],
+                        hx_swap='outerHTML')
+            else:
+                span(
+                    '%s/%s' % (
+                        humanize(current_page), humanize(page_count)),
+                    cls='vs-page-navigation-position',
+                    title=self.pool.get('ir.lang').get().format_number(
+                        page_count, digits=0, grouping=True))
             with button(
                     type='button', cls='vs-icon-button',
                     title=_('Next page'),

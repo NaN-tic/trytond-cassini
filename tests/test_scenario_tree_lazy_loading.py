@@ -82,6 +82,8 @@ class TestTreeLazyLoading(WebTestCase):
         page.get_by_role(
             'button', name='Cassini Lazy Tree', exact=True).click()
 
+        record_position = page.locator('.vs-record-navigation-position')
+        expect(record_position).to_have_text('_/220')
         rows = page.locator('.vs-active-panel .vs-row')
         expect(rows).to_have_count(100)
         loader = page.locator('.vs-tree-loader')
@@ -151,6 +153,7 @@ class TestTreeLazyLoading(WebTestCase):
         with page.expect_response(
                 lambda response: '/select?' in response.url):
             page.get_by_text('Lazy record 000', exact=True).click()
+        expect(record_position).to_have_text('1/220')
         expect(total.locator(
                 '.vs-tree-total-selected')).to_have_text('10.25')
         expect(total.locator('.vs-tree-total-page')).to_have_text('-')

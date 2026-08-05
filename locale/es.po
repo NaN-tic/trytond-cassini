@@ -1899,6 +1899,14 @@ msgid "Choose whether to save the changes"
 msgstr "Elija si quiere guardar los cambios"
 
 msgctxt "xgettext:x:"
+msgid "Click to see the number of records"
+msgstr "Haga clic para ver el número de registros"
+
+msgctxt "xgettext:x:"
+msgid "Click to see the number of pages"
+msgstr "Haga clic para ver el número de páginas"
+
+msgctxt "xgettext:x:"
 msgid "Clear"
 msgstr "Limpiar"
 

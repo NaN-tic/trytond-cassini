@@ -31,6 +31,7 @@ from .widgets import WidgetRenderer
 SUPPORTED_VIEWS = {'tree', 'form', 'list-form', 'calendar'}
 COMMON_SEARCH_FIELDS = SEARCH_COMMON_SEARCH_FIELDS
 TREE_RECORD_CHUNK_SIZE = 100
+RECORD_COUNT_LIMIT = 1000
 
 
 def evaluate(value, context, default=None):
@@ -970,7 +971,8 @@ class SaoEngine:
         self.save()
         return state, changed_fields
 
-    def _update_window_counts(self, tab, Model, view):
+    def _update_window_counts(
+            self, tab, Model, view, refresh_count=True, exact=False):
         base_domain = combine_domains(
             decode_value(tab.get('domain', [])),
             decode_value(tab.get('context_domain', [])),
@@ -988,21 +990,32 @@ class SaoEngine:
                 tab.get('active_domain', 0), len(domain_tabs) - 1)
             active_domain = domain_tabs[active_domain_index]['domain']
         domain = combine_domains(base_domain, active_domain)
-        tab['count'] = Model.search_count(domain)
-        tab['domain_counts'] = encode_value([
-                (
-                    min(tab['count'], 1000)
-                    if index == active_domain_index
-                    else Model.search_count(
-                        combine_domains(
-                            base_domain, domain_tab['domain']),
-                        limit=1000)
-                ) if domain_tab.get('count') else None
-                for index, domain_tab in enumerate(domain_tabs)
-                ])
+        if refresh_count:
+            offset = int(tab.get('offset') or 0)
+            if exact:
+                tab['count'] = Model.search_count(domain)
+                tab['count_limited'] = False
+            else:
+                count = Model.search_count(
+                    domain, offset=offset, limit=RECORD_COUNT_LIMIT + 1)
+                tab['count'] = offset + count
+                tab['count_limited'] = count > RECORD_COUNT_LIMIT
+            tab['count_exact'] = not tab['count_limited']
+            tab['domain_counts'] = encode_value([
+                    (
+                        min(tab['count'], RECORD_COUNT_LIMIT)
+                        if index == active_domain_index
+                        else Model.search_count(
+                            combine_domains(
+                                base_domain, domain_tab['domain']),
+                            limit=RECORD_COUNT_LIMIT)
+                    ) if domain_tab.get('count') else None
+                    for index, domain_tab in enumerate(domain_tabs)
+                    ])
         return domain
 
-    def load_tab(self, tab, ids=None, append=False):
+    def load_tab(
+            self, tab, ids=None, append=False, refresh_count=True):
         Model = self.pool.get(tab['model'])
         ModelAccess = self.pool.get('ir.model.access')
         tab['history'] = bool(getattr(Model, '_history', False))
@@ -1046,7 +1059,9 @@ class SaoEngine:
             if 'rec_name' not in read_fields:
                 read_fields.append('rec_name')
 
-            domain = self._update_window_counts(tab, Model, view)
+            domain = self._update_window_counts(
+                tab, Model, view,
+                refresh_count=refresh_count and not append)
 
             search_offset = int(tab.get('offset') or 0)
             record_limit = int(tab.get('limit') or 1000)
@@ -1175,6 +1190,20 @@ class SaoEngine:
             if key not in previous_keys]
         self.save()
         return tab, loaded_keys
+
+    def count_records(self, tab_id):
+        """Compute the unrestricted count for the current window domain."""
+        tab = self._tab(tab_id, kind='window')
+        Model = self.pool.get(tab['model'])
+        context = self.context(decode_value(tab.get('context', {})))
+        if not tab.get('active_only', True):
+            context['active_test'] = False
+        with Transaction().set_context(context):
+            view = decode_value(tab.get('view', {}))
+            self._update_window_counts(
+                tab, Model, view, exact=True)
+        self.save()
+        return tab
 
     def revisions(self, tab_id):
         tab = self._tab(tab_id, kind='window')
@@ -1394,15 +1423,19 @@ class SaoEngine:
         limit = int(tab.get('limit') or 1000)
         offset = int(tab.get('offset') or 0)
         if direction == 'next':
-            offset = min(
-                offset + limit,
-                max(0, int(tab.get('count') or 0) - 1))
+            if tab.get('count_limited'):
+                offset += limit
+            else:
+                offset = min(
+                    offset + limit,
+                    max(0, int(tab.get('count') or 0) - 1))
         elif direction == 'previous':
             offset = max(0, offset - limit)
         else:
             raise ValueError(_('Unknown page direction'))
         tab['offset'] = offset
-        self.load_tab(tab)
+        self.load_tab(
+            tab, refresh_count=not tab.get('count_exact', False))
         self.save()
         return tab
 
