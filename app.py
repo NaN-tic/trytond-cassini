@@ -4407,11 +4407,27 @@ class SelectRecord(SaoEndpoint):
         tab = self.engine.interface.get_tab(self.tab)
         if self.row and not self.open:
             # The row and its checkbox are updated immediately in the
-            # browser.  Only replace the toolbar so editable tree inputs keep
-            # their focus while the record position is refreshed from the
-            # authoritative server state.
-            return html_response(
-                ViewRenderer(self.engine.interface).toolbar(tab))
+            # browser.  Replace the toolbar and totals without replacing the
+            # tree, so editable inputs keep their focus while the record
+            # position is refreshed from the authoritative server state.
+            renderer = ViewRenderer(self.engine.interface)
+            view = decode_value(tab.get('view', {}))
+            root = parse_architecture(view)
+            _all_columns, columns, _multiple_buttons = (
+                renderer.tree_columns(tab, root))
+            fragments = [Fragment(
+                    'toolbar-' + self.tab, renderer.toolbar(tab))]
+            if any(
+                    node.tag == 'field'
+                    and str(node.attrib.get('sum', '0')).lower()
+                    in {'1', 'true', 'yes'}
+                    for node in columns):
+                total_row = renderer.tree_total_row(
+                    tab, view, columns, out_of_band=True)
+                fragments.append(Fragment(
+                        '', '<template>%s</template>'
+                        % normalize_htmx_markup(total_row.render())))
+            return FragmentResponse.response(fragments, stream=True)
         return screen_response(self.engine, tab)
 
 

@@ -229,7 +229,9 @@ class TestTreeFeatures(WebTestCase):
         page.reload(wait_until='domcontentloaded')
         expect(page.locator(
                 'input[value="Tree Child"]')).to_be_visible()
-        expect(page.locator('.vs-tree-total')).to_have_text('10')
+        expect(page.locator(
+                '.vs-tree-total-selected')).to_have_text('5')
+        expect(page.locator('.vs-tree-total-page')).to_have_text('10')
 
         sibling_name = page.locator('input[value="Tree Sibling"]')
         with page.expect_response(

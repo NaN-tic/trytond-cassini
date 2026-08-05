@@ -91,6 +91,12 @@ class TestTreeLazyLoading(WebTestCase):
         expect(loader).to_have_attribute(
             'hx-select',
             '.vs-row, .vs-tree-loader, .vs-tree-total-row')
+        loader_cell = loader.locator('td')
+        self.assertEqual(
+            int(loader_cell.get_attribute('colspan')),
+            page.locator('.vs-active-panel .vs-table th').count())
+        expect(loader_cell).to_have_css('display', 'table-cell')
+        expect(loader_cell).to_have_css('text-align', 'center')
         self.assertTrue(loader.get_attribute('hx-get').endswith(
                 '/tab/'
                 + page.locator('.vs-screen').get_attribute('data-tab')
@@ -105,7 +111,8 @@ class TestTreeLazyLoading(WebTestCase):
         total = tree.locator('.vs-tree-total')
         total_row = tree.locator('.vs-tree-total-row')
         main = page.locator('.vs-main')
-        expect(total).to_have_text('1,025.00')
+        expect(total.locator('.vs-tree-total-selected')).to_have_text('0')
+        expect(total.locator('.vs-tree-total-page')).to_have_text('-')
         expect(total_row).not_to_contain_text('Total')
         self.assertEqual(total_row.evaluate(
                 'element => getComputedStyle(element).position'), 'sticky')
@@ -142,6 +149,13 @@ class TestTreeLazyLoading(WebTestCase):
             2)
 
         with page.expect_response(
+                lambda response: '/select?' in response.url):
+            page.get_by_text('Lazy record 000', exact=True).click()
+        expect(total.locator(
+                '.vs-tree-total-selected')).to_have_text('10.25')
+        expect(total.locator('.vs-tree-total-page')).to_have_text('-')
+
+        with page.expect_response(
                 lambda response: '/tree/records' in response.url) \
                 as response_info:
             main.evaluate(
@@ -152,7 +166,9 @@ class TestTreeLazyLoading(WebTestCase):
         self.assertIn('Lazy record 100', response_markup)
         self.assertIn('Lazy record 199', response_markup)
         expect(rows).to_have_count(200)
-        expect(total).to_have_text('2,050.00')
+        expect(total.locator(
+                '.vs-tree-total-selected')).to_have_text('10.25')
+        expect(total.locator('.vs-tree-total-page')).to_have_text('-')
 
         with page.expect_response(
                 lambda response: '/tree/records' in response.url) \
@@ -165,5 +181,8 @@ class TestTreeLazyLoading(WebTestCase):
         self.assertIn('Lazy record 200', response_markup)
         self.assertIn('Lazy record 219', response_markup)
         expect(rows).to_have_count(220)
-        expect(total).to_have_text('2,255.00')
+        expect(total.locator(
+                '.vs-tree-total-selected')).to_have_text('10.25')
+        expect(total.locator(
+                '.vs-tree-total-page')).to_have_text('2,255.00')
         expect(page.locator('.vs-tree-loader')).to_have_count(0)

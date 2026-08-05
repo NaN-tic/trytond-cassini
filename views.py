@@ -1369,6 +1369,122 @@ class ViewRenderer:
             list(parser.completion(query))
             + list(parser.completion(''))))
 
+    def tree_columns(self, tab, root):
+        tree_context = dict(Transaction().context)
+        tree_context.update(decode_value(tab.get('context', {})))
+        tree_context['context'] = dict(tree_context)
+
+        def visible_in_tree(node):
+            return not bool(evaluate(
+                    node.attrib.get('tree_invisible'), tree_context, False))
+
+        multiple_buttons = [
+            node for node in root
+            if node.tag == 'button'
+            and visible_in_tree(node)
+            and str(node.attrib.get('multiple', '0')).lower() in {
+                '1', 'true', 'yes'}
+            ]
+        all_columns = [
+            node for node in root
+            if node.tag in {'field', 'button'}
+            and node not in multiple_buttons
+            and not (
+                node.tag == 'field'
+                and node.attrib.get('name') == tab.get('exclude_field'))
+            and visible_in_tree(node)
+            ]
+        visibility = tab.get('column_visibility', {})
+        columns = []
+        for node in all_columns:
+            if node.tag != 'field':
+                columns.append(node)
+                continue
+            optional = str(node.attrib.get('optional', '0')).lower() in {
+                '1', 'true', 'yes'}
+            if visibility.get(node.attrib['name'], not optional):
+                columns.append(node)
+        return all_columns, columns, multiple_buttons
+
+    def tree_total_row(self, tab, view, columns, out_of_band=False):
+        total_row_id = 'tree-total-' + tab['id']
+        total_renderer = WidgetRenderer(
+            tab, {
+                'key': 'total',
+                'values': (
+                    decode_value(tab['records'][
+                        tab['record_order'][0]].get('values', {}))
+                    if tab.get('record_order') else {}),
+                }, view, editable=False)
+        selected = set(tab.get('selected', []))
+        page_loaded = (
+            tab.get('kind') != 'window'
+            or int(tab.get('tree_next_offset') or 0) >= int(
+                tab.get('tree_end_offset') or 0))
+        row = tr(
+            id=total_row_id,
+            cls='vs-tree-total-row',
+            hx_swap_oob=(
+                'outerHTML:#' + total_row_id if out_of_band else None))
+        with row:
+            td(cls='vs-drag-column')
+            td(cls='vs-select-column')
+            for node in columns:
+                if (
+                        node.tag != 'field'
+                        or str(node.attrib.get('sum', '0')).lower()
+                        not in {'1', 'true', 'yes'}):
+                    td()
+                    continue
+                name = node.attrib['name']
+                values = {
+                    key: decode_value(tab['records'][key].get(
+                            'values', {})).get(name)
+                    for key in tab.get('record_order', [])
+                    }
+
+                def sum_values(keys):
+                    total = None
+                    for key in keys:
+                        value = values.get(key)
+                        if value is None:
+                            continue
+                        total = value if total is None else total + value
+                    return total or 0
+
+                selected_total = sum_values(
+                    key for key in tab.get('record_order', [])
+                    if key in selected)
+                page_total = sum_values(tab.get('record_order', []))
+                definition = view.get('fields', {}).get(name, {})
+                widget = (
+                    node.attrib.get('widget')
+                    or definition.get('type', 'char'))
+
+                if widget in WidgetRenderer.numeric_widgets:
+                    selected_formatted = total_renderer.format_numeric(
+                        name, selected_total, node.attrib)
+                    page_formatted = (
+                        total_renderer.format_numeric(
+                            name, page_total, node.attrib)
+                        if page_loaded else '-')
+                else:
+                    selected_formatted = stringify(selected_total)
+                    page_formatted = (
+                        stringify(page_total) if page_loaded else '-')
+
+                with td(cls='vs-tree-total%s' % (
+                            ' vs-tree-total-numeric'
+                            if widget in WidgetRenderer.numeric_widgets
+                            else '')):
+                    span(
+                        selected_formatted,
+                        cls='vs-tree-total-selected')
+                    span(
+                        page_formatted,
+                        cls='vs-tree-total-page')
+        return row
+
     def tree(self, tab, view, rows=None):
         root = parse_architecture(view)
         relation_origin = tab.get('relation_origin')
@@ -1393,44 +1509,15 @@ class ViewRenderer:
                 or relation_origin.get('editable', True))
             and not decode_value(
                 tab.get('context', {})).get('_datetime'))
-        tree_context = dict(Transaction().context)
-        tree_context.update(decode_value(tab.get('context', {})))
-        tree_context['context'] = dict(tree_context)
-
-        def visible_in_tree(node):
-            return not bool(evaluate(
-                    node.attrib.get('tree_invisible'), tree_context, False))
-
         all_buttons = [
             node for node in root
-            if node.tag == 'button' and visible_in_tree(node)
+            if node.tag == 'button'
             ]
-        multiple_buttons = [
+        all_columns, columns, multiple_buttons = self.tree_columns(tab, root)
+        all_buttons = [
             node for node in all_buttons
-            if str(node.attrib.get('multiple', '0')).lower() in {
-                '1', 'true', 'yes'}
-            ]
-        all_columns = [
-            node for node in root
-            if node.tag in {'field', 'button'}
-            and node not in multiple_buttons
-            and not (
-                node.tag == 'field'
-                and node.attrib.get('name') == tab.get('exclude_field'))
-            and visible_in_tree(node)
-            ]
+            if node in all_columns or node in multiple_buttons]
         visibility = tab.get('column_visibility', {})
-        columns = []
-        for node in all_columns:
-            if node.tag != 'field':
-                columns.append(node)
-                continue
-            name = node.attrib['name']
-            optional = str(node.attrib.get('optional', '0')).lower() in {
-                '1', 'true', 'yes'}
-            visible = visibility.get(name, not optional)
-            if visible:
-                columns.append(node)
         SelectRecord = self.pool.get('cassini.select.record')
         SelectAll = self.pool.get('cassini.select.all.records')
         SortRecords = self.pool.get('cassini.sort.records')
@@ -2037,63 +2124,10 @@ class ViewRenderer:
                         and str(node.attrib.get('sum', '0')).lower()
                         in {'1', 'true', 'yes'}
                         for node in columns):
-                    total_row_id = 'tree-total-' + tab['id']
-                    total_renderer = WidgetRenderer(
-                        tab, {
-                            'key': 'total',
-                            'values': (
-                                decode_value(tab['records'][
-                                    tab['record_order'][0]].get(
-                                        'values', {}))
-                                if tab.get('record_order') else {}),
-                            }, view, editable=False)
                     with tfoot():
-                        with tr(
-                                id=total_row_id,
-                                cls='vs-tree-total-row',
-                                hx_swap_oob=(
-                                    'outerHTML:#' + total_row_id
-                                    if partial_tree and not embedded
-                                    else None)):
-                            td(cls='vs-drag-column')
-                            td(cls='vs-select-column')
-                            for node in columns:
-                                if node.tag != 'field':
-                                    td()
-                                    continue
-                                if str(node.attrib.get(
-                                        'sum', '0')).lower() not in {
-                                            '1', 'true', 'yes'}:
-                                    td()
-                                    continue
-                                values = [
-                                    decode_value(tab['records'][key].get(
-                                            'values', {})).get(
-                                                node.attrib['name']) or 0
-                                    for key in tab.get('record_order', [])
-                                    ]
-                                total = values[0] if values else 0
-                                for value in values[1:]:
-                                    total += value
-                                definition = view.get('fields', {}).get(
-                                    node.attrib['name'], {})
-                                widget = (
-                                    node.attrib.get('widget')
-                                    or definition.get('type', 'char'))
-                                formatted = (
-                                    total_renderer.format_numeric(
-                                        node.attrib['name'], total,
-                                        node.attrib)
-                                    if widget
-                                    in WidgetRenderer.numeric_widgets
-                                    else stringify(total))
-                                td(
-                                    formatted,
-                                    cls='vs-tree-total%s' % (
-                                        ' vs-tree-total-numeric'
-                                        if widget
-                                        in WidgetRenderer.numeric_widgets
-                                        else ''))
+                        self.tree_total_row(
+                            tab, view, columns,
+                            out_of_band=partial_tree and not embedded)
             if not tab.get('record_order'):
                 p(
                     tab.get('empty_message') or _('No records'),

@@ -2739,9 +2739,9 @@ textarea.vs-input {
 }
 
 .vs-tree-loader td {
-    display: grid;
-    min-height: 2.5rem;
-    place-items: center;
+    height: 2.5rem;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .vs-table thead .vs-drag-column {
@@ -2886,6 +2886,12 @@ textarea.vs-input {
 .vs-table .vs-tree-total-numeric {
     text-align: right;
     text-align: end;
+}
+
+.vs-tree-total-selected,
+.vs-tree-total-page {
+    display: block;
+    white-space: nowrap;
 }
 
 .vs-monetary-value {
