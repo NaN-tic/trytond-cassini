@@ -32,7 +32,7 @@ from werkzeug.wrappers import Response
 
 from .engine import SaoEngine
 from .icons import fullscreen_icon, icon, theme_icon
-from .i18n import javascript_translations, translate
+from .i18n import javascript_translations
 from .state import (
     Fragment, FragmentResponse, current_request, decode_value, encode_value,
     normalize_htmx_markup, render_state_component)
@@ -2186,8 +2186,8 @@ class HelpPanel(SaoEndpoint):
                     cls=(
                         'vs-help-heading-button '
                         'vs-help-heading-separated'),
-                    title=translate('Keyboard shortcuts'),
-                    aria_label=translate('Keyboard shortcuts'),
+                    title=_('Keyboard shortcuts'),
+                    aria_label=_('Keyboard shortcuts'),
                     data_shortcut_help='true'):
                 kbd('F1', cls='vs-shortcut-key-icon', aria_hidden='true')
         elif identifier == 'updates':

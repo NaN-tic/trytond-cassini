@@ -2,414 +2,6 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=utf-8\n"
 
-msgctxt "model:ir.message,text:msg_a_cassini_session_can_only_have_one_workspace_4bb90d57"
-msgid "A Cassini session can only have one workspace."
-msgstr "Una sesión de Cassini solo puede tener un espacio de trabajo."
-
-msgctxt "model:ir.message,text:msg_a_bookmark_name_and_search_are_required_ff1ec299"
-msgid "A bookmark name and search are required"
-msgstr "Se requiere un nombre de marcador y una búsqueda"
-
-msgctxt "model:ir.message,text:msg_a_maximum_of_five_attachments_is_allowed_59377610"
-msgid "A maximum of five attachments is allowed."
-msgstr "Se permite un máximo de cinco archivos adjuntos."
-
-msgctxt "model:ir.message,text:msg_a_flat_tree_can_not_contain_child_records_4884a147"
-msgid "A flat tree can not contain child records"
-msgstr "Un árbol plano no puede contener registros hijos"
-
-msgctxt "model:ir.message,text:msg_a_tree_record_can_not_contain_itself_80215368"
-msgid "A tree record can not contain itself"
-msgstr "Un registro del árbol no puede contenerse a sí mismo"
-
-msgctxt "model:ir.message,text:msg_action_97c89a4d"
-msgid "Action"
-msgstr "Acción"
-
-msgctxt "model:ir.message,text:msg_attachment_83a56249"
-msgid "Attachment"
-msgstr "Adjunto"
-
-msgctxt "model:ir.message,text:msg_attachments_6771ade6"
-msgid "Attachments"
-msgstr "Aadjuntos"
-
-msgctxt "model:ir.message,text:msg_cancel_77dfd213"
-msgid "Cancel"
-msgstr "Cancelar"
-
-msgctxt "model:ir.message,text:msg_close_bbfa773e"
-msgid "Close"
-msgstr "Cerrar"
-
-msgctxt "model:ir.message,text:msg_close_tab_16759802"
-msgid "Close Tab"
-msgstr "Cerrar pestaña"
-
-msgctxt "model:ir.message,text:msg_confirm_action_50649c5c"
-msgid "Confirm action"
-msgstr "Confirmar la acción"
-
-msgctxt "model:ir.message,text:msg_continue_2e026239"
-msgid "Continue"
-msgstr "Continuar"
-
-msgctxt "model:ir.message,text:msg_could_not_save_the_column_widths_56544d9c"
-msgid "Could not save the column widths."
-msgstr "No se han podido guardar los anchos de columna."
-
-msgctxt "model:ir.message,text:msg_created_at_f1c69716"
-msgid "Created at"
-msgstr "Fecha de creación"
-
-msgctxt "model:ir.message,text:msg_created_by_5d73cc30"
-msgid "Created by"
-msgstr "Usuario de creación"
-
-msgctxt "model:ir.message,text:msg_cycle_side_panel_3f6f39b7"
-msgid "Cycle side panel"
-msgstr "Cambia el panel lateral"
-
-msgctxt "model:ir.message,text:msg_delete_f6fdbe48"
-msgid "Delete"
-msgstr "Borrar"
-
-msgctxt "model:ir.message,text:msg_duplicate_972d5737"
-msgid "Duplicate"
-msgstr "Duplicar"
-
-msgctxt "model:ir.message,text:msg_false_97cdbdc7"
-msgid "False"
-msgstr "Falso"
-
-msgctxt "model:ir.message,text:msg_global_search_a2b8a166"
-msgid "Global search"
-msgstr "Búsqueda global"
-
-msgctxt "model:ir.message,text:msg_global_search_or_start_a_new_assistant_conversat_ba037822"
-msgid "Global search or start a new assistant conversation"
-msgstr "Búsqueda global o inicia una conversación nueva con el asistente"
-
-msgctxt "model:ir.message,text:msg_global_shortcuts_e73da767"
-msgid "Global shortcuts"
-msgstr "Atajos globales"
-
-msgctxt "model:ir.message,text:msg_id_89f89c02"
-msgid "ID"
-msgstr "ID"
-
-msgctxt "model:ir.message,text:msg_invalid_decimal_value_6aa118ee"
-msgid "Invalid decimal value"
-msgstr "El valor decimal no es válido"
-
-msgctxt "model:ir.message,text:msg_keyboard_shortcuts_26669547"
-msgid "Keyboard shortcuts"
-msgstr "Atajos de teclado"
-
-msgctxt "model:ir.message,text:msg_logs_126dd3b7"
-msgid "Logs"
-msgstr "Registros"
-
-msgctxt "model:ir.message,text:msg_modified_at_e0978c14"
-msgid "Modified at"
-msgstr "Modificado el"
-
-msgctxt "model:ir.message,text:msg_modified_by_83f5aabd"
-msgid "Modified by"
-msgstr "Modificado por"
-
-msgctxt "model:ir.message,text:msg_new_6403f2b7"
-msgid "New"
-msgstr "Nuevo"
-
-msgctxt "model:ir.message,text:msg_next_bc981983"
-msgid "Next"
-msgstr "Próximo"
-
-msgctxt "model:ir.message,text:msg_next_tab_84c508a2"
-msgid "Next tab"
-msgstr "Pestaña siguiente"
-
-msgctxt "model:ir.message,text:msg_note_2c924e30"
-msgid "Note"
-msgstr "Nota"
-
-msgctxt "model:ir.message,text:msg_notes_70440046"
-msgid "Notes"
-msgstr "Notas"
-
-msgctxt "model:ir.message,text:msg_ok_9ce3bd42"
-msgid "OK"
-msgstr "Aceptar"
-
-msgctxt "model:ir.message,text:msg_previous_50f94286"
-msgid "Previous"
-msgstr "Anterior"
-
-msgctxt "model:ir.message,text:msg_previous_tab_75dd5109"
-msgid "Previous tab"
-msgstr "Pestaña anterior"
-
-msgctxt "model:ir.message,text:msg_print_5b221e9c"
-msgid "Print"
-msgstr "Imprimir"
-
-msgctxt "model:ir.message,text:msg_relate_0289b666"
-msgid "Relate"
-msgstr "Relacionado"
-
-msgctxt "model:ir.message,text:msg_reload_undo_b896471c"
-msgid "Reload/Undo"
-msgstr "Recargar/Deshacer"
-
-msgctxt "model:ir.message,text:msg_remote_assistance_could_not_be_initialized_95820921"
-msgid "Remote assistance could not be initialized."
-msgstr "No se ha podido inicializar la asistencia remota."
-
-msgctxt "model:ir.message,text:msg_remote_assistance_did_not_load_19908242"
-msgid "Remote assistance did not load."
-msgstr "No se ha cargado la asistencia remota."
-
-msgctxt "model:ir.message,text:msg_remove_file_s_7b17974a"
-msgid "Remove %(file)s"
-msgstr "Eliminar %(file)s"
-
-msgctxt "model:ir.message,text:msg_save_efc007a3"
-msgid "Save"
-msgstr "Ahorrar"
-
-msgctxt "model:ir.message,text:msg_screen_capture_is_not_available_ae53045e"
-msgid "Screen capture is not available."
-msgstr "La captura de pantalla no está disponible."
-
-msgctxt "model:ir.message,text:msg_screen_recording_is_not_available_ec251484"
-msgid "Screen recording is not available."
-msgstr "La grabación de pantalla no está disponible."
-
-msgctxt "model:ir.message,text:msg_search_bce06414"
-msgid "Search"
-msgstr "Buscar"
-
-msgctxt "model:ir.message,text:msg_select_a_record_before_scanning_e4e5cbd8"
-msgid "Select a record before scanning"
-msgstr "Seleccione un registro antes de escanear"
-
-msgctxt "model:ir.message,text:msg_select_a_record_first_d76e3fba"
-msgid "Select a record first"
-msgstr "Seleccione primero un registro"
-
-msgctxt "model:ir.message,text:msg_select_a_saved_record_first_f7386e0a"
-msgid "Select a saved record first"
-msgstr "Seleccione primero un registro guardado"
-
-msgctxt "model:ir.message,text:msg_show_this_help_3ab981f8"
-msgid "Show this help"
-msgstr "Muestra esta ayuda"
-
-msgctxt "model:ir.message,text:msg_show_hide_access_keys_26bbd1af"
-msgid "Show/Hide access keys"
-msgstr "Mostrar/Esconder las teclas rápidas"
-
-msgctxt "model:ir.message,text:msg_speech_recognition_is_not_available_478ab226"
-msgid "Speech recognition is not available."
-msgstr "El reconocimiento de voz no está disponible."
-
-msgctxt "model:ir.message,text:msg_start_a_support_session_by_sharing_the_current_b_48331194"
-msgid "Start a support session by sharing the current browser tab."
-msgstr "Inicie una sesión de asistencia compartiendo la pestaña actual del navegador."
-
-msgctxt "model:ir.message,text:msg_support_f32d5a3b"
-msgid "Support"
-msgstr "Soporte"
-
-msgctxt "model:ir.message,text:msg_switch_3e44c920"
-msgid "Switch"
-msgstr "Cambiar"
-
-msgctxt "model:ir.message,text:msg_tab_s_is_not_a_s_tab_f909d1b2"
-msgid "Tab %s is not a %s tab"
-msgstr "La pestaña %s no es una pestaña %s"
-
-msgctxt "model:ir.message,text:msg_tab_shortcuts_47d9e482"
-msgid "Tab shortcuts"
-msgstr "Atajos de las pestañas"
-
-msgctxt "model:ir.message,text:msg_the_csv_file_is_empty_2bf21a83"
-msgid "The CSV file is empty"
-msgstr "El archivo CSV está vacío"
-
-msgctxt "model:ir.message,text:msg_the_assistant_voice_is_not_available_c73be59e"
-msgid "The assistant voice is not available."
-msgstr "La voz del asistente no está disponible."
-
-msgctxt "model:ir.message,text:msg_the_audio_could_not_be_transcribed_e456ff0c"
-msgid "The audio could not be transcribed."
-msgstr "No se ha podido transcribir el audio."
-
-msgctxt "model:ir.message,text:msg_the_microphone_could_not_be_started_7315ef3a"
-msgid "The microphone could not be started."
-msgstr "No se ha podido iniciar el micrófono."
-
-msgctxt "model:ir.message,text:msg_the_recording_could_not_be_started_59a9df19"
-msgid "The recording could not be started."
-msgstr "No se ha podido iniciar la grabación."
-
-msgctxt "model:ir.message,text:msg_the_screenshot_could_not_be_captured_2a406353"
-msgid "The screenshot could not be captured."
-msgstr "No se ha podido realizar la captura de pantalla."
-
-msgctxt "model:ir.message,text:msg_the_server_could_not_complete_this_action_7b5aae69"
-msgid "The server could not complete this action."
-msgstr "El servidor no ha podido completar esta acción."
-
-msgctxt "model:ir.message,text:msg_this_download_is_no_longer_available_f25d5e7d"
-msgid "This download is no longer available"
-msgstr "Esta descarga ya no está disponible"
-
-msgctxt "model:ir.message,text:msg_this_menu_does_not_define_an_action_4c2a49f3"
-msgid "This menu does not define an action"
-msgstr "Este menú no define ninguna acción"
-
-msgctxt "model:ir.message,text:msg_this_model_does_not_keep_revisions_144217b6"
-msgid "This model does not keep revisions"
-msgstr "Este modelo no conserva revisiones"
-
-msgctxt "model:ir.message,text:msg_this_tree_can_not_be_reordered_092df402"
-msgid "This tree can not be reordered"
-msgstr "Este árbol no se puede reordenar"
-
-msgctxt "model:ir.message,text:msg_this_tree_is_read_only_85c4a7b3"
-msgid "This tree is read-only"
-msgstr "Este árbol es de solo lectura"
-
-msgctxt "model:ir.message,text:msg_this_search_bookmark_can_not_be_removed_915790df"
-msgid "This search bookmark can not be removed"
-msgstr "Este marcador de búsqueda no se puede eliminar"
-
-msgctxt "model:ir.message,text:msg_this_tab_is_not_a_relation_draft_5142b2a7"
-msgid "This tab is not a relation draft"
-msgstr "Esta pestaña no es un borrador de relación"
-
-msgctxt "model:ir.message,text:msg_toolbar_action_s_not_found_3642237e"
-msgid "Toolbar action %s not found"
-msgstr "No se ha encontrado la acción %s de la barra de herramientas"
-
-msgctxt "model:ir.message,text:msg_true_88b33e4e"
-msgid "True"
-msgstr "Verdadero"
-
-msgctxt "model:ir.message,text:msg_unknown_button_s_dadea476"
-msgid "Unknown button %s"
-msgstr "No se ha encontrado: botón %s"
-
-msgctxt "model:ir.message,text:msg_unknown_calendar_direction_1f910ffa"
-msgid "Unknown calendar direction"
-msgstr "No se ha encontrado: dirección del calendario"
-
-msgctxt "model:ir.message,text:msg_unknown_calendar_mode_93f78891"
-msgid "Unknown calendar mode"
-msgstr "No se ha encontrado: modo del calendario"
-
-msgctxt "model:ir.message,text:msg_unknown_calendar_record_44fcacb1"
-msgid "Unknown calendar record"
-msgstr "No se ha encontrado: registro del calendario"
-
-msgctxt "model:ir.message,text:msg_unknown_conversation_156667a3"
-msgid "Unknown conversation"
-msgstr "No se ha encontrado: conversación"
-
-msgctxt "model:ir.message,text:msg_unknown_domain_tab_cb641669"
-msgid "Unknown domain tab"
-msgstr "No se ha encontrado: pestaña de dominio"
-
-msgctxt "model:ir.message,text:msg_unknown_field_s_e452e987"
-msgid "Unknown field %s"
-msgstr "No se ha encontrado: campo %s"
-
-msgctxt "model:ir.message,text:msg_unknown_optional_column_8ec99f22"
-msgid "Unknown optional column"
-msgstr "No se ha encontrado: columna opcional"
-
-msgctxt "model:ir.message,text:msg_unknown_page_direction_0debded0"
-msgid "Unknown page direction"
-msgstr "No se ha encontrado: dirección de página"
-
-msgctxt "model:ir.message,text:msg_unknown_predefined_export_34a1f5a0"
-msgid "Unknown predefined export"
-msgstr "No se ha encontrado: exportación predefinida"
-
-msgctxt "model:ir.message,text:msg_unknown_preference_field_s_554b39ef"
-msgid "Unknown preference field %s"
-msgstr "No se ha encontrado: campo de preferencias %s"
-
-msgctxt "model:ir.message,text:msg_unknown_record_s_431ef202"
-msgid "Unknown record %s"
-msgstr "No se ha encontrado: registro %s"
-
-msgctxt "model:ir.message,text:msg_unknown_record_direction_6bdcbf15"
-msgid "Unknown record direction"
-msgstr "No se ha encontrado: dirección de registro"
-
-msgctxt "model:ir.message,text:msg_unknown_related_record_975cef55"
-msgid "Unknown related record"
-msgstr "No se ha encontrado: registro relacionado"
-
-msgctxt "model:ir.message,text:msg_unknown_related_resource_f8dcd623"
-msgid "Unknown related resource"
-msgstr "No se ha encontrado: recurso relacionado"
-
-msgctxt "model:ir.message,text:msg_unknown_relation_draft_e129b8dc"
-msgid "Unknown relation draft"
-msgstr "Borrador de relación desconocido"
-
-msgctxt "model:ir.message,text:msg_unknown_relation_parent_c938ac42"
-msgid "Unknown relation parent"
-msgstr "Padre de relación desconocido"
-
-msgctxt "model:ir.message,text:msg_unknown_revision_549a4778"
-msgid "Unknown revision"
-msgstr "No se ha encontrado: revisión"
-
-msgctxt "model:ir.message,text:msg_unknown_search_bookmark_aa59fe27"
-msgid "Unknown search bookmark"
-msgstr "No se ha encontrado: marcador de búsqueda"
-
-msgctxt "model:ir.message,text:msg_unknown_sort_field_790ee4b9"
-msgid "Unknown sort field"
-msgstr "No se ha encontrado: campo de ordenación"
-
-msgctxt "model:ir.message,text:msg_unknown_tab_s_3482ea05"
-msgid "Unknown tab %s"
-msgstr "No se ha encontrado: pestaña %s"
-
-msgctxt "model:ir.message,text:msg_unknown_tree_node_9ae3e928"
-msgid "Unknown tree node"
-msgstr "No se ha encontrado: nodo del árbol"
-
-msgctxt "model:ir.message,text:msg_unknown_tree_drop_position_82861af2"
-msgid "Unknown tree drop position"
-msgstr "No se ha encontrado: posición de destino del árbol"
-
-msgctxt "model:ir.message,text:msg_unknown_tree_record_2c68dc91"
-msgid "Unknown tree record"
-msgstr "No se ha encontrado: registro del árbol"
-
-msgctxt "model:ir.message,text:msg_unknown_wizard_field_s_d02f6297"
-msgid "Unknown wizard field %s"
-msgstr "No se ha encontrado: campo del asistente %s"
-
-msgctxt "model:ir.message,text:msg_unsupported_action_type_s_9c66a81e"
-msgid "Unsupported action type %s"
-msgstr "El tipo de acción %s no es compatible"
-
-msgctxt "model:ir.message,text:msg_view_s_is_not_part_of_this_action_c97ba4f2"
-msgid "View %s is not part of this action"
-msgstr "La vista %s no forma parte de esta acción"
-
-msgctxt "model:ir.message,text:msg_yes_5397e058"
-msgid "Yes"
-msgstr "Si"
-
 msgctxt "field:cassini.activate.tab,tab:"
 msgid "Tab"
 msgstr "Pestaña"
@@ -425,6 +17,30 @@ msgstr "Pestaña"
 msgctxt "field:cassini.asset,name:"
 msgid "Name"
 msgstr "Nombre"
+
+msgctxt "field:cassini.attachment.data,attachment:"
+msgid "Attachment"
+msgstr "Adjunto"
+
+msgctxt "field:cassini.attachment.data,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.attachment.preview,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.attachment.preview.navigate,direction:"
+msgid "Direction"
+msgstr "Dirección"
+
+msgctxt "field:cassini.attachment.preview.navigate,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.attachment.upload,tab:"
+msgid "Tab"
+msgstr "Pestaña"
 
 msgctxt "field:cassini.chat.new,nan:"
 msgid "NaN"
@@ -451,6 +67,42 @@ msgid "Tab"
 msgstr "Pestaña"
 
 msgctxt "field:cassini.close.tab,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.csv.dialog.close,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.csv.export.delete,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.csv.export.save,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.csv.export.show,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.csv.import.autodetect,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.csv.import.show,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.csv.relation.fields,kind:"
+msgid "Kind"
+msgstr "Tipo"
+
+msgctxt "field:cassini.csv.relation.fields,path:"
+msgid "Path"
+msgstr "Camino"
+
+msgctxt "field:cassini.csv.relation.fields,tab:"
 msgid "Tab"
 msgstr "Pestaña"
 
@@ -495,6 +147,26 @@ msgid "Record"
 msgstr "Registro"
 
 msgctxt "field:cassini.download.binary,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.download.x2many.binary,child:"
+msgid "Child Field"
+msgstr "Campo infantil"
+
+msgctxt "field:cassini.download.x2many.binary,field:"
+msgid "Field"
+msgstr "Campo"
+
+msgctxt "field:cassini.download.x2many.binary,item:"
+msgid "Item"
+msgstr "Elemento"
+
+msgctxt "field:cassini.download.x2many.binary,record:"
+msgid "Record"
+msgstr "Registro"
+
+msgctxt "field:cassini.download.x2many.binary,tab:"
 msgid "Tab"
 msgstr "Pestaña"
 
@@ -550,6 +222,10 @@ msgctxt "field:cassini.import.records,tab:"
 msgid "Tab"
 msgstr "Pestaña"
 
+msgctxt "field:cassini.load.tree.records,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
 msgctxt "field:cassini.login,password:"
 msgid "Password"
 msgstr "Contraseña"
@@ -594,9 +270,9 @@ msgctxt "field:cassini.move.calendar.record,tab:"
 msgid "Tab"
 msgstr "Pestaña"
 
-msgctxt "field:cassini.move.tree.record,direction:"
-msgid "Direction"
-msgstr "Dirección"
+msgctxt "field:cassini.move.tree.record,position:"
+msgid "Position"
+msgstr "Posición"
 
 msgctxt "field:cassini.move.tree.record,record:"
 msgid "Record"
@@ -605,6 +281,10 @@ msgstr "Registro"
 msgctxt "field:cassini.move.tree.record,tab:"
 msgid "Tab"
 msgstr "Pestaña"
+
+msgctxt "field:cassini.move.tree.record,target:"
+msgid "Target"
+msgstr "Objetivo"
 
 msgctxt "field:cassini.navigate.calendar,direction:"
 msgid "Direction"
@@ -634,6 +314,10 @@ msgctxt "field:cassini.open.action,model:"
 msgid "Model"
 msgstr "Modelo"
 
+msgctxt "field:cassini.open.action,origin:"
+msgid "Include Origin"
+msgstr "Incluir origen"
+
 msgctxt "field:cassini.open.action,record:"
 msgid "Record"
 msgstr "Registro"
@@ -658,6 +342,14 @@ msgctxt "field:cassini.open.relation.new,field:"
 msgid "Field"
 msgstr "Campo"
 
+msgctxt "field:cassini.open.relation.new,item:"
+msgid "Item"
+msgstr "Elemento"
+
+msgctxt "field:cassini.open.relation.new,query:"
+msgid "Query"
+msgstr "Consulta"
+
 msgctxt "field:cassini.open.relation.new,record:"
 msgid "Record"
 msgstr "Registro"
@@ -666,6 +358,10 @@ msgctxt "field:cassini.open.relation.new,tab:"
 msgid "Tab"
 msgstr "Pestaña"
 
+msgctxt "field:cassini.open.relation.record,field:"
+msgid "Field"
+msgstr "Campo"
+
 msgctxt "field:cassini.open.relation.record,model:"
 msgid "Model"
 msgstr "Modelo"
@@ -673,6 +369,10 @@ msgstr "Modelo"
 msgctxt "field:cassini.open.relation.record,record:"
 msgid "Record"
 msgstr "Registro"
+
+msgctxt "field:cassini.open.relation.record,source_record:"
+msgid "Source Record"
+msgstr "Registro de origen"
 
 msgctxt "field:cassini.open.relation.record,tab:"
 msgid "Tab"
@@ -698,6 +398,26 @@ msgctxt "field:cassini.preference.binary,field:"
 msgid "Field"
 msgstr "Campo"
 
+msgctxt "field:cassini.reference.autocomplete,field:"
+msgid "Field"
+msgstr "Campo"
+
+msgctxt "field:cassini.reference.autocomplete,model:"
+msgid "Model"
+msgstr "Modelo"
+
+msgctxt "field:cassini.reference.autocomplete,query:"
+msgid "Query"
+msgstr "Consulta"
+
+msgctxt "field:cassini.reference.autocomplete,record:"
+msgid "Record"
+msgstr "Registro"
+
+msgctxt "field:cassini.reference.autocomplete,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
 msgctxt "field:cassini.relation.autocomplete,field:"
 msgid "Field"
 msgstr "Campo"
@@ -714,9 +434,17 @@ msgctxt "field:cassini.relation.autocomplete,tab:"
 msgid "Tab"
 msgstr "Pestaña"
 
+msgctxt "field:cassini.relation.search,column:"
+msgid "Column"
+msgstr "Columna"
+
 msgctxt "field:cassini.relation.search,field:"
 msgid "Field"
 msgstr "Campo"
+
+msgctxt "field:cassini.relation.search,item:"
+msgid "Item"
+msgstr "Elemento"
 
 msgctxt "field:cassini.relation.search,query:"
 msgid "Query"
@@ -734,6 +462,10 @@ msgctxt "field:cassini.relation.search,value:"
 msgid "Value"
 msgstr "Valor"
 
+msgctxt "field:cassini.relation.search,visible:"
+msgid "Visible"
+msgstr "Visible"
+
 msgctxt "field:cassini.reload.tab,tab:"
 msgid "Tab"
 msgstr "Pestaña"
@@ -745,6 +477,10 @@ msgstr "Llave"
 msgctxt "field:cassini.resize.tree.columns,model:"
 msgid "Model"
 msgstr "Modelo"
+
+msgctxt "field:cassini.resize.tree.columns,reset:"
+msgid "Reset"
+msgstr "Reiniciar"
 
 msgctxt "field:cassini.resize.tree.columns,screen_width:"
 msgid "Screen Width"
@@ -866,6 +602,10 @@ msgctxt "field:cassini.select.neighbor,tab:"
 msgid "Tab"
 msgstr "Pestaña"
 
+msgctxt "field:cassini.select.record,current:"
+msgid "Current"
+msgstr "Actual"
+
 msgctxt "field:cassini.select.record,open:"
 msgid "Open"
 msgstr "Abrir"
@@ -881,6 +621,10 @@ msgstr "Fila"
 msgctxt "field:cassini.select.record,selected:"
 msgid "Selected"
 msgstr "Seleccionados"
+
+msgctxt "field:cassini.select.record,selection:"
+msgid "Selection"
+msgstr "Selección"
 
 msgctxt "field:cassini.select.record,silent:"
 msgid "Silent"
@@ -909,6 +653,14 @@ msgstr "Pestaña"
 msgctxt "field:cassini.shell.control,action:"
 msgid "Action"
 msgstr "Acción"
+
+msgctxt "field:cassini.shell.control,help_width:"
+msgid "Help Width"
+msgstr "Ancho de ayuda"
+
+msgctxt "field:cassini.shell.control,menu_width:"
+msgid "Menu Width"
+msgstr "Ancho del menú"
 
 msgctxt "field:cassini.show.revisions,tab:"
 msgid "Tab"
@@ -965,6 +717,222 @@ msgstr "Pestaña"
 msgctxt "field:cassini.switch.view,view:"
 msgid "View"
 msgstr "Vista"
+
+msgctxt "field:cassini.test.pyson_state,street_area_value:"
+msgid "Street Area"
+msgstr "Área de la calle"
+
+msgctxt "field:cassini.test.pyson_state,street_name_value:"
+msgid "Street Name"
+msgstr "Nombre de la calle"
+
+msgctxt "field:cassini.test.pyson_state,street_number_value:"
+msgid "Street Number"
+msgstr "Número de calle"
+
+msgctxt "field:cassini.test.pyson_state,street_unstructured:"
+msgid "Street Unstructured"
+msgstr "Calle sin estructura"
+
+msgctxt "field:cassini.test.pyson_state,street_value:"
+msgid "Street"
+msgstr "Calle"
+
+msgctxt "field:cassini.test.tree.node,amount:"
+msgid "Amount"
+msgstr "Cantidad"
+
+msgctxt "field:cassini.test.tree.node,children:"
+msgid "Children"
+msgstr "Niños"
+
+msgctxt "field:cassini.test.tree.node,name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:cassini.test.tree.node,parent:"
+msgid "Parent"
+msgstr "Padre"
+
+msgctxt "field:cassini.test.tree.node,sequence:"
+msgid "Sequence"
+msgstr "Secuencia"
+
+msgctxt "field:cassini.test.widget,binary_filename:"
+msgid "Binary Filename"
+msgstr "Nombre de archivo binario"
+
+msgctxt "field:cassini.test.widget,binary_value:"
+msgid "Binary"
+msgstr "Binario"
+
+msgctxt "field:cassini.test.widget,boolean_value:"
+msgid "Boolean"
+msgstr "Booleano"
+
+msgctxt "field:cassini.test.widget,callto_value:"
+msgid "Call"
+msgstr "Llamar"
+
+msgctxt "field:cassini.test.widget,char_value:"
+msgid "Character"
+msgstr "Personaje"
+
+msgctxt "field:cassini.test.widget,color_value:"
+msgid "Color"
+msgstr "Color"
+
+msgctxt "field:cassini.test.widget,currency_value:"
+msgid "Currency"
+msgstr "Divisa"
+
+msgctxt "field:cassini.test.widget,date_value:"
+msgid "Date"
+msgstr "Fecha"
+
+msgctxt "field:cassini.test.widget,datetime_value:"
+msgid "Date Time"
+msgstr "Fecha y hora"
+
+msgctxt "field:cassini.test.widget,dict_value:"
+msgid "Dictionary"
+msgstr "Diccionario"
+
+msgctxt "field:cassini.test.widget,document_filename:"
+msgid "Document Filename"
+msgstr "Nombre del archivo del documento"
+
+msgctxt "field:cassini.test.widget,document_value:"
+msgid "Document"
+msgstr "Documento"
+
+msgctxt "field:cassini.test.widget,email_value:"
+msgid "Email"
+msgstr "Correo electrónico"
+
+msgctxt "field:cassini.test.widget,float_value:"
+msgid "Float"
+msgstr "Flotar"
+
+msgctxt "field:cassini.test.widget,html_value:"
+msgid "HTML"
+msgstr "HTML"
+
+msgctxt "field:cassini.test.widget,image_value:"
+msgid "Image"
+msgstr "Imagen"
+
+msgctxt "field:cassini.test.widget,integer_value:"
+msgid "Integer"
+msgstr "Entero"
+
+msgctxt "field:cassini.test.widget,many2many_value:"
+msgid "Many to Many"
+msgstr "Muchos a muchos"
+
+msgctxt "field:cassini.test.widget,many2one_value:"
+msgid "Many to One"
+msgstr "Muchos a uno"
+
+msgctxt "field:cassini.test.widget,monetary_value:"
+msgid "Monetary"
+msgstr "Monetario"
+
+msgctxt "field:cassini.test.widget,multiselection_value:"
+msgid "Multi-selection"
+msgstr "Selección múltiple"
+
+msgctxt "field:cassini.test.widget,numeric_value:"
+msgid "Numeric"
+msgstr "Numérico"
+
+msgctxt "field:cassini.test.widget,one2many_value:"
+msgid "One to Many"
+msgstr "De uno a muchos"
+
+msgctxt "field:cassini.test.widget,one2one_value:"
+msgid "One to One"
+msgstr "Cara a cara"
+
+msgctxt "field:cassini.test.widget,password_value:"
+msgid "Password"
+msgstr "Contraseña"
+
+msgctxt "field:cassini.test.widget,progress_value:"
+msgid "Progress"
+msgstr "Progreso"
+
+msgctxt "field:cassini.test.widget,pyson_value:"
+msgid "PYSON"
+msgstr "PYSON"
+
+msgctxt "field:cassini.test.widget,reference_value:"
+msgid "Reference"
+msgstr "Referencia"
+
+msgctxt "field:cassini.test.widget,richtext_value:"
+msgid "Rich Text"
+msgstr "Texto enriquecido"
+
+msgctxt "field:cassini.test.widget,selection_value:"
+msgid "Selection"
+msgstr "Selección"
+
+msgctxt "field:cassini.test.widget,sip_value:"
+msgid "SIP"
+msgstr "SORBO"
+
+msgctxt "field:cassini.test.widget,text_value:"
+msgid "Text"
+msgstr "Texto"
+
+msgctxt "field:cassini.test.widget,time_value:"
+msgid "Time"
+msgstr "Tiempo"
+
+msgctxt "field:cassini.test.widget,timedelta_value:"
+msgid "Time Delta"
+msgstr "Delta de tiempo"
+
+msgctxt "field:cassini.test.widget,timestamp_value:"
+msgid "Timestamp"
+msgstr "Marca de tiempo"
+
+msgctxt "field:cassini.test.widget,url_value:"
+msgid "URL"
+msgstr "URL"
+
+msgctxt "field:cassini.test.widget-res.group,group:"
+msgid "Group"
+msgstr "Grupo"
+
+msgctxt "field:cassini.test.widget-res.group,widget:"
+msgid "Widget"
+msgstr "Widget"
+
+msgctxt "field:cassini.test.widget-res.group.one2one,group:"
+msgid "Group"
+msgstr "Grupo"
+
+msgctxt "field:cassini.test.widget-res.group.one2one,widget:"
+msgid "Widget"
+msgstr "Widget"
+
+msgctxt "field:cassini.test.widget.child,name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:cassini.test.widget.child,widget:"
+msgid "Widget"
+msgstr "Widget"
+
+msgctxt "field:cassini.test.widget.currency,name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:cassini.test.widget.currency,symbol:"
+msgid "Symbol"
+msgstr "Símbolo"
 
 msgctxt "field:cassini.toggle.active,tab:"
 msgid "Tab"
@@ -1046,6 +1014,54 @@ msgctxt "field:cassini.update.wizard.field,tab:"
 msgid "Tab"
 msgstr "Pestaña"
 
+msgctxt "field:cassini.update.x2many.field,child:"
+msgid "Child Field"
+msgstr "Campo infantil"
+
+msgctxt "field:cassini.update.x2many.field,field:"
+msgid "Field"
+msgstr "Campo"
+
+msgctxt "field:cassini.update.x2many.field,item:"
+msgid "Item"
+msgstr "Elemento"
+
+msgctxt "field:cassini.update.x2many.field,record:"
+msgid "Record"
+msgstr "Registro"
+
+msgctxt "field:cassini.update.x2many.field,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.update.x2many.field,value:"
+msgid "Value"
+msgstr "Valor"
+
+msgctxt "field:cassini.version.changes,action:"
+msgid "Action"
+msgstr "Acción"
+
+msgctxt "field:cassini.version.changes,update:"
+msgid "Update"
+msgstr "Actualizar"
+
+msgctxt "field:cassini.wizard.help,action:"
+msgid "Action"
+msgstr "Acción"
+
+msgctxt "field:cassini.wizard.help,filter:"
+msgid "Filter"
+msgstr "Filtro"
+
+msgctxt "field:cassini.wizard.help,tab:"
+msgid "Tab"
+msgstr "Pestaña"
+
+msgctxt "field:cassini.wizard.help,update:"
+msgid "Update"
+msgstr "Actualizar"
+
 msgctxt "field:cassini.wizard.step,state:"
 msgid "State"
 msgstr "Estado"
@@ -1074,6 +1090,10 @@ msgctxt "field:cassini.x2many.action,action:"
 msgid "Action"
 msgstr "Acción"
 
+msgctxt "field:cassini.x2many.action,current:"
+msgid "Current"
+msgstr "Actual"
+
 msgctxt "field:cassini.x2many.action,field:"
 msgid "Field"
 msgstr "Campo"
@@ -1082,505 +1102,627 @@ msgctxt "field:cassini.x2many.action,item:"
 msgid "Item"
 msgstr "Elemento"
 
+msgctxt "field:cassini.x2many.action,mode:"
+msgid "Mode"
+msgstr "Modo"
+
+msgctxt "field:cassini.x2many.action,position:"
+msgid "Position"
+msgstr "Posición"
+
 msgctxt "field:cassini.x2many.action,record:"
 msgid "Record"
 msgstr "Registro"
+
+msgctxt "field:cassini.x2many.action,selected:"
+msgid "Selected"
+msgstr "Seleccionados"
+
+msgctxt "field:cassini.x2many.action,selection:"
+msgid "Selection"
+msgstr "Selección"
 
 msgctxt "field:cassini.x2many.action,tab:"
 msgid "Tab"
 msgstr "Pestaña"
 
+msgctxt "field:cassini.x2many.action,target:"
+msgid "Target"
+msgstr "Objetivo"
+
 msgctxt "field:cassini.x2many.action,value:"
 msgid "Value"
 msgstr "Valor"
 
-msgctxt "model:cassini.activate.tab,name:"
-msgid "Activate Cassini Tab"
-msgstr "Activar la pestaña de Cassini"
+msgctxt "model:cassini.activate.tab,string:"
+msgid "Cassini Activate Tab"
+msgstr "Pestaña de activación de Cassini"
 
-msgctxt "model:cassini.apply.search.bookmark,name:"
-msgid "Apply Cassini Search Bookmark"
-msgstr "Aplicar el marcador de búsqueda de Cassini"
+msgctxt "model:cassini.apply.search.bookmark,string:"
+msgid "Cassini Apply Search Bookmark"
+msgstr "Cassini Aplicar Buscar Marcador"
 
-msgctxt "model:cassini.asset,name:"
+msgctxt "model:cassini.asset,string:"
 msgid "Cassini Asset"
 msgstr "Recurso de Cassini"
 
-msgctxt "model:cassini.chat.new,name:"
-msgid "Start a New Nantic Connection Conversation"
-msgstr "Iniciar una conversación nueva de Nantic Connection"
+msgctxt "model:cassini.attachment.data,string:"
+msgid "Cassini Attachment Data"
+msgstr "Datos de los archivos adjuntos de Cassini"
 
-msgctxt "model:cassini.chat.refresh,name:"
-msgid "Refresh the Nantic Connection Conversation"
-msgstr "Actualizar la conversación de Nantic Connection"
+msgctxt "model:cassini.attachment.preview,string:"
+msgid "Cassini Attachment Preview"
+msgstr "Vista previa del accesorio Cassini"
 
-msgctxt "model:cassini.chat.request,name:"
-msgid "Send a Request to Nantic Connection"
-msgstr "Enviar una petición a Nantic Connection"
+msgctxt "model:cassini.attachment.preview.navigate,string:"
+msgid "Cassini Attachment Preview Navigate"
+msgstr "Vista previa de archivos adjuntos de Cassini Navegar"
 
-msgctxt "model:cassini.chat.select,name:"
-msgid "Select an Existing Assistant Conversation"
-msgstr "Seleccionar una conversación existente del asistente"
+msgctxt "model:cassini.attachment.upload,string:"
+msgid "Cassini Attachment Upload"
+msgstr "Carga de archivos adjuntos de Cassini"
 
-msgctxt "model:cassini.chat.speech,name:"
-msgid "Read Assistant Text Aloud"
-msgstr "Leer en voz alta el texto del asistente"
+msgctxt "model:cassini.chat.new,string:"
+msgid "Cassini Chat New"
+msgstr "Chat de Cassini Nuevo"
 
-msgctxt "model:cassini.chat.transcribe,name:"
-msgid "Transcribe Assistant Audio Input"
-msgstr "Transcribir la entrada de audio del asistente"
+msgctxt "model:cassini.chat.refresh,string:"
+msgid "Cassini Chat Refresh"
+msgstr "Actualización del chat de Cassini"
 
-msgctxt "model:cassini.close.preferences,name:"
-msgid "Close Cassini Preferences"
-msgstr "Cerrar las preferencias de Cassini"
+msgctxt "model:cassini.chat.request,string:"
+msgid "Cassini Chat Request"
+msgstr "Solicitud de chat de Cassini"
 
-msgctxt "model:cassini.close.revisions,name:"
-msgid "Close Cassini Revisions"
-msgstr "Cerrar las revisiones de Cassini"
+msgctxt "model:cassini.chat.select,string:"
+msgid "Cassini Chat Select"
+msgstr "Selección de chat de Cassini"
 
-msgctxt "model:cassini.close.tab,name:"
-msgid "Close Cassini Tab"
-msgstr "Cerrar la pestaña de Cassini"
+msgctxt "model:cassini.chat.speech,string:"
+msgid "Cassini Chat Speech"
+msgstr "Discurso de Cassini"
 
-msgctxt "model:cassini.delete.record,name:"
-msgid "Delete Cassini Record"
-msgstr "Eliminar el registro de Cassini"
+msgctxt "model:cassini.chat.transcribe,string:"
+msgid "Cassini Chat Transcribe"
+msgstr "Transcripción del chat de Cassini"
 
-msgctxt "model:cassini.delete.records,name:"
-msgid "Delete Cassini Records"
-msgstr "Eliminar los registros de Cassini"
+msgctxt "model:cassini.close.preferences,string:"
+msgid "Cassini Close Preferences"
+msgstr "Preferencias de cierre de Cassini"
 
-msgctxt "model:cassini.delete.search.bookmark,name:"
-msgid "Delete Cassini Search Bookmark"
-msgstr "Eliminar el marcador de búsqueda de Cassini"
+msgctxt "model:cassini.close.revisions,string:"
+msgid "Cassini Close Revisions"
+msgstr "Revisiones de cierre de Cassini"
 
-msgctxt "model:cassini.demo,name:"
-msgid "Cassini Stateful Component Demo"
-msgstr "Demostración de componentes con estado de Cassini"
+msgctxt "model:cassini.close.tab,string:"
+msgid "Cassini Close Tab"
+msgstr "Pestaña Cassini Cerrar"
 
-msgctxt "model:cassini.demo.update,name:"
-msgid "Update Cassini Component Demo"
-msgstr "Actualizar la demostración de componentes de Cassini"
+msgctxt "model:cassini.csv.dialog.close,string:"
+msgid "Cassini Csv Dialog Close"
+msgstr "Cerrar diálogo CSV de Cassini"
 
-msgctxt "model:cassini.download.binary,name:"
-msgid "Download Cassini Binary"
-msgstr "Descargar el binario de Cassini"
+msgctxt "model:cassini.csv.export.delete,string:"
+msgid "Cassini Csv Export Delete"
+msgstr "Eliminar exportación CSV de Cassini"
 
-msgctxt "model:cassini.duplicate.record,name:"
-msgid "Duplicate Cassini Record"
-msgstr "Duplicar el registro de Cassini"
+msgctxt "model:cassini.csv.export.save,string:"
+msgid "Cassini Csv Export Save"
+msgstr "Exportar a CSV de Cassini Guardar"
 
-msgctxt "model:cassini.export.records,name:"
-msgid "Export Cassini Records"
-msgstr "Exportar los registros de Cassini"
+msgctxt "model:cassini.csv.export.show,string:"
+msgid "Cassini Csv Export Show"
+msgstr "Presentación de exportación CSV de Cassini"
 
-msgctxt "model:cassini.global.search,name:"
+msgctxt "model:cassini.csv.import.autodetect,string:"
+msgid "Cassini Csv Import Autodetect"
+msgstr "Detección automática de importación de CSV de Cassini"
+
+msgctxt "model:cassini.csv.import.show,string:"
+msgid "Cassini Csv Import Show"
+msgstr "Programa de importación de Cassini Csv"
+
+msgctxt "model:cassini.csv.relation.fields,string:"
+msgid "Cassini Csv Relation Fields"
+msgstr "Campos de relación CSV de Cassini"
+
+msgctxt "model:cassini.delete.record,string:"
+msgid "Cassini Delete Record"
+msgstr "Cassini Eliminar registro"
+
+msgctxt "model:cassini.delete.records,string:"
+msgid "Cassini Delete Records"
+msgstr "Cassini Eliminar registros"
+
+msgctxt "model:cassini.delete.search.bookmark,string:"
+msgid "Cassini Delete Search Bookmark"
+msgstr "Cassini Eliminar Buscar Marcador"
+
+msgctxt "model:cassini.demo,string:"
+msgid "Cassini Demo"
+msgstr "Demostración de Cassini"
+
+msgctxt "model:cassini.demo.update,string:"
+msgid "Cassini Demo Update"
+msgstr "Actualización de la demostración de Cassini"
+
+msgctxt "model:cassini.download.binary,string:"
+msgid "Cassini Download Binary"
+msgstr "Descarga del binario de Cassini"
+
+msgctxt "model:cassini.download.x2many.binary,string:"
+msgid "Cassini Download X2Many Binary"
+msgstr "Descarga binaria de Cassini X2Many"
+
+msgctxt "model:cassini.duplicate.record,string:"
+msgid "Cassini Duplicate Record"
+msgstr "Registro duplicado de Cassini"
+
+msgctxt "model:cassini.export.records,string:"
+msgid "Cassini Export Records"
+msgstr "Registros de exportación de Cassini"
+
+msgctxt "model:cassini.global.search,string:"
 msgid "Cassini Global Search"
 msgstr "Búsqueda global de Cassini"
 
-msgctxt "model:cassini.global.search.results,name:"
-msgid "Update Cassini Global Search Results"
-msgstr "Actualizar los resultados de búsqueda global de Cassini"
+msgctxt "model:cassini.global.search.results,string:"
+msgid "Cassini Global Search Results"
+msgstr "Resultados de la búsqueda global de Cassini"
 
-msgctxt "model:cassini.help.documentation,name:"
-msgid "Search and Open Contextual Help Documentation"
-msgstr "Buscar y abrir la documentación de ayuda contextual"
+msgctxt "model:cassini.help.documentation,string:"
+msgid "Cassini Help Documentation"
+msgstr "Documentación de ayuda de Cassini"
 
-msgctxt "model:cassini.help.panel,name:"
-msgid "Cassini Help and Assistant Panel"
-msgstr "Panel de ayuda y del asistente de Cassini"
+msgctxt "model:cassini.help.nan.options,string:"
+msgid "Cassini Help Nan Options"
+msgstr "Opciones de ayuda de Cassini para Nan"
 
-msgctxt "model:cassini.help.resource,name:"
-msgid "Open a Help Resource in the Workspace"
-msgstr "Abrir un recurso de ayuda en el espacio de trabajo"
+msgctxt "model:cassini.help.panel,string:"
+msgid "Cassini Help Panel"
+msgstr "Panel de ayuda de Cassini"
 
-msgctxt "model:cassini.help.section,name:"
-msgid "Switch the Open Help Accordion Section"
-msgstr "Cambiar la sección abierta del acordeón de ayuda"
+msgctxt "model:cassini.help.resource,string:"
+msgid "Cassini Help Resource"
+msgstr "Recursos de ayuda de Cassini"
 
-msgctxt "model:cassini.help.updates,name:"
-msgid "Filter and Open Help Updates"
-msgstr "Filtrar y abrir las actualizaciones de ayuda"
+msgctxt "model:cassini.help.section,string:"
+msgid "Cassini Help Section"
+msgstr "Sección de ayuda de Cassini"
 
-msgctxt "model:cassini.import.records,name:"
-msgid "Import Cassini Records"
-msgstr "Importar los registros de Cassini"
+msgctxt "model:cassini.help.updates,string:"
+msgid "Cassini Help Updates"
+msgstr "Actualizaciones de ayuda de Cassini"
 
-msgctxt "model:cassini.index,name:"
+msgctxt "model:cassini.import.records,string:"
+msgid "Cassini Import Records"
+msgstr "Discos de importación Cassini"
+
+msgctxt "model:cassini.index,string:"
 msgid "Cassini Index"
 msgstr "Índice de Cassini"
 
-msgctxt "model:cassini.login,name:"
+msgctxt "model:cassini.load.tree.records,string:"
+msgid "Cassini Load Tree Records"
+msgstr "Registros del árbol de carga de Cassini"
+
+msgctxt "model:cassini.login,string:"
 msgid "Cassini Login"
 msgstr "Inicio de sesión de Cassini"
 
-msgctxt "model:cassini.login.form,name:"
+msgctxt "model:cassini.login.form,string:"
 msgid "Cassini Login Form"
 msgstr "Formulario de inicio de sesión de Cassini"
 
-msgctxt "model:cassini.login.page,name:"
+msgctxt "model:cassini.login.page,string:"
 msgid "Cassini Login Page"
 msgstr "Página de inicio de sesión de Cassini"
 
-msgctxt "model:cassini.logout,name:"
+msgctxt "model:cassini.logout,string:"
 msgid "Cassini Logout"
 msgstr "Cierre de sesión de Cassini"
 
-msgctxt "model:cassini.menu,name:"
+msgctxt "model:cassini.menu,string:"
 msgid "Cassini Menu"
 msgstr "Menú de Cassini"
 
-msgctxt "model:cassini.move.calendar.record,name:"
-msgid "Move a Cassini Calendar Record"
-msgstr "Mover un registro de calendario de Cassini"
+msgctxt "model:cassini.move.calendar.record,string:"
+msgid "Cassini Move Calendar Record"
+msgstr "Registro del calendario de movimientos de Cassini"
 
-msgctxt "model:cassini.move.tree.record,name:"
-msgid "Move a Cassini Tree Record"
-msgstr "Mover un registro de árbol de Cassini"
+msgctxt "model:cassini.move.tree.record,string:"
+msgid "Cassini Move Tree Record"
+msgstr "Registro de movimiento de árboles de Cassini"
 
-msgctxt "model:cassini.navigate.calendar,name:"
-msgid "Navigate Cassini Calendar"
-msgstr "Navegar por el calendario de Cassini"
+msgctxt "model:cassini.navigate.calendar,string:"
+msgid "Cassini Navigate Calendar"
+msgstr "Calendario de navegación de Cassini"
 
-msgctxt "model:cassini.new.calendar.record,name:"
-msgid "Create a Cassini Calendar Record"
-msgstr "Crear un registro de calendario de Cassini"
+msgctxt "model:cassini.new.calendar.record,string:"
+msgid "Cassini New Calendar Record"
+msgstr "Cassini establece un nuevo récord en el calendario."
 
-msgctxt "model:cassini.new.record,name:"
-msgid "New Cassini Record"
-msgstr "Registro nuevo de Cassini"
+msgctxt "model:cassini.new.record,string:"
+msgid "Cassini New Record"
+msgstr "Cassini establece un nuevo récord."
 
-msgctxt "model:cassini.open.action,name:"
-msgid "Open Cassini Action"
-msgstr "Abrir una acción de Cassini"
+msgctxt "model:cassini.open.action,string:"
+msgid "Cassini Open Action"
+msgstr "Acción abierta de Cassini"
 
-msgctxt "model:cassini.open.menu,name:"
-msgid "Open Cassini Menu"
-msgstr "Abrir el menú de Cassini"
+msgctxt "model:cassini.open.menu,string:"
+msgid "Cassini Open Menu"
+msgstr "Menú abierto de Cassini"
 
-msgctxt "model:cassini.open.notification,name:"
-msgid "Open a Tryton Notification"
-msgstr "Abrir una notificación de Tryton"
+msgctxt "model:cassini.open.notification,string:"
+msgid "Cassini Open Notification"
+msgstr "Notificación abierta de Cassini"
 
-msgctxt "model:cassini.open.notifications,name:"
-msgid "Open All Tryton Notifications"
-msgstr "Abrir todas las notificaciones de Tryton"
+msgctxt "model:cassini.open.notifications,string:"
+msgid "Cassini Open Notifications"
+msgstr "Notificaciones abiertas de Cassini"
 
-msgctxt "model:cassini.open.related,name:"
-msgid "Open Cassini Related Resource"
-msgstr "Abrir un recurso relacionado de Cassini"
+msgctxt "model:cassini.open.related,string:"
+msgid "Cassini Open Related"
+msgstr "Cassini Abierto Relacionado"
 
-msgctxt "model:cassini.open.relation.new,name:"
-msgid "Create a Record for a Cassini Relation"
-msgstr "Crear un registro para una relación de Cassini"
+msgctxt "model:cassini.open.relation.new,string:"
+msgid "Cassini Open Relation New"
+msgstr "Cassini abre nueva relación"
 
-msgctxt "model:cassini.open.relation.record,name:"
-msgid "Open a Cassini Relation Record in a Dialog"
-msgstr "Abrir un registro de relación de Cassini en un diálogo"
+msgctxt "model:cassini.open.relation.record,string:"
+msgid "Cassini Open Relation Record"
+msgstr "Registro de relaciones abiertas de Cassini"
 
-msgctxt "model:cassini.open.resource,name:"
-msgid "Open Cassini Resource"
-msgstr "Abrir un recurso de Cassini"
+msgctxt "model:cassini.open.resource,string:"
+msgid "Cassini Open Resource"
+msgstr "Recursos abiertos de Cassini"
 
-msgctxt "model:cassini.page.layout,name:"
+msgctxt "model:cassini.page.layout,string:"
 msgid "Cassini Page Layout"
 msgstr "Disposición de página de Cassini"
 
-msgctxt "model:cassini.page.records,name:"
-msgid "Page Cassini Records"
-msgstr "Paginar los registros de Cassini"
+msgctxt "model:cassini.page.records,string:"
+msgid "Cassini Page Records"
+msgstr "Registros de páginas de Cassini"
 
-msgctxt "model:cassini.preference.binary,name:"
+msgctxt "model:cassini.preference.binary,string:"
 msgid "Cassini Preference Binary"
 msgstr "Binario de preferencias de Cassini"
 
-msgctxt "model:cassini.preferences,name:"
+msgctxt "model:cassini.preferences,string:"
 msgid "Cassini Preferences"
 msgstr "Preferencias de Cassini"
 
-msgctxt "model:cassini.relation.autocomplete,name:"
-msgid "Autocomplete a Cassini Relation"
-msgstr "Autocompletar una relación de Cassini"
+msgctxt "model:cassini.reference.autocomplete,string:"
+msgid "Cassini Reference Autocomplete"
+msgstr "Autocompletar la referencia de Cassini"
 
-msgctxt "model:cassini.relation.search,name:"
-msgid "Search and Select a Cassini Relation"
-msgstr "Buscar y seleccionar una relación de Cassini"
+msgctxt "model:cassini.relation.autocomplete,string:"
+msgid "Cassini Relation Autocomplete"
+msgstr "Autocompletar la relación de Cassini"
 
-msgctxt "model:cassini.reload.tab,name:"
-msgid "Reload Cassini Tab"
-msgstr "Recargar la pestaña de Cassini"
+msgctxt "model:cassini.relation.search,string:"
+msgid "Cassini Relation Search"
+msgstr "Búsqueda de relaciones de Cassini"
 
-msgctxt "model:cassini.report.download,name:"
-msgid "Download Cassini Report"
-msgstr "Descargar el informe de Cassini"
+msgctxt "model:cassini.reload.tab,string:"
+msgid "Cassini Reload Tab"
+msgstr "Pestaña de recarga de Cassini"
 
-msgctxt "model:cassini.resize.tree.columns,name:"
-msgid "Resize Cassini Tree Columns"
-msgstr "Redimensionar las columnas de árbol de Cassini"
+msgctxt "model:cassini.report.download,string:"
+msgid "Cassini Report Download"
+msgstr "Descargar informe de Cassini"
 
-msgctxt "model:cassini.resolve.unsaved.changes,name:"
-msgid "Resolve Unsaved Changes before Leaving a Record"
-msgstr "Resolver los cambios sin guardar antes de salir de un registro"
+msgctxt "model:cassini.resize.tree.columns,string:"
+msgid "Cassini Resize Tree Columns"
+msgstr "Cassini Redimensionar columnas de árbol"
 
-msgctxt "model:cassini.revert.record,name:"
-msgid "Revert Cassini Record"
-msgstr "Revertir el registro de Cassini"
+msgctxt "model:cassini.resolve.unsaved.changes,string:"
+msgid "Cassini Resolve Unsaved Changes"
+msgstr "Cassini resuelve los cambios no guardados"
 
-msgctxt "model:cassini.run.button,name:"
-msgid "Run Cassini Button"
-msgstr "Ejecutar un botón de Cassini"
+msgctxt "model:cassini.revert.record,string:"
+msgid "Cassini Revert Record"
+msgstr "Registro de reversión de Cassini"
 
-msgctxt "model:cassini.save.preferences,name:"
-msgid "Save Cassini Preferences"
-msgstr "Guardar las preferencias de Cassini"
+msgctxt "model:cassini.run.button,string:"
+msgid "Cassini Run Button"
+msgstr "Botón de ejecución de Cassini"
 
-msgctxt "model:cassini.save.record,name:"
-msgid "Save Cassini Record"
-msgstr "Guardar el registro de Cassini"
+msgctxt "model:cassini.save.preferences,string:"
+msgid "Cassini Save Preferences"
+msgstr "Preferencias de guardado de Cassini"
 
-msgctxt "model:cassini.save.records,name:"
-msgid "Save Cassini Records"
-msgstr "Guardar los registros de Cassini"
+msgctxt "model:cassini.save.record,string:"
+msgid "Cassini Save Record"
+msgstr "Cassini guarda el récord"
 
-msgctxt "model:cassini.save.search.bookmark,name:"
-msgid "Save Cassini Search Bookmark"
-msgstr "Guardar el marcador de búsqueda de Cassini"
+msgctxt "model:cassini.save.records,string:"
+msgid "Cassini Save Records"
+msgstr "Registros de Cassini Save"
 
-msgctxt "model:cassini.scan.code,name:"
-msgid "Scan a Code into a Cassini Form"
-msgstr "Escanear un código en un formulario de Cassini"
+msgctxt "model:cassini.save.search.bookmark,string:"
+msgid "Cassini Save Search Bookmark"
+msgstr "Cassini Guardar búsqueda Marcador"
 
-msgctxt "model:cassini.search,name:"
-msgid "Search Cassini View"
-msgstr "Buscar en la vista de Cassini"
+msgctxt "model:cassini.scan.code,string:"
+msgid "Cassini Scan Code"
+msgstr "Código de escaneo de Cassini"
 
-msgctxt "model:cassini.search.bookmark.dialog,name:"
-msgid "Create Cassini Search Bookmark Dialog"
-msgstr "Crear el diálogo de marcador de búsqueda de Cassini"
+msgctxt "model:cassini.search,string:"
+msgid "Cassini Search"
+msgstr "Búsqueda de Cassini"
 
-msgctxt "model:cassini.search.draft,name:"
-msgid "Update Cassini Search Draft"
-msgstr "Actualizar el borrador de búsqueda de Cassini"
+msgctxt "model:cassini.search.bookmark.dialog,string:"
+msgid "Cassini Search Bookmark Dialog"
+msgstr "Cuadro de diálogo de marcadores de búsqueda de Cassini"
 
-msgctxt "model:cassini.select.all.records,name:"
-msgid "Select All Cassini Records"
-msgstr "Seleccionar todos los registros de Cassini"
+msgctxt "model:cassini.search.draft,string:"
+msgid "Cassini Search Draft"
+msgstr "Borrador de la búsqueda de Cassini"
 
-msgctxt "model:cassini.select.neighbor,name:"
-msgid "Select Previous or Next Cassini Record"
-msgstr "Seleccionar el registro anterior o siguiente de Cassini"
+msgctxt "model:cassini.select.all.records,string:"
+msgid "Cassini Select All Records"
+msgstr "Cassini Seleccionar todos los registros"
 
-msgctxt "model:cassini.select.record,name:"
-msgid "Select Cassini Record"
-msgstr "Seleccionar un registro de Cassini"
+msgctxt "model:cassini.select.neighbor,string:"
+msgid "Cassini Select Neighbor"
+msgstr "Cassini Select Vecino"
 
-msgctxt "model:cassini.set.calendar.mode,name:"
-msgid "Set Cassini Calendar Mode"
-msgstr "Establecer el modo de calendario de Cassini"
+msgctxt "model:cassini.select.record,string:"
+msgid "Cassini Select Record"
+msgstr "Registro Selecto de Cassini"
 
-msgctxt "model:cassini.set.revision,name:"
-msgid "Set Cassini Revision"
-msgstr "Establecer la revisión de Cassini"
+msgctxt "model:cassini.set.calendar.mode,string:"
+msgid "Cassini Set Calendar Mode"
+msgstr "Cassini establece el modo calendario."
 
-msgctxt "model:cassini.shell,name:"
+msgctxt "model:cassini.set.revision,string:"
+msgid "Cassini Set Revision"
+msgstr "Revisión del conjunto Cassini"
+
+msgctxt "model:cassini.shell,string:"
 msgid "Cassini Shell"
 msgstr "Interfaz de Cassini"
 
-msgctxt "model:cassini.shell.control,name:"
-msgid "Update Cassini Shell State"
-msgstr "Actualizar el estado de la interfaz de Cassini"
+msgctxt "model:cassini.shell.control,string:"
+msgid "Cassini Shell Control"
+msgstr "Control de la capa de Cassini"
 
-msgctxt "model:cassini.show.revisions,name:"
-msgid "Show Cassini Revisions"
-msgstr "Mostrar las revisiones de Cassini"
+msgctxt "model:cassini.show.revisions,string:"
+msgid "Cassini Show Revisions"
+msgstr "Revisiones del programa Cassini"
 
-msgctxt "model:cassini.sort.records,name:"
-msgid "Sort Cassini Records"
-msgstr "Ordenar los registros de Cassini"
+msgctxt "model:cassini.sort.records,string:"
+msgid "Cassini Sort Records"
+msgstr "Registros de clasificación de Cassini"
 
-msgctxt "model:cassini.state.component,name:"
-msgid "Render a registered custom component from its persistent state."
-msgstr "Renderizar un componente personalizado registrado a partir de su estado persistente."
+msgctxt "model:cassini.state.component,string:"
+msgid "Cassini State Component"
+msgstr "Componente del estado de Cassini"
 
-msgctxt "model:cassini.stateful.component,name:"
-msgid "Base Voyager component backed by the current persistent workspace."
-msgstr "Componente base de Voyager respaldado por el espacio de trabajo persistente actual."
+msgctxt "model:cassini.stateful.component,string:"
+msgid "Cassini Stateful Component"
+msgstr "Componente estatal de Cassini"
 
-msgctxt "model:cassini.switch.domain,name:"
-msgid "Switch Cassini Domain"
-msgstr "Cambiar el dominio de Cassini"
+msgctxt "model:cassini.switch.domain,string:"
+msgid "Cassini Switch Domain"
+msgstr "Dominio de conmutación de Cassini"
 
-msgctxt "model:cassini.switch.page,name:"
-msgid "Switch Cassini Notebook Page"
-msgstr "Cambiar la página del cuaderno de Cassini"
+msgctxt "model:cassini.switch.page,string:"
+msgid "Cassini Switch Page"
+msgstr "Página de conmutación de Cassini"
 
-msgctxt "model:cassini.switch.preference.page,name:"
-msgid "Switch Cassini Preferences Notebook Page"
-msgstr "Cambiar la página del cuaderno de preferencias de Cassini"
+msgctxt "model:cassini.switch.preference.page,string:"
+msgid "Cassini Switch Preference Page"
+msgstr "Página de preferencias del conmutador Cassini"
 
-msgctxt "model:cassini.switch.view,name:"
-msgid "Switch Cassini View"
-msgstr "Cambiar la vista de Cassini"
+msgctxt "model:cassini.switch.view,string:"
+msgid "Cassini Switch View"
+msgstr "Vista del interruptor Cassini"
 
-msgctxt "model:cassini.toggle.active,name:"
-msgid "Toggle Active Cassini Records"
-msgstr "Alternar los registros activos de Cassini"
+msgctxt "model:cassini.test.pyson_state,string:"
+msgid "Cassini Test Pyson State"
+msgstr "Prueba de Cassini Estado de Pyson"
 
-msgctxt "model:cassini.toggle.column,name:"
-msgid "Toggle Cassini Optional Column"
-msgstr "Alternar una columna opcional de Cassini"
+msgctxt "model:cassini.test.tree.node,string:"
+msgid "Cassini Test Tree Node"
+msgstr "Nodo del árbol de prueba de Cassini"
 
-msgctxt "model:cassini.toggle.menu.favorite,name:"
-msgid "Toggle a Cassini Menu Favorite"
-msgstr "Alternar un favorito de menú de Cassini"
+msgctxt "model:cassini.test.widget,string:"
+msgid "Cassini Test Widget"
+msgstr "Widget de prueba de Cassini"
 
-msgctxt "model:cassini.toggle.menu.item,name:"
-msgid "Toggle a Cassini Menu Branch"
-msgstr "Alternar una rama de menú de Cassini"
+msgctxt "model:cassini.test.widget-res.group,string:"
+msgid "Cassini Test Widget - Group"
+msgstr "Widget de prueba de Cassini - Grupo"
 
-msgctxt "model:cassini.toggle.tree.node,name:"
-msgid "Toggle Cassini Tree Node"
-msgstr "Alternar un nodo de árbol de Cassini"
+msgctxt "model:cassini.test.widget-res.group.one2one,string:"
+msgid "Cassini Test Widget - Group One2One"
+msgstr "Widget de prueba de Cassini - Grupo One2One"
 
-msgctxt "model:cassini.toolbar.action,name:"
-msgid "Run Cassini Toolbar Action"
-msgstr "Ejecutar una acción de la barra de herramientas de Cassini"
+msgctxt "model:cassini.test.widget.child,string:"
+msgid "Cassini Test Widget Child"
+msgstr "Widget de prueba Cassini hijo"
 
-msgctxt "model:cassini.update.field,name:"
-msgid "Update Cassini Field"
-msgstr "Actualizar un campo de Cassini"
+msgctxt "model:cassini.test.widget.currency,string:"
+msgid "Cassini Test Widget Currency"
+msgstr "Widget de prueba de Cassini Moneda"
 
-msgctxt "model:cassini.update.preference.field,name:"
-msgid "Update Cassini Preference Field"
-msgstr "Actualizar un campo de preferencias de Cassini"
+msgctxt "model:cassini.toggle.active,string:"
+msgid "Cassini Toggle Active"
+msgstr "Cassini Activar"
 
-msgctxt "model:cassini.update.state.component,name:"
-msgid "Merge JSON state and return only the affected custom component."
-msgstr "Fusionar el estado JSON y devolver solo el componente personalizado afectado."
+msgctxt "model:cassini.toggle.column,string:"
+msgid "Cassini Toggle Column"
+msgstr "Columna de alternancia Cassini"
 
-msgctxt "model:cassini.update.wizard.field,name:"
-msgid "Update Cassini Wizard Field"
-msgstr "Actualizar un campo del asistente de Cassini"
+msgctxt "model:cassini.toggle.menu.favorite,string:"
+msgid "Cassini Toggle Menu Favorite"
+msgstr "Menú Cassini Alternar Favorito"
 
-msgctxt "model:cassini.wizard.step,name:"
-msgid "Continue Cassini Wizard"
-msgstr "Continuar el asistente de Cassini"
+msgctxt "model:cassini.toggle.menu.item,string:"
+msgid "Cassini Toggle Menu Item"
+msgstr "Elemento del menú Cassini"
 
-msgctxt "model:cassini.workspace,name:"
+msgctxt "model:cassini.toggle.tree.node,string:"
+msgid "Cassini Toggle Tree Node"
+msgstr "Nodo de árbol de alternancia de Cassini"
+
+msgctxt "model:cassini.toolbar.action,string:"
+msgid "Cassini Toolbar Action"
+msgstr "Acción de la barra de herramientas de Cassini"
+
+msgctxt "model:cassini.update.field,string:"
+msgid "Cassini Update Field"
+msgstr "Campo de actualización de Cassini"
+
+msgctxt "model:cassini.update.preference.field,string:"
+msgid "Cassini Update Preference Field"
+msgstr "Campo de preferencias de actualización de Cassini"
+
+msgctxt "model:cassini.update.state.component,string:"
+msgid "Cassini Update State Component"
+msgstr "Componente de actualización de estado de Cassini"
+
+msgctxt "model:cassini.update.wizard.field,string:"
+msgid "Cassini Update Wizard Field"
+msgstr "Campo del mago de actualización de Cassini"
+
+msgctxt "model:cassini.update.x2many.field,string:"
+msgid "Cassini Update X2Many Field"
+msgstr "Actualización de Cassini Campo X2Many"
+
+msgctxt "model:cassini.version.changes,string:"
+msgid "Cassini Version Changes"
+msgstr "Cambios en la versión de Cassini"
+
+msgctxt "model:cassini.wizard.help,string:"
+msgid "Cassini Wizard Help"
+msgstr "Ayuda del mago Cassini"
+
+msgctxt "model:cassini.wizard.step,string:"
+msgid "Cassini Wizard Step"
+msgstr "Paso del mago de Cassini"
+
+msgctxt "model:cassini.workspace,string:"
 msgid "Cassini Workspace"
 msgstr "Espacio de trabajo de Cassini"
 
-msgctxt "model:cassini.x2many.action,name:"
-msgid "Operate a Cassini One2Many or Many2Many Widget"
-msgstr "Operar un widget One2Many o Many2Many de Cassini"
+msgctxt "model:cassini.x2many.action,string:"
+msgid "Cassini X2Many Action"
+msgstr "Cassini X2 Muchas acciones"
 
-msgctxt "selection:www.site,type:cassini"
+msgctxt ""
+"model:ir.message,text:msg_a_cassini_session_can_only_have_one_workspace_4bb90d57"
+msgid "A Cassini session can only have one workspace."
+msgstr "Una sesión de Cassini solo puede tener un espacio de trabajo."
+
+msgctxt "selection:cassini.attachment.preview.navigate,direction:"
+msgid "Next"
+msgstr "Próximo"
+
+msgctxt "selection:cassini.attachment.preview.navigate,direction:"
+msgid "Previous"
+msgstr "Anterior"
+
+msgctxt "selection:cassini.test.widget,multiselection_value:"
+msgid "First"
+msgstr "Primero"
+
+msgctxt "selection:cassini.test.widget,multiselection_value:"
+msgid "Second"
+msgstr "Segundo"
+
+msgctxt "selection:cassini.test.widget,reference_value:"
+msgid "Group"
+msgstr "Grupo"
+
+msgctxt "selection:cassini.test.widget,selection_value:"
+msgid "Draft"
+msgstr "Borrador"
+
+msgctxt "selection:cassini.test.widget,selection_value:"
+msgid "Marked"
+msgstr "Marcado"
+
+msgctxt "selection:www.site,type:"
 msgid "Cassini"
 msgstr "Cassini"
 
-msgctxt "model:ir.message,text:msg_dashboard_d87f47b4"
-msgid "Dashboard"
-msgstr "Panel"
-
-msgctxt "model:ir.message,text:msg_direct_printing_failed_error_s_0c46e137"
-msgid "Direct printing failed: %(error)s"
-msgstr "La impresión directa ha fallado: %(error)s"
-
-msgctxt "model:ir.message,text:msg_plotly_could_not_be_initialized_71855ebb"
-msgid "Plotly could not be initialized."
-msgstr "No se ha podido inicializar Plotly."
-
-msgctxt "model:ir.message,text:msg_qz_tray_could_not_be_initialized_ff4bcfe4"
-msgid "QZ Tray could not be initialized."
-msgstr "No se ha podido inicializar QZ Tray."
-
-msgctxt "model:ir.message,text:msg_the_dashboard_view_requires_the_babi_module_a8b9ad85"
-msgid "The Dashboard view requires the babi module."
-msgstr "La vista de panel requiere el módulo babi."
-
-msgctxt "model:ir.message,text:msg_the_chart_data_is_not_valid_d50dc29d"
-msgid "The chart data is not valid."
-msgstr "Los datos del gráfico no son válidos."
-
-msgctxt "model:ir.message,text:msg_the_requested_javascript_library_could_not_be_lo_1745ceaa"
-msgid "The requested JavaScript library could not be loaded."
-msgstr "No se ha podido cargar la biblioteca JavaScript solicitada."
-
-msgctxt "model:ir.message,text:msg_this_tab_can_not_be_reloaded_aeb04527"
-msgid "This tab can not be reloaded"
-msgstr "Esta pestaña no se puede recargar"
-
-msgctxt "model:ir.message,text:msg_unknown_dashboard_64c495b2"
-msgid "Unknown dashboard"
-msgstr "Panel desconocido"
-
-msgctxt "model:ir.message,text:msg_the_csv_file_could_not_be_decoded_with_encoding__f12698f7"
-msgid "The CSV file could not be decoded with %(encoding)s"
-msgstr "No se ha podido descodificar el fichero CSV con %(encoding)s"
-
-msgctxt "model:ir.message,text:msg_select_at_least_one_field_e1839336"
-msgid "Select at least one field"
-msgstr "Seleccione al menos un campo"
-
-msgctxt "model:ir.message,text:msg_the_csv_delimiter_must_be_one_character_ae41c2fd"
-msgid "The CSV delimiter must be one character"
-msgstr "El delimitador CSV debe tener un carácter"
-
-msgctxt "model:ir.message,text:msg_the_csv_quote_character_must_be_one_character_bd6c63dc"
-msgid "The CSV quote character must be one character"
-msgstr "El carácter de comillas CSV debe tener un carácter"
-
-msgctxt "model:ir.message,text:msg_unknown_csv_record_selection_1005a5c9"
-msgid "Unknown CSV record selection"
-msgstr "Selección de registros CSV desconocida"
-
-msgctxt "model:ir.message,text:msg_select_at_least_one_field_to_import_ecb61539"
-msgid "Select at least one field to import"
-msgstr "Seleccione al menos un campo para importar"
-
+#, python-format
 msgctxt "xgettext:x:"
 msgid "%(count)d record"
 msgstr "%(count)d registro"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "%(count)d records"
 msgstr "%(count)d registros"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "%(field)s (model name)"
 msgstr "%(field)s (nombre del modelo)"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "%(field)s (string)"
 msgstr "%(field)s (texto)"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "%(field)s/Record Name"
 msgstr "%(field)s/Nombre del registro"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "%(fields)d modified field in %(records)d record"
 msgstr "%(fields)d campo modificado en %(records)d registro"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "%(fields)d modified field in %(records)d records"
 msgstr "%(fields)d campo modificado en %(records)d registros"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "%(fields)d modified fields in %(records)d record"
 msgstr "%(fields)d campos modificados en %(records)d registro"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "%(fields)d modified fields in %(records)d records"
 msgstr "%(fields)d campos modificados en %(records)d registros"
+
+msgctxt "xgettext:x:"
+msgid "(CET/CEST time zone)"
+msgstr "(Zona horaria CET/CEST)"
+
+msgctxt "xgettext:x:"
+msgid "A bookmark name and search are required"
+msgstr "Se requiere un nombre de marcador y una búsqueda"
 
 msgctxt "xgettext:x:"
 msgid "A component name and callable renderer are required"
 msgstr "Se requiere un nombre de componente y un renderizador ejecutable"
 
 msgctxt "xgettext:x:"
+msgid "A flat tree can not contain child records"
+msgstr "Un árbol plano no puede contener registros hijos"
+
+msgctxt "xgettext:x:"
+msgid "A maximum of five attachments is allowed."
+msgstr "Se permite un máximo de cinco archivos adjuntos."
+
+msgctxt "xgettext:x:"
 msgid "A new task"
 msgstr "Una tarea nueva"
+
+msgctxt "xgettext:x:"
+msgid "A tree record can not contain itself"
+msgstr "Un registro del árbol no puede contenerse a sí mismo"
 
 msgctxt "xgettext:x:"
 msgid "Accept"
@@ -1594,6 +1736,7 @@ msgctxt "xgettext:x:"
 msgid "Add"
 msgstr "Agregar"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Add %(menu)s to favorites"
 msgstr "Añadir %(menu)s a favoritos"
@@ -1632,7 +1775,9 @@ msgstr "Los cambios no guardados se revisarán antes de cerrar cada pestaña."
 
 msgctxt "xgettext:x:"
 msgid "Application updates are available when nantic_connection is installed."
-msgstr "Las actualizaciones de la aplicación están disponibles cuando nantic_connection está instalado."
+msgstr ""
+"Las actualizaciones de la aplicación están disponibles cuando "
+"nantic_connection está instalado."
 
 msgctxt "xgettext:x:"
 msgid "Ask the assistant…"
@@ -1659,6 +1804,10 @@ msgid "Attach screenshot"
 msgstr "Adjuntar una captura de pantalla"
 
 msgctxt "xgettext:x:"
+msgid "Attachment"
+msgstr "Adjunto"
+
+msgctxt "xgettext:x:"
 msgid "Attachment preview"
 msgstr "Vista previa del adjunto"
 
@@ -1679,6 +1828,10 @@ msgid "Back to Sao"
 msgstr "Volver a Sao"
 
 msgctxt "xgettext:x:"
+msgid "Binary actions"
+msgstr "Acciones binarias"
+
+msgctxt "xgettext:x:"
 msgid "Bookmark Name"
 msgstr "Nombre del marcador"
 
@@ -1690,10 +1843,12 @@ msgctxt "xgettext:x:"
 msgid "Bookmarks"
 msgstr "Búsquedas favoritas"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "CSV Export: %(name)s"
 msgstr "Exportación CSV: %(name)s"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "CSV Import: %(name)s"
 msgstr "Importación CSV: %(name)s"
@@ -1734,6 +1889,7 @@ msgctxt "xgettext:x:"
 msgid "Choose a related record to add"
 msgstr "Seleccione un registro relacionado para añadir"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Choose what to do before you %(action)s."
 msgstr "Elija qué hacer antes de %(action)s."
@@ -1754,9 +1910,14 @@ msgctxt "xgettext:x:"
 msgid "Close"
 msgstr "Cerrar"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Close %(tab)s"
 msgstr "Cerrar %(tab)s"
+
+msgctxt "xgettext:x:"
+msgid "Close Tab"
+msgstr "Cerrar pestaña"
 
 msgctxt "xgettext:x:"
 msgid "Close all tabs?"
@@ -1795,6 +1956,10 @@ msgid "Component state must be valid JSON"
 msgstr "El estado del componente debe ser un JSON válido"
 
 msgctxt "xgettext:x:"
+msgid "Confirm action"
+msgstr "Confirmar la acción"
+
+msgctxt "xgettext:x:"
 msgid "Contextual documentation"
 msgstr "Documentación contextual"
 
@@ -1819,6 +1984,14 @@ msgid "Conversations"
 msgstr "Conversaciones"
 
 msgctxt "xgettext:x:"
+msgid "Copy Selected Records"
+msgstr "Copiar registros seleccionados"
+
+msgctxt "xgettext:x:"
+msgid "Could not save the column widths."
+msgstr "No se han podido guardar los anchos de columna."
+
+msgctxt "xgettext:x:"
 msgid "Counter component"
 msgstr "Componente contador"
 
@@ -1829,6 +2002,14 @@ msgstr "Crear"
 msgctxt "xgettext:x:"
 msgid "Create the related record from its own window"
 msgstr "Crear el registro relacionado desde su propia ventana"
+
+msgctxt "xgettext:x:"
+msgid "Created at"
+msgstr "Fecha de creación"
+
+msgctxt "xgettext:x:"
+msgid "Created by"
+msgstr "Usuario de creación"
 
 msgctxt "xgettext:x:"
 msgid "Create…"
@@ -1845,6 +2026,14 @@ msgstr "Registro actual"
 msgctxt "xgettext:x:"
 msgid "Current values"
 msgstr "Valores actuales"
+
+msgctxt "xgettext:x:"
+msgid "Cycle side panel"
+msgstr "Cambia el panel lateral"
+
+msgctxt "xgettext:x:"
+msgid "Dashboard"
+msgstr "Panel"
 
 msgctxt "xgettext:x:"
 msgid "Dashboard chart"
@@ -1898,6 +2087,11 @@ msgctxt "xgettext:x:"
 msgid "Details"
 msgstr "Detalles"
 
+#, python-format
+msgctxt "xgettext:x:"
+msgid "Direct printing failed: %(error)s"
+msgstr "La impresión directa ha fallado: %(error)s"
+
 msgctxt "xgettext:x:"
 msgid "Discard the unsaved changes to this record?"
 msgstr "¿Quiere descartar los cambios no guardados de este registro?"
@@ -1908,7 +2102,8 @@ msgstr "Documentación"
 
 msgctxt "xgettext:x:"
 msgid "Documentation is available when nantic_connection is installed."
-msgstr "La documentación está disponible cuando nantic_connection está instalado."
+msgstr ""
+"La documentación está disponible cuando nantic_connection está instalado."
 
 msgctxt "xgettext:x:"
 msgid "Domains"
@@ -1917,10 +2112,6 @@ msgstr "Dominios"
 msgctxt "xgettext:x:"
 msgid "Don't show again"
 msgstr "No volver a mostrar"
-
-msgctxt "xgettext:x:"
-msgid "Download"
-msgstr "Descargar"
 
 msgctxt "xgettext:x:"
 msgid "Duplicate"
@@ -1955,6 +2146,10 @@ msgid "Export Name"
 msgstr "Nombre de la exportación"
 
 msgctxt "xgettext:x:"
+msgid "Failed to copy selected records to the clipboard."
+msgstr "No se pudieron copiar los registros seleccionados al portapapeles."
+
+msgctxt "xgettext:x:"
 msgid "False"
 msgstr "Falso"
 
@@ -1987,12 +2182,24 @@ msgid "Global search"
 msgstr "Búsqueda global"
 
 msgctxt "xgettext:x:"
+msgid "Global search or start a new assistant conversation"
+msgstr "Búsqueda global o inicia una conversación nueva con el asistente"
+
+msgctxt "xgettext:x:"
+msgid "Global shortcuts"
+msgstr "Atajos globales"
+
+msgctxt "xgettext:x:"
 msgid "Help"
 msgstr "Ayuda"
 
 msgctxt "xgettext:x:"
 msgid "Help and Updates"
 msgstr "Ayuda y actualizaciones"
+
+msgctxt "xgettext:x:"
+msgid "ID"
+msgstr "ID"
 
 msgctxt "xgettext:x:"
 msgid "Ignore search limit"
@@ -2031,6 +2238,14 @@ msgid "Invalid column widths"
 msgstr "Los anchos de columna no son válidos"
 
 msgctxt "xgettext:x:"
+msgid "Invalid decimal value"
+msgstr "El valor decimal no es válido"
+
+msgctxt "xgettext:x:"
+msgid "Keyboard shortcuts"
+msgstr "Atajos de teclado"
+
+msgctxt "xgettext:x:"
 msgid "Latest"
 msgstr "Últimas"
 
@@ -2043,8 +2258,16 @@ msgid "Listed Records"
 msgstr "Registros listados"
 
 msgctxt "xgettext:x:"
+msgid "Loading more records"
+msgstr "Cargando más registros"
+
+msgctxt "xgettext:x:"
 msgid "Logout"
 msgstr "Cerrar sesión"
+
+msgctxt "xgettext:x:"
+msgid "Logs"
+msgstr "Registros"
 
 msgctxt "xgettext:x:"
 msgid "Manage..."
@@ -2057,6 +2280,18 @@ msgstr "Menús"
 msgctxt "xgettext:x:"
 msgid "Message"
 msgstr "Mensaje"
+
+msgctxt "xgettext:x:"
+msgid "Modified at"
+msgstr "Modificado el"
+
+msgctxt "xgettext:x:"
+msgid "Modified by"
+msgstr "Modificado por"
+
+msgctxt "xgettext:x:"
+msgid "Monday to Thursday from 9 to 17:30 and Friday from 9 to 15"
+msgstr "De lunes a jueves de 9 a 17:30 y viernes de 9 a 15"
 
 msgctxt "xgettext:x:"
 msgid "Month"
@@ -2082,6 +2317,7 @@ msgctxt "xgettext:x:"
 msgid "New event"
 msgstr "Evento nuevo"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "New event on %(date)s"
 msgstr "Evento nuevo el %(date)s"
@@ -2101,6 +2337,10 @@ msgstr "Página siguiente"
 msgctxt "xgettext:x:"
 msgid "Next record"
 msgstr "Registro siguiente"
+
+msgctxt "xgettext:x:"
+msgid "Next tab"
+msgstr "Pestaña siguiente"
 
 msgctxt "xgettext:x:"
 msgid "No actions"
@@ -2163,6 +2403,10 @@ msgid "No updates available."
 msgstr "No hay actualizaciones disponibles."
 
 msgctxt "xgettext:x:"
+msgid "Note"
+msgstr "Nota"
+
+msgctxt "xgettext:x:"
 msgid "Notebook pages"
 msgstr "Páginas del cuaderno"
 
@@ -2206,6 +2450,7 @@ msgctxt "xgettext:x:"
 msgid "Optional columns"
 msgstr "Columnas opcionales"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Page %(page)d"
 msgstr "Página %(page)d"
@@ -2227,6 +2472,10 @@ msgid "Persistent draft"
 msgstr "Borrador persistente"
 
 msgctxt "xgettext:x:"
+msgid "Plotly could not be initialized."
+msgstr "No se ha podido inicializar Plotly."
+
+msgctxt "xgettext:x:"
 msgid "Predefined Exports"
 msgstr "Exportaciones predefinidas"
 
@@ -2240,7 +2489,8 @@ msgstr "Las preferencias no están abiertas"
 
 msgctxt "xgettext:x:"
 msgid "Preferences require all open tabs to be closed."
-msgstr "Para abrir las preferencias se deben cerrar todas las pestañas abiertas."
+msgstr ""
+"Para abrir las preferencias se deben cerrar todas las pestañas abiertas."
 
 msgctxt "xgettext:x:"
 msgid "Preview"
@@ -2259,8 +2509,16 @@ msgid "Previous record"
 msgstr "Registro anterior"
 
 msgctxt "xgettext:x:"
+msgid "Previous tab"
+msgstr "Pestaña anterior"
+
+msgctxt "xgettext:x:"
 msgid "Print"
 msgstr "Imprimir"
+
+msgctxt "xgettext:x:"
+msgid "QZ Tray could not be initialized."
+msgstr "No se ha podido inicializar QZ Tray."
 
 msgctxt "xgettext:x:"
 msgid "Quote Char"
@@ -2299,9 +2557,23 @@ msgid "Remote assistance"
 msgstr "Asistencia remota"
 
 msgctxt "xgettext:x:"
+msgid "Remote assistance could not be initialized."
+msgstr "No se ha podido inicializar la asistencia remota."
+
+msgctxt "xgettext:x:"
+msgid "Remote assistance did not load."
+msgstr "No se ha cargado la asistencia remota."
+
+msgctxt "xgettext:x:"
 msgid "Remove"
 msgstr "Eliminar"
 
+#, python-format
+msgctxt "xgettext:x:"
+msgid "Remove %(file)s"
+msgstr "Eliminar %(file)s"
+
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Remove %(menu)s from favorites"
 msgstr "Eliminar %(menu)s de favoritos"
@@ -2327,16 +2599,17 @@ msgid "Reordering related records is not allowed"
 msgstr "No está permitido reordenar los registros relacionados"
 
 msgctxt "xgettext:x:"
+msgid "Reset Column Widths"
+msgstr "Restablecer anchos de columna"
+
+msgctxt "xgettext:x:"
 msgid "Resize"
 msgstr "Redimensionar"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Resize %(column)s column"
 msgstr "Redimensionar la columna %(column)s"
-
-msgctxt "xgettext:x:"
-msgid "Resource actions"
-msgstr "Acciones del recurso"
 
 msgctxt "xgettext:x:"
 msgid "Revisions"
@@ -2387,9 +2660,18 @@ msgid "Scan or enter a code"
 msgstr "Escanee o introduzca un código"
 
 msgctxt "xgettext:x:"
+msgid "Screen capture is not available."
+msgstr "La captura de pantalla no está disponible."
+
+msgctxt "xgettext:x:"
+msgid "Screen recording is not available."
+msgstr "La grabación de pantalla no está disponible."
+
+msgctxt "xgettext:x:"
 msgid "Search"
 msgstr "Buscar"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Search %(model)s"
 msgstr "Buscar %(model)s"
@@ -2431,9 +2713,14 @@ msgid "Search…"
 msgstr "Buscar…"
 
 msgctxt "xgettext:x:"
+msgid "See tickets"
+msgstr "Ver tiques"
+
+msgctxt "xgettext:x:"
 msgid "Select"
 msgstr "Seleccionar"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Select %(record)s"
 msgstr "Selecciona %(record)s"
@@ -2441,6 +2728,14 @@ msgstr "Selecciona %(record)s"
 msgctxt "xgettext:x:"
 msgid "Select a predefined export"
 msgstr "Seleccione una exportación predefinida"
+
+msgctxt "xgettext:x:"
+msgid "Select a record before scanning"
+msgstr "Seleccione un registro antes de escanear"
+
+msgctxt "xgettext:x:"
+msgid "Select a record first"
+msgstr "Seleccione primero un registro"
 
 msgctxt "xgettext:x:"
 msgid "Select a saved record first"
@@ -2453,6 +2748,10 @@ msgstr "Seleccionar todos los registros"
 msgctxt "xgettext:x:"
 msgid "Select at least one field"
 msgstr "Seleccione al menos un campo"
+
+msgctxt "xgettext:x:"
+msgid "Select at least one field to import"
+msgstr "Seleccione al menos un campo para importar"
 
 msgctxt "xgettext:x:"
 msgid "Select record"
@@ -2479,6 +2778,14 @@ msgid "Show inactive records"
 msgstr "Mostrar registros inactivos"
 
 msgctxt "xgettext:x:"
+msgid "Show this help"
+msgstr "Muestra esta ayuda"
+
+msgctxt "xgettext:x:"
+msgid "Show/Hide access keys"
+msgstr "Mostrar/Esconder las teclas rápidas"
+
+msgctxt "xgettext:x:"
 msgid "Side panel"
 msgstr "Panel lateral"
 
@@ -2491,16 +2798,34 @@ msgid "Sign in with your Tryton account."
 msgstr "Inicie sesión con su cuenta de Tryton."
 
 msgctxt "xgettext:x:"
+msgid "Size"
+msgstr "Tamaño"
+
+msgctxt "xgettext:x:"
 msgid "Speech recognition is not available"
 msgstr "El reconocimiento de voz no está disponible"
+
+msgctxt "xgettext:x:"
+msgid "Speech recognition is not available."
+msgstr "El reconocimiento de voz no está disponible."
 
 msgctxt "xgettext:x:"
 msgid "Speech to text"
 msgstr "Conversión de voz a texto"
 
 msgctxt "xgettext:x:"
-msgid "Start a conversation. The active model, record, selection, domain and language are sent as context."
-msgstr "Inicie una conversación. El modelo activo, el registro, la selección, el dominio y el idioma se envían como contexto."
+msgid ""
+"Start a conversation. The active model, record, selection, domain and "
+"language are sent as context."
+msgstr ""
+"Inicie una conversación. El modelo activo, el registro, la selección, el "
+"dominio y el idioma se envían como contexto."
+
+msgctxt "xgettext:x:"
+msgid "Start a support session by sharing the current browser tab."
+msgstr ""
+"Inicie una sesión de asistencia compartiendo la pestaña actual del "
+"navegador."
 
 msgctxt "xgettext:x:"
 msgid "Start or select a conversation first"
@@ -2516,7 +2841,9 @@ msgstr "Soporte"
 
 msgctxt "xgettext:x:"
 msgid "Support tickets are available when nantic_connection is installed."
-msgstr "Los tiques de soporte están disponibles cuando nantic_connection está instalado."
+msgstr ""
+"Los tiques de soporte están disponibles cuando nantic_connection está "
+"instalado."
 
 msgctxt "xgettext:x:"
 msgid "Switch"
@@ -2534,6 +2861,15 @@ msgctxt "xgettext:x:"
 msgid "Switch without saving"
 msgstr "Cambiar sin guardar"
 
+#, python-format
+msgctxt "xgettext:x:"
+msgid "Tab %s is not a %s tab"
+msgstr "La pestaña %s no es una pestaña %s"
+
+msgctxt "xgettext:x:"
+msgid "Tab shortcuts"
+msgstr "Atajos de las pestañas"
+
 msgctxt "xgettext:x:"
 msgid "Task component"
 msgstr "Componente de tareas"
@@ -2547,6 +2883,11 @@ msgid "Text to speech is not available"
 msgstr "La conversión de texto a voz no está disponible"
 
 msgctxt "xgettext:x:"
+msgid "The CSV delimiter must be one character"
+msgstr "El delimitador CSV debe tener un carácter"
+
+#, python-format
+msgctxt "xgettext:x:"
 msgid "The CSV file could not be decoded with %(encoding)s"
 msgstr "No se ha podido descodificar el fichero CSV con %(encoding)s"
 
@@ -2555,9 +2896,30 @@ msgid "The CSV file is empty"
 msgstr "El archivo CSV está vacío"
 
 msgctxt "xgettext:x:"
+msgid "The CSV quote character must be one character"
+msgstr "El carácter de comillas CSV debe tener un carácter"
+
+msgctxt "xgettext:x:"
+msgid "The Dashboard view requires the babi module."
+msgstr "La vista de panel requiere el módulo babi."
+
+msgctxt "xgettext:x:"
 msgid "The assistant needs confirmation to continue."
 msgstr "El asistente necesita confirmación para continuar."
 
+msgctxt "xgettext:x:"
+msgid "The assistant voice is not available."
+msgstr "La voz del asistente no está disponible."
+
+msgctxt "xgettext:x:"
+msgid "The audio could not be transcribed."
+msgstr "No se ha podido transcribir el audio."
+
+msgctxt "xgettext:x:"
+msgid "The chart data is not valid."
+msgstr "Los datos del gráfico no son válidos."
+
+#, python-format
 msgctxt "xgettext:x:"
 msgid "The field \"%(field)s\" is read-only"
 msgstr "El campo \"%(field)s\" es de solo lectura"
@@ -2567,20 +2929,57 @@ msgid "The first CSV row must contain field names"
 msgstr "La primera fila del CSV debe contener nombres de campos"
 
 msgctxt "xgettext:x:"
+msgid "The microphone could not be started."
+msgstr "No se ha podido iniciar el micrófono."
+
+msgctxt "xgettext:x:"
+msgid "The recording could not be started."
+msgstr "No se ha podido iniciar la grabación."
+
+msgctxt "xgettext:x:"
 msgid "The related record is already saved"
 msgstr "El registro relacionado ya está guardado"
+
+msgctxt "xgettext:x:"
+msgid "The requested JavaScript library could not be loaded."
+msgstr "No se ha podido cargar la biblioteca JavaScript solicitada."
+
+msgctxt "xgettext:x:"
+msgid "The screenshot could not be captured."
+msgstr "No se ha podido realizar la captura de pantalla."
+
+msgctxt "xgettext:x:"
+msgid "The server could not complete this action."
+msgstr "El servidor no ha podido completar esta acción."
 
 msgctxt "xgettext:x:"
 msgid "This action opens an external address."
 msgstr "Esta acción abre una dirección externa."
 
 msgctxt "xgettext:x:"
+msgid "This download is no longer available"
+msgstr "Esta descarga ya no está disponible"
+
+msgctxt "xgettext:x:"
 msgid "This help resource is not installed"
 msgstr "Este recurso de ayuda no está instalado"
 
 msgctxt "xgettext:x:"
-msgid "This page uses no Tryton XML view. Dominate renders its custom components, HTMX updates fragments and the same workspace stores every draft."
-msgstr "Esta página no utiliza ninguna vista XML de Tryton. Dominate renderiza los componentes personalizados, HTMX actualiza los fragmentos y el mismo espacio de trabajo guarda todos los borradores."
+msgid "This menu does not define an action"
+msgstr "Este menú no define ninguna acción"
+
+msgctxt "xgettext:x:"
+msgid "This model does not keep revisions"
+msgstr "Este modelo no conserva revisiones"
+
+msgctxt "xgettext:x:"
+msgid ""
+"This page uses no Tryton XML view. Dominate renders its custom components, "
+"HTMX updates fragments and the same workspace stores every draft."
+msgstr ""
+"Esta página no utiliza ninguna vista XML de Tryton. Dominate renderiza los "
+"componentes personalizados, HTMX actualiza los fragmentos y el mismo espacio"
+" de trabajo guarda todos los borradores."
 
 msgctxt "xgettext:x:"
 msgid "This record is read-only"
@@ -2595,8 +2994,32 @@ msgid "This relation is not readable"
 msgstr "Esta relación no se puede leer"
 
 msgctxt "xgettext:x:"
+msgid "This search bookmark can not be removed"
+msgstr "Este marcador de búsqueda no se puede eliminar"
+
+msgctxt "xgettext:x:"
+msgid "This tab can not be reloaded"
+msgstr "Esta pestaña no se puede recargar"
+
+msgctxt "xgettext:x:"
+msgid "This tab is not a relation draft"
+msgstr "Esta pestaña no es un borrador de relación"
+
+msgctxt "xgettext:x:"
+msgid "This tab is not a tree view"
+msgstr "Esta pestaña no es una vista de árbol."
+
+msgctxt "xgettext:x:"
 msgid "This tree can not be reordered"
 msgstr "Este árbol no se puede reordenar"
+
+msgctxt "xgettext:x:"
+msgid "This tree is read-only"
+msgstr "Este árbol es de solo lectura"
+
+msgctxt "xgettext:x:"
+msgid "Tickets and assistance"
+msgstr "Tiques y asistencia"
 
 msgctxt "xgettext:x:"
 msgid "To"
@@ -2614,9 +3037,22 @@ msgctxt "xgettext:x:"
 msgid "Toggle task"
 msgstr "Activar o desactivar la tarea"
 
+#, python-format
+msgctxt "xgettext:x:"
+msgid "Toolbar action %s not found"
+msgstr "No se ha encontrado la acción %s de la barra de herramientas"
+
 msgctxt "xgettext:x:"
 msgid "Total"
 msgstr "Total"
+
+msgctxt "xgettext:x:"
+msgid ""
+"Track the tickets you have created via the chat, monitor their status, and "
+"add new comments as needed."
+msgstr ""
+"Haz el seguimiento de los tiques que has creado a través del chat, controla "
+"su estado y añade nuevos comentarios cuando sea necesario."
 
 msgctxt "xgettext:x:"
 msgid "True"
@@ -2634,6 +3070,7 @@ msgctxt "xgettext:x:"
 msgid "Undelete"
 msgstr "Recuperar"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Unknown CSV field \"%(field)s\""
 msgstr "Campo CSV \"%(field)s\" desconocido"
@@ -2643,12 +3080,42 @@ msgid "Unknown CSV operation"
 msgstr "Operación CSV desconocida"
 
 msgctxt "xgettext:x:"
+msgid "Unknown CSV record selection"
+msgstr "Selección de registros CSV desconocida"
+
+msgctxt "xgettext:x:"
+msgid "Unknown binary field"
+msgstr "Campo binario desconocido"
+
+#, python-format
+msgctxt "xgettext:x:"
+msgid "Unknown button %s"
+msgstr "No se ha encontrado: botón %s"
+
+msgctxt "xgettext:x:"
+msgid "Unknown calendar direction"
+msgstr "No se ha encontrado: dirección del calendario"
+
+msgctxt "xgettext:x:"
+msgid "Unknown calendar mode"
+msgstr "No se ha encontrado: modo del calendario"
+
+msgctxt "xgettext:x:"
+msgid "Unknown calendar record"
+msgstr "No se ha encontrado: registro del calendario"
+
+#, python-format
+msgctxt "xgettext:x:"
 msgid "Unknown column header \"%(header)s\""
 msgstr "Cabecera de columna \"%(header)s\" desconocida"
 
 msgctxt "xgettext:x:"
 msgid "Unknown conversation"
 msgstr "No se ha encontrado: conversación"
+
+msgctxt "xgettext:x:"
+msgid "Unknown dashboard"
+msgstr "Panel desconocido"
 
 msgctxt "xgettext:x:"
 msgid "Unknown demo action"
@@ -2663,8 +3130,17 @@ msgid "Unknown documentation action"
 msgstr "No se ha encontrado: acción de documentación"
 
 msgctxt "xgettext:x:"
+msgid "Unknown domain tab"
+msgstr "No se ha encontrado: pestaña de dominio"
+
+msgctxt "xgettext:x:"
 msgid "Unknown favorite action"
 msgstr "No se ha encontrado: acción de favoritos"
+
+#, python-format
+msgctxt "xgettext:x:"
+msgid "Unknown field %s"
+msgstr "No se ha encontrado: campo %s"
 
 msgctxt "xgettext:x:"
 msgid "Unknown help resource"
@@ -2691,6 +3167,23 @@ msgid "Unknown notification"
 msgstr "No se ha encontrado: notificación"
 
 msgctxt "xgettext:x:"
+msgid "Unknown optional column"
+msgstr "No se ha encontrado: columna opcional"
+
+msgctxt "xgettext:x:"
+msgid "Unknown page direction"
+msgstr "No se ha encontrado: dirección de página"
+
+msgctxt "xgettext:x:"
+msgid "Unknown predefined export"
+msgstr "No se ha encontrado: exportación predefinida"
+
+#, python-format
+msgctxt "xgettext:x:"
+msgid "Unknown preference field %s"
+msgstr "No se ha encontrado: campo de preferencias %s"
+
+msgctxt "xgettext:x:"
 msgid "Unknown preference record"
 msgstr "No se ha encontrado: registro de preferencias"
 
@@ -2702,22 +3195,56 @@ msgctxt "xgettext:x:"
 msgid "Unknown record"
 msgstr "No se ha encontrado: registro"
 
+#, python-format
+msgctxt "xgettext:x:"
+msgid "Unknown record %s"
+msgstr "No se ha encontrado: registro %s"
+
+msgctxt "xgettext:x:"
+msgid "Unknown record direction"
+msgstr "No se ha encontrado: dirección de registro"
+
 msgctxt "xgettext:x:"
 msgid "Unknown related record"
 msgstr "No se ha encontrado: registro relacionado"
+
+msgctxt "xgettext:x:"
+msgid "Unknown related resource"
+msgstr "No se ha encontrado: recurso relacionado"
 
 msgctxt "xgettext:x:"
 msgid "Unknown relation column"
 msgstr "Columna de relación desconocida"
 
 msgctxt "xgettext:x:"
+msgid "Unknown relation draft"
+msgstr "Borrador de relación desconocido"
+
+msgctxt "xgettext:x:"
 msgid "Unknown relation field"
 msgstr "No se ha encontrado: campo de relación"
+
+msgctxt "xgettext:x:"
+msgid "Unknown relation parent"
+msgstr "Padre de relación desconocido"
+
+msgctxt "xgettext:x:"
+msgid "Unknown revision"
+msgstr "No se ha encontrado: revisión"
+
+msgctxt "xgettext:x:"
+msgid "Unknown search bookmark"
+msgstr "No se ha encontrado: marcador de búsqueda"
 
 msgctxt "xgettext:x:"
 msgid "Unknown shell action"
 msgstr "No se ha encontrado: acción de la interfaz"
 
+msgctxt "xgettext:x:"
+msgid "Unknown sort field"
+msgstr "No se ha encontrado: campo de ordenación"
+
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Unknown state component %s"
 msgstr "No se ha encontrado: componente de estado %s"
@@ -2726,6 +3253,7 @@ msgctxt "xgettext:x:"
 msgid "Unknown tab"
 msgstr "No se ha encontrado: pestaña"
 
+#, python-format
 msgctxt "xgettext:x:"
 msgid "Unknown tab %s"
 msgstr "No se ha encontrado: pestaña %s"
@@ -2735,12 +3263,25 @@ msgid "Unknown tree drop position"
 msgstr "No se ha encontrado: posición de destino del árbol"
 
 msgctxt "xgettext:x:"
+msgid "Unknown tree node"
+msgstr "No se ha encontrado: nodo del árbol"
+
+msgctxt "xgettext:x:"
+msgid "Unknown tree record"
+msgstr "No se ha encontrado: registro del árbol"
+
+msgctxt "xgettext:x:"
 msgid "Unknown version change"
 msgstr "Cambio de versión desconocido"
 
 msgctxt "xgettext:x:"
 msgid "Unknown version change action"
 msgstr "Acción de cambio de versión desconocida"
+
+#, python-format
+msgctxt "xgettext:x:"
+msgid "Unknown wizard field %s"
+msgstr "No se ha encontrado: campo del asistente %s"
 
 msgctxt "xgettext:x:"
 msgid "Unknown x2many action"
@@ -2757,6 +3298,11 @@ msgstr "Sin guardar"
 msgctxt "xgettext:x:"
 msgid "Unsaved changes"
 msgstr "Cambios sin guardar"
+
+#, python-format
+msgctxt "xgettext:x:"
+msgid "Unsupported action type %s"
+msgstr "El tipo de acción %s no es compatible"
 
 msgctxt "xgettext:x:"
 msgid "Unsupported tab type"
@@ -2794,6 +3340,11 @@ msgctxt "xgettext:x:"
 msgid "Version changes require nantic_connection."
 msgstr "Los cambios de versión requieren nantic_connection."
 
+#, python-format
+msgctxt "xgettext:x:"
+msgid "View %s is not part of this action"
+msgstr "La vista %s no forma parte de esta acción"
+
 msgctxt "xgettext:x:"
 msgid "View logs"
 msgstr "Ver los registros"
@@ -2815,12 +3366,24 @@ msgid "Wizard has no current view"
 msgstr "El asistente no tiene ninguna vista actual"
 
 msgctxt "xgettext:x:"
+msgid "Yes"
+msgstr "Si"
+
+msgctxt "xgettext:x:"
 msgid "You"
 msgstr "Tú"
 
 msgctxt "xgettext:x:"
 msgid "You are not allowed to import records"
 msgstr "No tiene permiso para importar registros"
+
+msgctxt "xgettext:x:"
+msgid ""
+"You must have an active hour pack, where the time spent answering will be "
+"charged with a"
+msgstr ""
+"Debes tener una bolsa de horas activa, donde se imputará el tiempo dedicado "
+"a darte respuesta con un"
 
 msgctxt "xgettext:x:"
 msgid "You must select an import file first."
@@ -2839,6 +3402,10 @@ msgid "duplicate this record"
 msgstr "duplicar este registro"
 
 msgctxt "xgettext:x:"
+msgid "minimum of 15 minutes"
+msgstr "mínimo de 15 minutos"
+
+msgctxt "xgettext:x:"
 msgid "open another record"
 msgstr "abrir otro registro"
 
@@ -2849,31 +3416,3 @@ msgstr "abrir las preferencias"
 msgctxt "xgettext:x:"
 msgid "switch view"
 msgstr "cambiar de vista"
-
-msgctxt "xgettext:x:"
-msgid "(CET/CEST time zone)"
-msgstr "(Zona horaria CET/CEST)"
-
-msgctxt "xgettext:x:"
-msgid "Monday to Thursday from 9 to 17:30 and Friday from 9 to 15"
-msgstr "De lunes a jueves de 9 a 17:30 y viernes de 9 a 15"
-
-msgctxt "xgettext:x:"
-msgid "See tickets"
-msgstr "Ver tiques"
-
-msgctxt "xgettext:x:"
-msgid "Tickets and assistance"
-msgstr "Tiques y asistencia"
-
-msgctxt "xgettext:x:"
-msgid "Track the tickets you have created via the chat, monitor their status, and add new comments as needed."
-msgstr "Haz el seguimiento de los tiques que has creado a través del chat, controla su estado y añade nuevos comentarios cuando sea necesario."
-
-msgctxt "xgettext:x:"
-msgid "You must have an active hour pack, where the time spent answering will be charged with a"
-msgstr "Debes tener una bolsa de horas activa, donde se imputará el tiempo dedicado a darte respuesta con un"
-
-msgctxt "xgettext:x:"
-msgid "minimum of 15 minutes"
-msgstr "mínimo de 15 minutos"

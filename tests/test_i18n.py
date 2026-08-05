@@ -5,9 +5,7 @@ from xml.etree import ElementTree
 
 import polib
 
-from trytond.modules.cassini.i18n import (
-    JAVASCRIPT_SOURCES, message_id, translate)
-from trytond.modules.cassini.engine import COMMON_SEARCH_FIELDS
+from trytond.modules.cassini.i18n import javascript_translations
 from trytond.modules.cassini.state import WORKSPACE_SESSION_UNIQUE
 from trytond.modules.xgettext import _
 from trytond.pool import Pool
@@ -19,27 +17,6 @@ MODULE_ROOT = Path(__file__).resolve().parent.parent
 
 
 class TranslationTestCase(unittest.TestCase):
-
-    def interface_sources(self):
-        sources = set(JAVASCRIPT_SOURCES)
-        sources.add(WORKSPACE_SESSION_UNIQUE)
-        sources.update(title for _name, title, _type in COMMON_SEARCH_FIELDS)
-        for path in MODULE_ROOT.glob('*.py'):
-            tree = ast.parse(path.read_text())
-            for node in ast.walk(tree):
-                if not (
-                        isinstance(node, ast.Call)
-                        and isinstance(node.func, ast.Name)
-                        and node.func.id in {
-                            'translate', 'lazy_translate', 'message_id'}
-                        and node.args):
-                    continue
-                for constant in ast.walk(node.args[0]):
-                    if (
-                            isinstance(constant, ast.Constant)
-                            and isinstance(constant.value, str)):
-                        sources.add(constant.value)
-        return sources
 
     def messages(self):
         root = ElementTree.parse(MODULE_ROOT / 'message.xml').getroot()
@@ -60,18 +37,18 @@ class TranslationTestCase(unittest.TestCase):
                         and node.func.id == '_'
                         and node.args):
                     continue
+                self.assertEqual(len(node.args), 1)
+                self.assertFalse(node.keywords)
                 self.assertIsInstance(node.args[0], ast.Constant)
                 self.assertIsInstance(node.args[0].value, str)
                 sources.add(node.args[0].value)
         return sources
 
-    def test_all_interface_sources_are_messages(self):
-        messages = self.messages()
-        expected = {
-            message_id(source): source
-            for source in self.interface_sources()
-            }
-        self.assertEqual(messages, expected)
+    def test_only_constraint_message_is_registered(self):
+        self.assertEqual(self.messages(), {
+                WORKSPACE_SESSION_UNIQUE.removeprefix('cassini.'):
+                    'A Cassini session can only have one workspace.',
+                })
 
     def test_all_messages_are_translated(self):
         messages = self.messages()
@@ -109,7 +86,9 @@ class RuntimeTranslationTestCase(unittest.TestCase):
                 language, 'cassini',
                 str(MODULE_ROOT / 'locale' / (language + '.po')))
             with Transaction().set_context(language=language):
-                self.assertEqual(translate('Search'), expected)
+                self.assertEqual(
+                    javascript_translations()['Search'], expected)
+                self.assertEqual(_('Search'), expected)
                 self.assertEqual(
                     _('Contextual documentation'),
                     'Documentació contextual'

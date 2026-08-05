@@ -15,11 +15,9 @@ from trytond.modules.voyager.voyager import Component
 from trytond.transaction import Transaction
 from werkzeug.wrappers import Response
 
-from .i18n import message_id
-
 STATE_VERSION = 1
 WORKSPACE_SESSION_UNIQUE = (
-    'A Cassini session can only have one workspace.')
+    'cassini.msg_a_cassini_session_can_only_have_one_workspace_4bb90d57')
 _WORKSPACE_CACHE = Cache(
     'cassini.workspace.session', duration=10 * 60, context=False)
 _HTMX_ATTRIBUTE = re.compile(r'\bhx_([a-z_]+)(?==)')
@@ -209,7 +207,7 @@ class Workspace(ModelSQL, ModelView):
         table = cls.__table__()
         cls._sql_constraints += [
             ('session_unique', Unique(table, table.session),
-                'cassini.' + message_id(WORKSPACE_SESSION_UNIQUE)),
+                WORKSPACE_SESSION_UNIQUE),
             ]
 
     @staticmethod

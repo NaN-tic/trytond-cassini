@@ -7,12 +7,12 @@ from types import GeneratorType
 from xml.etree import ElementTree
 
 from dateutil.parser import parse as parse_flexible_date
+from trytond.modules.xgettext import _
 from trytond.pool import Pool
 from trytond.pyson import PYSONDecoder
 from trytond.tools import timezone
 from trytond.transaction import Transaction
 
-from .i18n import translate
 from .state import decode_value
 
 
@@ -24,6 +24,16 @@ COMMON_SEARCH_FIELDS = (
     ('write_uid', 'Modified by', 'many2one'),
     ('write_date', 'Modified at', 'datetime'),
     )
+
+
+def common_search_title(title):
+    return {
+        'ID': _('ID'),
+        'Created by': _('Created by'),
+        'Created at': _('Created at'),
+        'Modified by': _('Modified by'),
+        'Modified at': _('Modified at'),
+        }[title]
 
 
 class SearchLexer(shlex):
@@ -318,8 +328,8 @@ def convert_value(field, value, context):
             return None
         tests = {
             '1', 't', 'true', 'y', 'yes', 's', 'si', 'sí',
-            str(translate('True')).casefold(),
-            str(translate('Yes')).casefold(),
+            str(_('True')).casefold(),
+            str(_('Yes')).casefold(),
             }
         test = value.casefold()
         return any(candidate.startswith(test) for candidate in tests)
@@ -400,8 +410,8 @@ def format_value(field, value, context, target=None, quote_empty=False):
                 field, item, context, quote_empty=True)
             for item in value)
     if type_ == 'boolean':
-        result = translate('False') if value is False else (
-            translate('True') if value else '')
+        result = _('False') if value is False else (
+            _('True') if value else '')
     elif type_ in {'selection', 'multiselection'}:
         result = dict(valid_selection(field)).get(value, value) or ''
     elif type_ == 'reference':
@@ -803,7 +813,7 @@ def search_field_definitions(view):
         if name not in definitions:
             definitions[name] = {
                 'name': name,
-                'string': translate(title),
+                'string': common_search_title(title),
                 'type': type_,
                 }
             if type_ == 'datetime':
@@ -840,7 +850,7 @@ def parser_field_definitions(view):
         if name not in definitions:
             definitions[name] = {
                 'name': name,
-                'string': translate(title),
+                'string': common_search_title(title),
                 'type': type_,
                 }
             if type_ == 'datetime':

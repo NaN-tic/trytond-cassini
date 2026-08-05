@@ -12,12 +12,12 @@ from xml.etree import ElementTree
 
 from sql import For
 from trytond import backend
+from trytond.modules.xgettext import _
 from trytond.pool import Pool
 from trytond.pyson import PYSONDecoder, PYSONEncoder
 from trytond.tools import timezone
 from trytond.transaction import Transaction
 
-from .i18n import translate
 from .search import (
     COMMON_SEARCH_FIELDS as SEARCH_COMMON_SEARCH_FIELDS,
     date_format, parse_date, search_domain_parser,
@@ -124,7 +124,7 @@ class SaoEngine:
         actions = ActionKeyword.get_keyword(
             'tree_open', ('ir.ui.menu', int(menu_id)))
         if not actions:
-            raise ValueError(translate('This menu does not define an action'))
+            raise ValueError(_('This menu does not define an action'))
         return self.open_action(actions[0], {
                 'model': 'ir.ui.menu',
                 'id': int(menu_id),
@@ -160,7 +160,7 @@ class SaoEngine:
             record_ids=None):
         parent = self._tab(parent_tab_id)
         if parent.get('kind') not in {'window', 'wizard'}:
-            raise ValueError(translate('Unknown relation parent'))
+            raise ValueError(_('Unknown relation parent'))
         Model = self.pool.get(model_name)
         record_id = int(record_id)
         record = Model(record_id)
@@ -203,16 +203,16 @@ class SaoEngine:
         key = tab.get('current_record')
         record = tab.get('records', {}).get(key)
         if not record or not record.get('id'):
-            raise ValueError(translate('Select a saved record first'))
+            raise ValueError(_('Select a saved record first'))
         resources = {
-            'attachments': ('ir.attachment', translate('Attachments')),
-            'notes': ('ir.note', translate('Notes')),
-            'logs': ('ir.model.log', translate('Logs')),
+            'attachments': ('ir.attachment', _('Attachments')),
+            'notes': ('ir.note', _('Notes')),
+            'logs': ('ir.model.log', _('Logs')),
             }
         try:
             model_name, title = resources[resource]
         except KeyError:
-            raise ValueError(translate('Unknown related resource'))
+            raise ValueError(_('Unknown related resource'))
         reference = '%s,%s' % (tab['model'], record['id'])
         Model = self.pool.get(tab['model'])
         rec_name = str(Model(record['id']).rec_name)
@@ -412,7 +412,7 @@ class SaoEngine:
                     'nantic.chat.conversation')
             except KeyError:
                 raise ValueError(
-                    translate('Unsupported action type %s') % action_type)
+                    _('Unsupported action type %s') % action_type)
             identifier = (
                 action.get('identifier') or action.get('res_id'))
             conversations = Conversation.search([
@@ -420,7 +420,7 @@ class SaoEngine:
                     ('create_uid', '=', Transaction().user),
                     ], limit=1)
             if not conversations:
-                raise ValueError(translate('Unknown conversation'))
+                raise ValueError(_('Unknown conversation'))
             conversation, = conversations
             shell = self.interface.component('shell', {
                     'panel': 'none',
@@ -441,7 +441,7 @@ class SaoEngine:
             conversation.mark_assistant_messages_as_read()
             tab = None
         else:
-            raise ValueError(translate('Unsupported action type %s') % action_type)
+            raise ValueError(_('Unsupported action type %s') % action_type)
         self.save()
         return tab
 
@@ -450,11 +450,11 @@ class SaoEngine:
             self.pool.get('babi.dashboard')
             self.pool.get('babi.widget')
         except KeyError:
-            raise ValueError(translate(
+            raise ValueError(_(
                 'The Dashboard view requires the babi module.'))
         dashboard_id = action.get('dashboard')
         if not dashboard_id:
-            raise ValueError(translate('Unknown dashboard'))
+            raise ValueError(_('Unknown dashboard'))
         context = dict(extra_context or {})
         for tab in self.interface.tabs:
             if (
@@ -465,7 +465,7 @@ class SaoEngine:
                 return tab
         tab = self.interface.add_tab({
                 'kind': 'dashboard',
-                'title': action.get('name') or translate('Dashboard'),
+                'title': action.get('name') or _('Dashboard'),
                 'dashboard': int(dashboard_id),
                 'action': encode_value(action),
                 'context': encode_value(context),
@@ -485,7 +485,7 @@ class SaoEngine:
             records = Dashboard.read(
                 [int(tab['dashboard'])], ['name', 'view'])
             if not records:
-                raise ValueError(translate('Unknown dashboard'))
+                raise ValueError(_('Unknown dashboard'))
             dashboard = records[0]
             try:
                 items = json.loads(dashboard.get('view') or '[]')
@@ -817,7 +817,7 @@ class SaoEngine:
         try:
             definition = downloads.pop(key)
         except KeyError:
-            raise ValueError(translate('This download is no longer available'))
+            raise ValueError(_('This download is no longer available'))
         self.save()
         return self.execute_report(
             decode_value(definition['action']),
@@ -829,7 +829,7 @@ class SaoEngine:
         view = decode_value(tab.get('view', {}))
         Model = self.pool.get(view['model'])
         if field_name not in Model._fields:
-            raise ValueError(translate('Unknown wizard field %s') % field_name)
+            raise ValueError(_('Unknown wizard field %s') % field_name)
         definition = view.get('fields', {}).get(field_name, {})
         value = self.parse_value(
             Model._fields[field_name], raw_value, definition)
@@ -851,9 +851,9 @@ class SaoEngine:
     def _tab(self, tab_id, kind=None):
         tab = self.interface.get_tab(tab_id)
         if not tab:
-            raise KeyError(translate('Unknown tab %s') % tab_id)
+            raise KeyError(_('Unknown tab %s') % tab_id)
         if kind and tab.get('kind') != kind:
-            raise ValueError(translate('Tab %s is not a %s tab') % (tab_id, kind))
+            raise ValueError(_('Tab %s is not a %s tab') % (tab_id, kind))
         return tab
 
     def activate_tab(self, tab_id):
@@ -878,7 +878,7 @@ class SaoEngine:
     def switch_view(self, tab_id, view_type):
         tab = self._tab(tab_id, kind='window')
         if view_type not in tab['view_types']:
-            raise ValueError(translate('View %s is not part of this action') % view_type)
+            raise ValueError(_('View %s is not part of this action') % view_type)
         index = tab['view_types'].index(view_type)
         tab['view_type'] = view_type
         tab['view_id'] = tab['view_ids'][index]
@@ -891,7 +891,7 @@ class SaoEngine:
         domains = decode_value(tab.get('domain_tabs', []))
         index = int(index)
         if index < 0 or index >= len(domains):
-            raise ValueError(translate('Unknown domain tab'))
+            raise ValueError(_('Unknown domain tab'))
         tab['active_domain'] = index
         tab['offset'] = 0
         self.load_tab(tab)
@@ -924,7 +924,7 @@ class SaoEngine:
     def update_preference(self, view, field_name, raw_value):
         User = self.pool.get('res.user')
         if field_name not in User._fields:
-            raise ValueError(translate('Unknown preference field %s') % field_name)
+            raise ValueError(_('Unknown preference field %s') % field_name)
         state = self.interface.component('preferences')
         values = decode_value(state.get('values', {}))
         definition = view.get('fields', {}).get(field_name, {})
@@ -1165,7 +1165,7 @@ class SaoEngine:
         """Load the next visible chunk of a window tree."""
         tab = self._tab(tab_id, kind='window')
         if tab.get('view_type') != 'tree':
-            raise ValueError(translate('This tab is not a tree view'))
+            raise ValueError(_('This tab is not a tree view'))
         previous_keys = set(tab.get('record_order', []))
         if int(tab.get('tree_next_offset') or 0) < int(
                 tab.get('tree_end_offset') or 0):
@@ -1180,7 +1180,7 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         Model = self.pool.get(tab['model'])
         if not getattr(Model, '_history', False):
-            raise ValueError(translate('This model does not keep revisions'))
+            raise ValueError(_('This model does not keep revisions'))
         keys = tab.get('selected') or [tab.get('current_record')]
         ids = [
             tab['records'][key]['id']
@@ -1188,7 +1188,7 @@ class SaoEngine:
             if key in tab['records'] and tab['records'][key].get('id')
             ]
         if not ids:
-            raise ValueError(translate('Select a saved record first'))
+            raise ValueError(_('Select a saved record first'))
         tab['revisions'] = encode_value(Model.history_revisions(ids))
         tab['revision_open'] = True
         self.save()
@@ -1209,7 +1209,7 @@ class SaoEngine:
             revisions = decode_value(tab.get('revisions', []))
             index = int(index)
             if index < 0 or index >= len(revisions):
-                raise ValueError(translate('Unknown revision'))
+                raise ValueError(_('Unknown revision'))
             context['_datetime'] = revisions[index][0] + timedelta(
                 milliseconds=1)
         tab['context'] = encode_value(context)
@@ -1225,7 +1225,7 @@ class SaoEngine:
         elif tab.get('kind') == 'window':
             self.load_tab(tab)
         else:
-            raise ValueError(translate('This tab can not be reloaded'))
+            raise ValueError(_('This tab can not be reloaded'))
         self.save()
         return tab
 
@@ -1312,7 +1312,7 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         domain = decode_value(tab.get('search_domain', []))
         if not name or not domain:
-            raise ValueError(translate('A bookmark name and search are required'))
+            raise ValueError(_('A bookmark name and search are required'))
         ViewSearch = self.pool.get('ir.ui.view_search')
         bookmark_id = ViewSearch.set(
             name.strip(), tab['model'], PYSONEncoder().encode(domain))
@@ -1327,7 +1327,7 @@ class SaoEngine:
                 int(bookmark[0]) == int(bookmark_id)
                 and bookmark[3]
                 for bookmark in bookmarks):
-            raise ValueError(translate('This search bookmark can not be removed'))
+            raise ValueError(_('This search bookmark can not be removed'))
         ViewSearch = self.pool.get('ir.ui.view_search')
         ViewSearch.unset(int(bookmark_id))
         if int(tab.get('search_bookmark') or 0) == int(bookmark_id):
@@ -1341,7 +1341,7 @@ class SaoEngine:
                 bookmark for bookmark in self.search_bookmarks(tab_id)
                 if int(bookmark[0]) == int(bookmark_id)), None)
         if not bookmark:
-            raise ValueError(translate('Unknown search bookmark'))
+            raise ValueError(_('Unknown search bookmark'))
         domain = bookmark[2]
         view = decode_value(tab.get('view', {}))
         tab['search'] = self.search_domain_text(tab, view, domain)
@@ -1378,7 +1378,7 @@ class SaoEngine:
         elif direction == 'next':
             index = min(len(order) - 1, index + 1)
         else:
-            raise ValueError(translate('Unknown record direction'))
+            raise ValueError(_('Unknown record direction'))
         tab['current_record'] = order[index]
         tab['selected'] = [order[index]]
         if tab.get('relation_navigation'):
@@ -1400,7 +1400,7 @@ class SaoEngine:
         elif direction == 'previous':
             offset = max(0, offset - limit)
         else:
-            raise ValueError(translate('Unknown page direction'))
+            raise ValueError(_('Unknown page direction'))
         tab['offset'] = offset
         self.load_tab(tab)
         self.save()
@@ -1410,7 +1410,7 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         Model = self.pool.get(tab['model'])
         if field_name not in Model._fields:
-            raise ValueError(translate('Unknown sort field'))
+            raise ValueError(_('Unknown sort field'))
         order = decode_value(tab.get('order')) or []
         if order and order[0][0] == field_name:
             direction = 'DESC' if order[0][1].upper() == 'ASC' else 'ASC'
@@ -1426,7 +1426,7 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         view = decode_value(tab.get('view', {}))
         if field_name not in view.get('fields', {}):
-            raise ValueError(translate('Unknown optional column'))
+            raise ValueError(_('Unknown optional column'))
         tab.setdefault('column_visibility', {})[field_name] = bool(visible)
         self.save()
         return tab
@@ -1434,7 +1434,7 @@ class SaoEngine:
     def toggle_tree_node(self, tab_id, record_key):
         tab = self._tab(tab_id, kind='window')
         if record_key not in tab.get('records', {}):
-            raise ValueError(translate('Unknown tree node'))
+            raise ValueError(_('Unknown tree node'))
         expanded = tab.setdefault('expanded', [])
         if record_key in expanded:
             expanded.remove(record_key)
@@ -1448,9 +1448,9 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         order = tab.get('record_order', [])
         if record_key not in order or target_key not in order:
-            raise ValueError(translate('Unknown tree record'))
+            raise ValueError(_('Unknown tree record'))
         if position not in {'before', 'after', 'inside'}:
-            raise ValueError(translate('Unknown tree drop position'))
+            raise ValueError(_('Unknown tree drop position'))
         if record_key == target_key:
             return tab
         view = decode_value(tab.get('view', {}))
@@ -1458,11 +1458,11 @@ class SaoEngine:
         sequence = root.attrib.get('sequence')
         Model = self.pool.get(tab['model'])
         if not sequence or sequence not in Model._fields:
-            raise ValueError(translate('This tree can not be reordered'))
+            raise ValueError(_('This tree can not be reordered'))
         if (
                 not tab.get('access', {}).get('write', True)
                 or decode_value(tab.get('context', {})).get('_datetime')):
-            raise ValueError(translate('This tree is read-only'))
+            raise ValueError(_('This tree is read-only'))
 
         child_field = view.get('field_childs')
         children = {}
@@ -1490,7 +1490,7 @@ class SaoEngine:
         if position == 'inside':
             if not child_field:
                 raise ValueError(
-                    translate('A flat tree can not contain child records'))
+                    _('A flat tree can not contain child records'))
             destination_parent = target_key
             destination_siblings = children[target_key]
             destination_index = len(destination_siblings)
@@ -1506,7 +1506,7 @@ class SaoEngine:
         while ancestor:
             if ancestor == record_key:
                 raise ValueError(
-                    translate('A tree record can not contain itself'))
+                    _('A tree record can not contain itself'))
             ancestor = parent_by_child.get(ancestor)
 
         source_index = source_siblings.index(record_key)
@@ -1608,7 +1608,7 @@ class SaoEngine:
                     if current.month == 12
                     else current.replace(month=current.month + 1, day=1))
         else:
-            raise ValueError(translate('Unknown calendar direction'))
+            raise ValueError(_('Unknown calendar direction'))
         tab['calendar_date'] = current.isoformat()
         self.save()
         return tab
@@ -1616,7 +1616,7 @@ class SaoEngine:
     def set_calendar_mode(self, tab_id, mode):
         tab = self._tab(tab_id, kind='window')
         if mode not in {'day', 'week', 'month'}:
-            raise ValueError(translate('Unknown calendar mode'))
+            raise ValueError(_('Unknown calendar mode'))
         tab['calendar_mode'] = mode
         self.save()
         return tab
@@ -1625,13 +1625,13 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         record = tab.get('records', {}).get(record_key)
         if not record:
-            raise ValueError(translate('Unknown calendar record'))
+            raise ValueError(_('Unknown calendar record'))
         view = decode_value(tab.get('view', {}))
         root = ElementTree.fromstring(
             view.get('arch') or '<calendar/>')
         delta = timedelta(days=1 if direction == 'next' else -1)
         if direction not in {'next', 'previous'}:
-            raise ValueError(translate('Unknown calendar direction'))
+            raise ValueError(_('Unknown calendar direction'))
         values = decode_value(record.get('values', {}))
         changed = set()
         for name in filter(None, [
@@ -1652,10 +1652,10 @@ class SaoEngine:
             selection=None, current=None):
         tab = self._tab(tab_id, kind='window')
         if record_key not in tab['records']:
-            raise KeyError(translate('Unknown record %s') % record_key)
+            raise KeyError(_('Unknown record %s') % record_key)
         if selection is not None:
             if any(key not in tab['records'] for key in selection):
-                raise KeyError(translate('Unknown record %s') % record_key)
+                raise KeyError(_('Unknown record %s') % record_key)
             selection = list(dict.fromkeys(selection))
             tab['selected'] = selection
             tab['current_record'] = (
@@ -1903,7 +1903,7 @@ class SaoEngine:
                     Decimal(value)
                     * Decimal(str(definition.get('factor', 1) or 1)))
             except InvalidOperation as exception:
-                raise ValueError(translate('Invalid decimal value')) from exception
+                raise ValueError(_('Invalid decimal value')) from exception
         if field._type in {'date', 'datetime', 'timestamp', 'time'}:
             context = self.context()
             if field._type == 'date':
@@ -1965,10 +1965,10 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         stored = tab['records'].get(record_key)
         if not stored:
-            raise KeyError(translate('Unknown record %s') % record_key)
+            raise KeyError(_('Unknown record %s') % record_key)
         Model = self.pool.get(tab['model'])
         if field_name not in Model._fields:
-            raise KeyError(translate('Unknown field %s') % field_name)
+            raise KeyError(_('Unknown field %s') % field_name)
         field = Model._fields[field_name]
         view = decode_value(tab['view'])
         definition = dict(
@@ -2025,7 +2025,7 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         stored = tab.get('records', {}).get(record_key)
         if not stored:
-            raise ValueError(translate('Select a record before scanning'))
+            raise ValueError(_('Select a record before scanning'))
         Model = self.pool.get(tab['model'])
         values = decode_value(stored.get('values', {}))
         record = Model(
@@ -2222,13 +2222,13 @@ class SaoEngine:
     def save_relation_draft(self, tab_id):
         tab = self._tab(tab_id, kind='window')
         if not tab.get('relation_draft'):
-            raise ValueError(translate('This tab is not a relation draft'))
+            raise ValueError(_('This tab is not a relation draft'))
         origin = tab.get('relation_origin') or {}
         parent = self._tab(origin.get('tab'))
         record_key = tab.get('current_record')
         stored = tab.get('records', {}).get(record_key)
         if not stored or not stored.get('new'):
-            raise ValueError(translate('Unknown relation draft'))
+            raise ValueError(_('Unknown relation draft'))
 
         Model = self.pool.get(tab['model'])
         values = decode_value(stored.get('values', {}))
@@ -2247,7 +2247,7 @@ class SaoEngine:
                         relation_values[index] = create_values
                         break
                 else:
-                    raise ValueError(translate('Unknown related record'))
+                    raise ValueError(_('Unknown related record'))
             else:
                 relation_values.append(create_values)
             self.update_wizard_field(
@@ -2256,7 +2256,7 @@ class SaoEngine:
             parent_record = parent.get('records', {}).get(
                 origin.get('record'))
             if not parent_record:
-                raise ValueError(translate('Unknown relation parent'))
+                raise ValueError(_('Unknown relation parent'))
             parent_values = decode_value(parent_record.get('values', {}))
             relation_values = list(parent_values.get(field_name) or [])
             if origin.get('item'):
@@ -2266,14 +2266,14 @@ class SaoEngine:
                         relation_values[index] = create_values
                         break
                 else:
-                    raise ValueError(translate('Unknown related record'))
+                    raise ValueError(_('Unknown related record'))
             else:
                 relation_values.append(create_values)
             self.update_field(
                 parent['id'], parent_record['key'],
                 field_name, relation_values)
         else:
-            raise ValueError(translate('Unknown relation parent'))
+            raise ValueError(_('Unknown relation parent'))
 
         self.interface.close(tab_id)
         self.interface.activate(parent['id'])
@@ -2382,18 +2382,18 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         if record_key:
             if record_key not in tab['records']:
-                raise ValueError(translate('Unknown record %s') % record_key)
+                raise ValueError(_('Unknown record %s') % record_key)
             tab['current_record'] = record_key
             if record_key not in tab.get('selected', []):
                 tab['selected'] = [record_key]
         keys = tab.get('selected') or [tab.get('current_record')]
         Model = self.pool.get(tab['model'])
         if button_name not in Model._buttons:
-            raise ValueError(translate('Unknown button %s') % button_name)
+            raise ValueError(_('Unknown button %s') % button_name)
         if button_type == 'instance':
             key = tab.get('current_record')
             if not key or key not in tab['records']:
-                raise ValueError(translate('Select a record first'))
+                raise ValueError(_('Select a record first'))
             stored = tab['records'][key]
             values = decode_value(stored['values'])
             record = Model(
@@ -2419,7 +2419,7 @@ class SaoEngine:
         tab = self._tab(tab_id, kind='window')
         records = [Model(record_id) for record_id in record_ids]
         if not records:
-            raise ValueError(translate('Select a saved record first'))
+            raise ValueError(_('Select a saved record first'))
         result = getattr(Model, button_name)(records)
         if result:
             if isinstance(result, str):
@@ -2487,7 +2487,7 @@ class SaoEngine:
                     action_category = category
                     break
         if not action:
-            raise KeyError(translate('Toolbar action %s not found') % action_id)
+            raise KeyError(_('Toolbar action %s not found') % action_id)
         keys = tab.get('selected') or [tab.get('current_record')]
         ids = []
         for key in list(keys):
@@ -2551,10 +2551,10 @@ class SaoEngine:
         delimiter = delimiter or ','
         quotechar = quotechar or '"'
         if len(delimiter) != 1:
-            raise ValueError(translate(
+            raise ValueError(_(
                     'The CSV delimiter must be one character'))
         if len(quotechar) != 1:
-            raise ValueError(translate(
+            raise ValueError(_(
                     'The CSV quote character must be one character'))
         return delimiter, quotechar
 
@@ -2623,7 +2623,7 @@ class SaoEngine:
                     if int(definition['id']) == int(export_id)
                     ), None)
             if not export_definition:
-                raise ValueError(translate('Unknown predefined export'))
+                raise ValueError(_('Unknown predefined export'))
         if export_definition:
             fields_names = [
                 field['name']
@@ -2637,9 +2637,9 @@ class SaoEngine:
             fields_names = list(fields_names or [])
             filename = tab['model'].replace('.', '_')
         if not fields_names:
-            raise ValueError(translate('Select at least one field'))
+            raise ValueError(_('Select at least one field'))
         if records not in {'selected', 'listed'}:
-            raise ValueError(translate('Unknown CSV record selection'))
+            raise ValueError(_('Unknown CSV record selection'))
         view = decode_value(tab['view'])
         context = self.context(decode_value(tab.get('context', {})))
         if not tab.get('active_only', True):
@@ -2704,16 +2704,17 @@ class SaoEngine:
             codecs.lookup(encoding)
             text = content.decode(encoding)
         except (LookupError, UnicodeDecodeError) as exception:
-            raise ValueError(translate(
-                    'The CSV file could not be decoded with %(encoding)s',
-                    encoding=encoding)) from exception
+            raise ValueError(
+                _('The CSV file could not be decoded with %(encoding)s') % {
+                    'encoding': encoding,
+                    }) from exception
         if text.startswith('\ufeff'):
             text = text[1:]
         rows = list(csv.reader(
                 io.StringIO(text), delimiter=delimiter,
                 quotechar=quotechar))
         if not rows:
-            raise ValueError(translate('The CSV file is empty'))
+            raise ValueError(_('The CSV file is empty'))
         skip = max(0, int(skip or 0))
         if fields_names:
             rows = rows[skip:]
@@ -2721,7 +2722,7 @@ class SaoEngine:
             fields_names = rows.pop(0)
         if not fields_names or any(not name for name in fields_names):
             raise ValueError(
-                translate('Select at least one field to import'))
+                _('Select at least one field to import'))
         count = Model.import_data(fields_names, rows)
         self.load_tab(tab)
         self.save()
