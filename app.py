@@ -2980,7 +2980,6 @@ class Menu(SaoEndpoint):
         with nav(
                 id='menu-tree', cls='vs-menu vs-hierarchy',
                 aria_label=_('Tryton menu')) as menu:
-            h2(_('Menu'), cls='vs-menu-title')
             with ul(cls='vs-menu-list'):
                 for root in roots:
                     self.menu_item(
@@ -3370,8 +3369,8 @@ class GlobalSearch(SaoEndpoint):
             if self.query:
                 with ul(cls='vs-search-results'):
                     for (
-                            ratio, model, model_name,
-                            id_, name, _icon_name) in results:
+                            ratio, model, _model_name,
+                            id_, name, icon_name) in results:
                         with li():
                             if model == 'ir.ui.menu':
                                 endpoint = OpenMenu.url(menu=id_)
@@ -3386,10 +3385,11 @@ class GlobalSearch(SaoEndpoint):
                                     hx_target='#workspace',
                                     hx_swap='outerHTML',
                                     hx_push_url='true'):
+                                if icon_name:
+                                    icon(
+                                        icon_name.removeprefix('tryton-'),
+                                        cls='vs-search-result-icon')
                                 span(name, cls='vs-search-result-name')
-                                span(
-                                    model_name,
-                                    cls='vs-search-result-model')
                     if not results:
                         li(_('No results'), cls='vs-empty')
         return host
@@ -3456,6 +3456,18 @@ class GlobalSearch(SaoEndpoint):
                         if optional_model('nantic.chat.conversation')
                         else None),
                     hx_include='this')
+                if optional_model('nantic.chat.conversation'):
+                    with button(
+                            type='button',
+                            cls='vs-global-search-assistant-tip',
+                            aria_label=_('Assistant'),
+                            data_global_search_assistant_tip='true'):
+                        img(
+                            src=HELP_ICONS + 'ai.svg', alt='',
+                            aria_hidden='true',
+                            cls='vs-global-search-assistant-tip-icon')
+                        span(_('Assistant'))
+                        kbd('↵', cls='vs-global-search-assistant-tip-key')
                 entry.add(self.render_results())
         return search
 

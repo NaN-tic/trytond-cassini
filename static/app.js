@@ -2422,6 +2422,11 @@
         if (search) {
             updateSearchCompletion(search);
         }
+        const globalSearch = event.target.closest(
+            "[data-global-search-input]");
+        if (globalSearch) {
+            updateGlobalSearchAssistantTip(globalSearch);
+        }
         const welcome = event.target.closest("[data-welcome-search]");
         if (!welcome) {
             return;
@@ -2453,6 +2458,20 @@
         const search = event.target.closest("[data-search-autocomplete]");
         if (search) {
             updateSearchCompletion(search);
+        }
+        const globalSearch = event.target.closest(
+            "[data-global-search-input]");
+        if (globalSearch) {
+            updateGlobalSearchAssistantTip(globalSearch);
+        }
+    });
+
+    document.addEventListener("focusout", function (event) {
+        const globalSearch = event.target.closest(
+            "[data-global-search-input]");
+        if (globalSearch) {
+            globalSearch.closest(".vs-global-search-entry")?.classList.remove(
+                "vs-global-search-assistant-tip-visible");
         }
     });
 
@@ -3187,50 +3206,118 @@
             renderChatFiles(input);
         }
     });
+    function updateGlobalSearchAssistantTip(input) {
+        const entry = input?.closest(".vs-global-search-entry");
+        if (!entry) {
+            return;
+        }
+        entry.classList.toggle(
+            "vs-global-search-assistant-tip-visible",
+            input.matches("[data-global-search-assistant]")
+            && input === document.activeElement
+            && Boolean(input.value.trim()));
+    }
+
+    function sendGlobalSearchToAssistant(input) {
+        const text = input?.value.trim();
+        if (!text) {
+            return false;
+        }
+        if (window.htmx) {
+            window.htmx.trigger(input, "htmx:abort");
+        }
+        const pending = replaceRequests.get(input);
+        if (pending) {
+            pending.abort();
+            replaceRequests.delete(input);
+        }
+        window.clearTimeout(fallbackTimers.get(input));
+        fallbackTimers.delete(input);
+        input.value = "";
+        updateGlobalSearchAssistantTip(input);
+        input.closest("#global-search")?.querySelector(
+            ".vs-search-results")?.remove();
+
+        const send = function () {
+            const message = document.querySelector(
+                "[data-chat-form] #message");
+            const submit = message?.closest("form")?.querySelector(
+                "[data-chat-send]");
+            if (!message || !submit || submit.disabled) {
+                return;
+            }
+            message.value = text;
+            submit.click();
+        };
+        const help = document.querySelector("[data-panel-option='help']");
+        if (help?.getAttribute("aria-pressed") === "true") {
+            send();
+        } else if (help) {
+            fallbackRequest(help).then(send);
+        }
+        return true;
+    }
+
+    document.addEventListener("mousedown", function (event) {
+        if (event.target.closest("[data-global-search-assistant-tip]")) {
+            event.preventDefault();
+        }
+    });
+    document.addEventListener("click", function (event) {
+        const tip = event.target.closest("[data-global-search-assistant-tip]");
+        if (!tip) {
+            return;
+        }
+        const input = tip.closest("#global-search")?.querySelector(
+            "[data-global-search-input]");
+        if (sendGlobalSearchToAssistant(input)) {
+            event.preventDefault();
+        }
+    });
     document.addEventListener("keydown", function (event) {
         const globalSearch = event.target.closest(
-            "[data-global-search-input][data-global-search-assistant]");
+            "[data-global-search-input]");
+        if (globalSearch && event.key === "ArrowDown" &&
+                !event.shiftKey && !event.ctrlKey && !event.altKey &&
+                !event.metaKey) {
+            const result = globalSearch.closest("#global-search")?.querySelector(
+                "[data-global-search-result]");
+            if (result) {
+                event.preventDefault();
+                result.focus({preventScroll: true});
+            }
+            return;
+        }
+        const globalSearchResult = event.target.closest(
+            "[data-global-search-result]");
+        if (globalSearchResult &&
+                (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+                !event.shiftKey && !event.ctrlKey && !event.altKey &&
+                !event.metaKey) {
+            const search = globalSearchResult.closest("#global-search");
+            const results = Array.from(search?.querySelectorAll(
+                "[data-global-search-result]") || []);
+            const index = results.indexOf(globalSearchResult);
+            const next = index + (event.key === "ArrowDown" ? 1 : -1);
+            if (next >= 0 && next < results.length) {
+                event.preventDefault();
+                results[next].focus({preventScroll: true});
+            } else if (next < 0) {
+                event.preventDefault();
+                search?.querySelector("[data-global-search-input]")?.focus(
+                    {preventScroll: true});
+            }
+            return;
+        }
         if (globalSearch && event.key === "Enter" &&
                 !event.isComposing && !event.shiftKey &&
                 !event.ctrlKey && !event.altKey && !event.metaKey) {
-            const text = globalSearch.value.trim();
-            if (!text) {
+            if (!globalSearch.matches("[data-global-search-assistant]")
+                    || !sendGlobalSearchToAssistant(globalSearch)) {
                 return;
             }
             event.preventDefault();
             event.stopImmediatePropagation();
-            if (window.htmx) {
-                window.htmx.trigger(globalSearch, "htmx:abort");
-            }
-            const pending = replaceRequests.get(globalSearch);
-            if (pending) {
-                pending.abort();
-                replaceRequests.delete(globalSearch);
-            }
-            window.clearTimeout(fallbackTimers.get(globalSearch));
-            fallbackTimers.delete(globalSearch);
-            globalSearch.value = "";
-            globalSearch.closest("#global-search")?.querySelector(
-                ".vs-search-results")?.remove();
-
-            const send = function () {
-                const message = document.querySelector(
-                    "[data-chat-form] #message");
-                const submit = message?.closest("form")?.querySelector(
-                    "[data-chat-send]");
-                if (!message || !submit || submit.disabled) {
-                    return;
-                }
-                message.value = text;
-                submit.click();
-            };
-            const help = document.querySelector(
-                "[data-panel-option='help']");
-            if (help?.getAttribute("aria-pressed") === "true") {
-                send();
-            } else if (help) {
-                fallbackRequest(help).then(send);
-            }
             return;
         }
         const input = event.target.closest(

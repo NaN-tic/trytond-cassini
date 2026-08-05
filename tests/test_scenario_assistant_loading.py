@@ -185,6 +185,10 @@ class TestAssistantLoading(WebTestCase):
 
         global_message = 'Open the assistant from global search'
         global_search.fill(global_message)
+        assistant_tip = page.locator('[data-global-search-assistant-tip]')
+        expect(assistant_tip).to_be_visible()
+        expect(assistant_tip.get_by_text('Assistant', exact=True)).to_be_visible()
+        expect(assistant_tip.get_by_text('↵', exact=True)).to_be_visible()
         with page.expect_response(
                 lambda response: response.url.endswith('/help/chat')):
             global_search.press('Enter')

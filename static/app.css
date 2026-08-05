@@ -199,6 +199,26 @@ a {
     flex: 1;
 }
 
+@media (min-width: 901px) {
+    .vs-header {
+        transition: grid-template-columns .5s ease;
+    }
+
+    .vs-header-primary .vs-global-search {
+        flex: 0 1 12rem;
+        transition: flex-basis .5s ease;
+    }
+
+    .vs-header:has(.vs-global-search-input:focus) {
+        grid-template-columns: minmax(34rem, 42rem) minmax(0, 1fr) auto;
+    }
+
+    .vs-header:has(.vs-global-search-input:focus)
+            .vs-global-search {
+        flex-basis: 22rem;
+    }
+}
+
 .vs-header > .vs-tabs {
     position: static;
     min-width: 0;
@@ -431,6 +451,10 @@ a {
     resize: horizontal;
 }
 
+#main-menu {
+    padding-top: .5rem;
+}
+
 .vs-main {
     min-width: 0;
     min-height: 0;
@@ -440,14 +464,6 @@ a {
 
 .vs-main:has(.vs-active-panel-empty) {
     padding-bottom: 0;
-}
-
-.vs-menu-title {
-    margin: 0 0 .7rem;
-    color: var(--vs-muted);
-    font-size: .75rem;
-    letter-spacing: .14em;
-    text-transform: uppercase;
 }
 
 .vs-menu-list,
@@ -693,6 +709,60 @@ button.vs-menu-group:focus-visible {
     border-radius: 0;
 }
 
+.vs-global-search-entry.vs-global-search-assistant-tip-visible
+        > .vs-global-search-input {
+    padding-right: 7rem;
+}
+
+.vs-global-search-assistant-tip {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: .3rem;
+    display: none;
+    align-items: center;
+    gap: .3rem;
+    padding: .16rem .3rem;
+    border: 1px solid var(--vs-line);
+    border-radius: .3rem;
+    transform: translateY(-50%);
+    background: var(--vs-panel-soft);
+    color: var(--vs-muted);
+    cursor: pointer;
+    font-size: .72rem;
+    line-height: 1.2;
+}
+
+.vs-global-search-entry.vs-global-search-assistant-tip-visible
+        .vs-global-search-assistant-tip {
+    display: inline-flex;
+}
+
+.vs-global-search-assistant-tip:hover {
+    background: var(--vs-primary-soft);
+}
+
+.vs-global-search-assistant-tip:focus-visible {
+    outline: 2px solid var(--vs-focus);
+    outline-offset: 1px;
+}
+
+.vs-global-search-assistant-tip-icon {
+    width: .9rem;
+    height: .9rem;
+}
+
+.vs-global-search-assistant-tip-key {
+    min-width: 1rem;
+    padding: .03rem .16rem;
+    border: 1px solid var(--vs-line);
+    border-radius: .2rem;
+    background: var(--vs-panel);
+    color: var(--vs-ink);
+    font-size: .68rem;
+    text-align: center;
+}
+
 .vs-global-search-entry > #global-search-results > .vs-search-results {
     right: auto;
     left: 0;
@@ -736,9 +806,9 @@ button.vs-menu-group:focus-visible {
 
 .vs-search-result {
     display: flex;
+    align-items: center;
     width: 100%;
-    justify-content: space-between;
-    gap: 1rem;
+    gap: .6rem;
     padding: .62rem .7rem;
     border: 0;
     border-radius: .45rem;
@@ -753,9 +823,10 @@ button.vs-menu-group:focus-visible {
     background: var(--vs-primary-soft);
 }
 
-.vs-search-result-model {
-    color: var(--vs-muted);
-    font-size: .78rem;
+.vs-search-result-icon {
+    flex: 0 0 auto;
+    width: 1.4rem;
+    height: 1.4rem;
 }
 
 .vs-workspace {

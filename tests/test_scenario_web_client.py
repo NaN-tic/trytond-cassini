@@ -79,6 +79,7 @@ class TestWebClient(WebTestCase):
         page.locator('[data-panel-option="menu"]').click()
 
         expect(page.locator('.vs-app')).to_be_visible()
+        expect(page.locator('#main-menu .vs-menu-title')).to_have_count(0)
         page.get_by_role(
             'button', name='Cassini Groups', exact=True).click()
         expect(page.get_by_text('Persistent Existing Group')).to_be_visible()
@@ -100,6 +101,14 @@ class TestWebClient(WebTestCase):
         expect(page.get_by_text('Unsaved changes')).not_to_be_visible()
 
         global_search = page.get_by_label('Global search')
+        global_search_width = global_search.bounding_box()['width']
+        global_search.focus()
+        page.wait_for_function(
+            '''width => document.querySelector(
+                '[data-global-search-input]').getBoundingClientRect().width
+                > width''', arg=global_search_width)
+        self.assertGreater(
+            global_search.bounding_box()['width'], global_search_width)
         page.get_by_role('button', name='User menu').click()
         expect(page.locator('.vs-notification-badge')).to_have_text('1')
         expect(page.get_by_text(
@@ -149,6 +158,12 @@ class TestWebClient(WebTestCase):
             has_text=(
                 'Cassini Groups With A Deliberately Long Suggestion'))
         expect(long_result).to_be_visible()
+        result_icon = long_result.locator('.vs-search-result-icon')
+        expect(result_icon).to_be_visible()
+        self.assertLess(
+            result_icon.bounding_box()['x'],
+            long_result.locator('.vs-search-result-name').bounding_box()['x'])
+        expect(page.locator('.vs-search-result-model')).to_have_count(0)
         self.assertEqual(
             long_result.evaluate(
                 'element => getComputedStyle(element).whiteSpace'),
@@ -156,6 +171,16 @@ class TestWebClient(WebTestCase):
         self.assertGreater(
             page.locator('.vs-search-results').bounding_box()['width'],
             global_search.bounding_box()['width'])
+        search_results = page.locator('[data-global-search-result]')
+        self.assertGreaterEqual(search_results.count(), 2)
+        global_search.press('ArrowDown')
+        expect(search_results.first).to_be_focused()
+        page.keyboard.press('ArrowDown')
+        expect(search_results.nth(1)).to_be_focused()
+        page.keyboard.press('ArrowUp')
+        expect(search_results.first).to_be_focused()
+        page.keyboard.press('ArrowUp')
+        expect(global_search).to_be_focused()
         page.get_by_role('img', name='NaN-tic').click()
         expect(page.locator('.vs-search-results')).to_have_count(0)
         global_search.fill('Cassini Gr')
