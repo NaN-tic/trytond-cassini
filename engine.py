@@ -30,6 +30,7 @@ from .widgets import WidgetRenderer
 
 SUPPORTED_VIEWS = {'tree', 'form', 'list-form', 'calendar'}
 COMMON_SEARCH_FIELDS = SEARCH_COMMON_SEARCH_FIELDS
+TREE_RECORD_CHUNK_SIZE = 50
 
 
 def evaluate(value, context, default=None):
@@ -1001,7 +1002,7 @@ class SaoEngine:
                 ])
         return domain
 
-    def load_tab(self, tab, ids=None):
+    def load_tab(self, tab, ids=None, append=False):
         Model = self.pool.get(tab['model'])
         ModelAccess = self.pool.get('ir.model.access')
         tab['history'] = bool(getattr(Model, '_history', False))
@@ -1047,12 +1048,33 @@ class SaoEngine:
 
             domain = self._update_window_counts(tab, Model, view)
 
+            search_offset = int(tab.get('offset') or 0)
+            record_limit = int(tab.get('limit') or 1000)
+            hierarchy_limit = record_limit
+            if tab.get('view_type') == 'tree':
+                if append:
+                    search_offset = int(
+                        tab.get('tree_next_offset') or search_offset)
+                    tree_end_offset = min(
+                        int(tab.get('tree_end_offset') or 0),
+                        int(tab.get('count') or 0))
+                else:
+                    tree_end_offset = min(
+                        search_offset + record_limit,
+                        int(tab.get('count') or 0))
+                tab['tree_end_offset'] = tree_end_offset
+                record_limit = min(
+                    TREE_RECORD_CHUNK_SIZE,
+                    max(0, tree_end_offset - search_offset))
+                hierarchy_limit = TREE_RECORD_CHUNK_SIZE
             if ids is None:
-                ids = Model.search(
-                    domain,
-                    offset=tab.get('offset', 0),
-                    limit=tab.get('limit', 1000),
-                    order=decode_value(tab.get('order')))
+                ids = (
+                    Model.search(
+                        domain,
+                        offset=search_offset,
+                        limit=record_limit,
+                        order=decode_value(tab.get('order')))
+                    if record_limit else [])
             else:
                 ids = [int(id_) for id_ in ids if id_]
                 order = decode_value(tab.get('order'))
@@ -1061,6 +1083,10 @@ class SaoEngine:
                             ('id', 'in', ids),
                             ], order=order)
             ids = [int(id_) for id_ in ids if id_]
+            if tab.get('view_type') == 'tree':
+                tab['tree_next_offset'] = (
+                    search_offset + len(ids)
+                    if ids else int(tab.get('count') or 0))
             binary_context = {
                 '%s.%s' % (Model.__name__, name): 'size'
                 for name in read_fields
@@ -1085,9 +1111,9 @@ class SaoEngine:
                         for child_id in row.get(child_field, [])
                         if child_id not in known
                         }
-                    while pending and len(known) < tab.get('limit', 1000):
+                    while pending and len(known) < hierarchy_limit:
                         child_ids = list(pending)[
-                            :tab.get('limit', 1000) - len(known)]
+                            :hierarchy_limit - len(known)]
                         child_values = Model.read(child_ids, read_fields)
                         values.extend(child_values)
                         known.update(child_ids)
@@ -1099,8 +1125,8 @@ class SaoEngine:
                             }
 
         old_records = tab.get('records', {})
-        records = {}
-        order = []
+        records = dict(old_records) if append else {}
+        order = list(tab.get('record_order', [])) if append else []
         for row in values:
             key = str(row['id'])
             old = old_records.get(key)
@@ -1116,12 +1142,14 @@ class SaoEngine:
                     'new': False,
                     'deleted': False,
                     }
-            order.append(key)
+            if key not in order:
+                order.append(key)
 
-        for key, record in old_records.items():
-            if record.get('new') and key not in records:
-                records[key] = record
-                order.insert(0, key)
+        if not append:
+            for key, record in old_records.items():
+                if record.get('new') and key not in records:
+                    records[key] = record
+                    order.insert(0, key)
         tab['records'] = records
         tab['record_order'] = order
         tab['selected'] = [
@@ -1132,6 +1160,21 @@ class SaoEngine:
                 if tab.get('view_type') != 'tree' and order else None)
         tab['dirty'] = any(record.get('dirty') for record in records.values())
         return tab
+
+    def load_tree_records(self, tab_id):
+        """Load the next visible chunk of a window tree."""
+        tab = self._tab(tab_id, kind='window')
+        if tab.get('view_type') != 'tree':
+            raise ValueError(translate('This tab is not a tree view'))
+        previous_keys = set(tab.get('record_order', []))
+        if int(tab.get('tree_next_offset') or 0) < int(
+                tab.get('tree_end_offset') or 0):
+            self.load_tab(tab, append=True)
+        loaded_keys = [
+            key for key in tab.get('record_order', [])
+            if key not in previous_keys]
+        self.save()
+        return tab, loaded_keys
 
     def revisions(self, tab_id):
         tab = self._tab(tab_id, kind='window')

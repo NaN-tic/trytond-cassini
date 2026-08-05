@@ -16,7 +16,7 @@ import dominate
 from dominate.tags import (
     a, article, aside, br, button, details, div, form, h1, h2, h3, h4,
     header, img, input_, kbd, label, li, link, main, meta, nav, option, p,
-    script, section, select, span, strong, summary, textarea, ul)
+    script, section, select, span, strong, summary, td, textarea, tr, ul)
 from dominate.util import raw
 from trytond.exceptions import (
     LoginException, RateLimitException, TrytonException, UserWarning)
@@ -4103,6 +4103,40 @@ class PageRecords(SaoEndpoint):
         self.engine.page(self.tab, self.direction)
         tab = self.engine.interface.get_tab(self.tab)
         return screen_response(self.engine, tab)
+
+
+class LoadTreeRecords(SaoEndpoint):
+    'Load More Cassini Tree Records'
+    __name__ = 'cassini.load.tree.records'
+    _url = '/tab/<string:tab>/tree/records'
+
+    tab = fields.Char('Tab')
+
+    def render_lazy(self, hx_trigger='load', colspan=1):
+        """Render Voyager's deferred tree-record loader."""
+        with tr(
+                id='tree-loader-' + self.tab,
+                cls='vs-tree-loader',
+                hx_get=type(self).url(tab=self.tab),
+                hx_trigger=hx_trigger,
+                hx_target='this',
+                hx_swap='outerHTML',
+                hx_select='.vs-row, .vs-tree-loader',
+                hx_sync='this:drop') as loader:
+            with td(colspan=str(colspan)):
+                span(_('Loading more records'), cls='vs-tree-loader-label')
+        return loader
+
+    @handle_endpoint_errors
+    def render(self):
+        tab, loaded_keys = self.engine.load_tree_records(self.tab)
+        view = decode_value(tab.get('view', {}))
+        renderer = ViewRenderer(self.engine.interface)
+        loaded_keys = set(loaded_keys)
+        rows = [
+            row for row in renderer.tree_rows(tab, view)
+            if row[0] in loaded_keys]
+        return html_response(renderer.tree(tab, view, rows=rows))
 
 
 class NavigateCalendar(SaoEndpoint):

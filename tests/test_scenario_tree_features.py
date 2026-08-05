@@ -126,6 +126,15 @@ class TestTreeFeatures(WebTestCase):
 
         rows = page.locator('.vs-row')
         expect(rows).to_have_count(2)
+        toolbar = page.locator('.vs-active-panel .vs-toolbar')
+        expect(toolbar.locator('.vs-domain-tabs')).to_have_count(0)
+        search_box = toolbar.locator(
+            '.vs-search-toolbar').bounding_box()
+        header_box = page.locator(
+            '.vs-active-panel .vs-table th').first.bounding_box()
+        self.assertLessEqual(abs(
+                header_box['y']
+                - search_box['y'] - search_box['height']), 1)
         expect(page.locator('.vs-row-current')).to_have_count(0)
         expect(page.locator(
             '.vs-select-column input[aria-label="Select record"]:checked'

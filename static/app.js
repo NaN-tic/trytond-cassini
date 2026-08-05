@@ -14,9 +14,6 @@
     let lastSpokenText = "";
     const chatRecorders = new WeakMap();
     const voiceRecorders = new WeakMap();
-    const requestQueues = new WeakMap();
-    const replaceRequests = new WeakMap();
-    const fallbackTimers = new WeakMap();
     const observedWorkspaceTabs = new WeakSet();
     let seasonalLogoTimer = null;
     let monacoPromise = null;
@@ -25,6 +22,7 @@
     let qzConfigured = false;
     let qzPrintQueue = Promise.resolve();
     let pendingColumnPopup = null;
+    const observedWorkspaceToolbars = new WeakSet();
 
     document.addEventListener("change", event => {
         const model = event.target.closest?.("[data-reference-model]");
@@ -607,17 +605,44 @@
             const tabs = workspace.querySelector(":scope > .vs-tabs");
             if (!tabs) {
                 workspace.style.removeProperty("--vs-tabs-height");
-                continue;
+            } else {
+                if (workspaceResizeObserver &&
+                        !observedWorkspaceTabs.has(tabs)) {
+                    observedWorkspaceTabs.add(tabs);
+                    workspaceResizeObserver.observe(
+                        tabs, {box: "border-box"});
+                }
+                workspace.style.setProperty(
+                    "--vs-tabs-height",
+                    tabs.getBoundingClientRect().height + "px");
             }
-            if (workspaceResizeObserver &&
-                    !observedWorkspaceTabs.has(tabs)) {
-                observedWorkspaceTabs.add(tabs);
-                workspaceResizeObserver.observe(
-                    tabs, {box: "border-box"});
+            for (const screen of workspace.querySelectorAll(".vs-screen")) {
+                const toolbar = screen.querySelector(
+                    ":scope > .vs-toolbar");
+                if (!toolbar) {
+                    screen.style.removeProperty(
+                        "--vs-sticky-toolbar-height");
+                    continue;
+                }
+                if (workspaceResizeObserver &&
+                        !observedWorkspaceToolbars.has(toolbar)) {
+                    observedWorkspaceToolbars.add(toolbar);
+                    workspaceResizeObserver.observe(
+                        toolbar, {box: "border-box"});
+                }
+                const toolbarBox = toolbar.getBoundingClientRect();
+                let toolbarBottom = toolbarBox.bottom;
+                for (const child of toolbar.children) {
+                    if (getComputedStyle(child).display !== "none") {
+                        toolbarBottom = Math.max(
+                            toolbarBottom,
+                            child.getBoundingClientRect().bottom);
+                    }
+                }
+                screen.style.setProperty(
+                    "--vs-sticky-toolbar-height",
+                    Math.max(0, toolbarBottom - toolbarBox.top) + "px");
             }
-            workspace.style.setProperty(
-                "--vs-tabs-height",
-                tabs.getBoundingClientRect().height + "px");
         }
     }
 
@@ -857,7 +882,14 @@
         if (!button || button.disabled) {
             return false;
         }
-        button.click();
+        captureSidebarWidth(false);
+        window.clearTimeout(sidebarWidthTimer);
+        sidebarWidthTimer = null;
+        window.htmx.ajax("POST", button.getAttribute("hx-post"), {
+            source: button,
+            target: "#cassini",
+            swap: "outerHTML",
+        });
         return true;
     }
 
@@ -2498,22 +2530,11 @@
         if (!url) {
             return;
         }
-        if (window.htmx) {
-            window.htmx.ajax("POST", url, {
-                target: "#workspace",
-                swap: "outerHTML",
-                pushUrl: true,
-            });
-        } else {
-            const request = document.createElement("button");
-            request.hidden = true;
-            request.setAttribute("hx-post", url);
-            request.setAttribute("hx-target", "#workspace");
-            request.setAttribute("hx-swap", "outerHTML");
-            request.setAttribute("hx-push-url", "true");
-            document.body.append(request);
-            fallbackRequest(request).finally(() => request.remove());
-        }
+        window.htmx.ajax("POST", url, {
+            target: "#workspace",
+            swap: "outerHTML",
+            pushUrl: true,
+        });
     }, true);
     document.addEventListener("click", function (event) {
         const popupAction = event.target.closest(
@@ -2620,16 +2641,7 @@
             const input = search?.querySelector(
                 "[data-global-search-input]");
             if (input) {
-                if (window.htmx) {
-                    window.htmx.trigger(input, "htmx:abort");
-                }
-                const request = replaceRequests.get(input);
-                if (request) {
-                    request.abort();
-                    replaceRequests.delete(input);
-                }
-                window.clearTimeout(fallbackTimers.get(input));
-                fallbackTimers.delete(input);
+                window.htmx.trigger(input, "htmx:abort");
                 input.value = "";
             }
             const results = search?.querySelector(".vs-search-results");
@@ -2726,7 +2738,7 @@
                 "[data-relation-search-confirm]");
             if (confirm) {
                 confirm.disabled = false;
-                fallbackRequest(form);
+                window.htmx.trigger(form, "submit");
             }
             return;
         }
@@ -3223,16 +3235,7 @@
         if (!text) {
             return false;
         }
-        if (window.htmx) {
-            window.htmx.trigger(input, "htmx:abort");
-        }
-        const pending = replaceRequests.get(input);
-        if (pending) {
-            pending.abort();
-            replaceRequests.delete(input);
-        }
-        window.clearTimeout(fallbackTimers.get(input));
-        fallbackTimers.delete(input);
+        window.htmx.trigger(input, "htmx:abort");
         input.value = "";
         updateGlobalSearchAssistantTip(input);
         input.closest("#global-search")?.querySelector(
@@ -3247,13 +3250,22 @@
                 return;
             }
             message.value = text;
-            submit.click();
+            const form = message.closest("form");
+            window.htmx.ajax("POST", form.getAttribute("hx-post"), {
+                source: form,
+                target: "#help-panel",
+                swap: "outerHTML",
+            });
         };
         const help = document.querySelector("[data-panel-option='help']");
         if (help?.getAttribute("aria-pressed") === "true") {
             send();
         } else if (help) {
-            fallbackRequest(help).then(send);
+            window.htmx.ajax("POST", help.getAttribute("hx-post"), {
+                source: help,
+                target: "#cassini",
+                swap: "outerHTML",
+            }).then(send);
         }
         return true;
     }
@@ -3464,278 +3476,6 @@
         scheduleNoticeDismissal();
     });
 
-    function formDataFor(element) {
-        function addDeclaredValues(data) {
-            const declared = element.getAttribute("hx-vals");
-            if (!declared) {
-                return data;
-            }
-            try {
-                const values = JSON.parse(declared);
-                for (const [name, value] of Object.entries(values)) {
-                    data.set(name, value);
-                }
-            } catch (error) {
-                // HTMX will ignore an invalid static hx-vals value too.
-            }
-            return data;
-        }
-        if (element instanceof HTMLFormElement) {
-            return addDeclaredValues(new FormData(element));
-        }
-        const include = element.getAttribute("hx-include");
-        if (include === "this" &&
-                (element instanceof HTMLInputElement ||
-                 element instanceof HTMLSelectElement ||
-                 element instanceof HTMLTextAreaElement)) {
-            const data = new FormData();
-            if (element instanceof HTMLSelectElement && element.multiple) {
-                for (const option of element.selectedOptions) {
-                    data.append(element.name, option.value);
-                }
-            } else if (element.type !== "checkbox" || element.checked) {
-                data.append(element.name, element.value);
-            }
-            return addDeclaredValues(data);
-        }
-        if (include === "closest form") {
-            const form = element.closest("form");
-            return addDeclaredValues(
-                form ? new FormData(form) : new FormData());
-        }
-        if (include) {
-            const data = new FormData();
-            for (const control of document.querySelectorAll(include)) {
-                if (!control.name || control.disabled ||
-                        (control.type === "checkbox" && !control.checked)) {
-                    continue;
-                }
-                data.append(control.name, control.value);
-            }
-            return addDeclaredValues(data);
-        }
-        const form = element.closest("form");
-        return addDeclaredValues(
-            form ? new FormData(form) : new FormData());
-    }
-
-    function replaceTarget(target, fragment, swap) {
-        if (!target || swap === "none") {
-            return null;
-        }
-        if (swap === "innerHTML") {
-            target.replaceChildren(fragment);
-            return target;
-        } else {
-            target.replaceWith(fragment);
-            return fragment;
-        }
-    }
-
-    function applyResponse(element, markup) {
-        const template = document.createElement("template");
-        template.innerHTML = markup.trim();
-        const inserted = [];
-        for (const outOfBand of template.content.querySelectorAll(
-                "[hx-swap-oob]")) {
-            const specification = outOfBand.getAttribute("hx-swap-oob");
-            const parts = specification.split(":");
-            const swap = parts[0] || "outerHTML";
-            const selector = parts[1] || "#" + outOfBand.id;
-            const target = document.querySelector(selector);
-            outOfBand.removeAttribute("hx-swap-oob");
-            inserted.push(replaceTarget(target, outOfBand, swap));
-        }
-        const selector = element.getAttribute("hx-target");
-        const target = selector ? document.querySelector(selector) : element;
-        const swap = element.getAttribute("hx-swap") || "innerHTML";
-        const content = template.content;
-        const active = document.activeElement;
-        if (active?.id && active.matches("[hx-preserve]")) {
-            const incoming = content.querySelector(
-                "[hx-preserve][id=\"" +
-                CSS.escape(active.id) + "\"]");
-            if (incoming) {
-                incoming.replaceWith(active);
-            }
-        }
-        if (!content.childNodes.length) {
-            if (swap === "innerHTML" && target) {
-                target.replaceChildren();
-            }
-            for (const node of inserted) {
-                if (window.htmx && node?.isConnected) {
-                    window.htmx.process(node);
-                }
-            }
-            return;
-        }
-        if (swap === "outerHTML") {
-            inserted.push(replaceTarget(
-                target, content.firstElementChild, swap));
-        } else {
-            inserted.push(replaceTarget(target, content, swap));
-        }
-        for (const node of inserted) {
-            if (window.htmx && node?.isConnected) {
-                window.htmx.process(node);
-            }
-        }
-    }
-
-    async function performFallbackRequest(element, signal) {
-        const confirmation = element.getAttribute("hx-confirm");
-        if (confirmation && !await requestConfirmation(confirmation)) {
-            return;
-        }
-        rememberFocus();
-        if (element.matches("[data-chat-form]") &&
-                focusState.id === "message") {
-            focusState.value = "";
-            focusState.start = 0;
-            focusState.end = 0;
-        }
-        const post = element.getAttribute("hx-post");
-        const get = element.getAttribute("hx-get");
-        const method = post ? "POST" : "GET";
-        const url = post || get;
-        if (!url) {
-            return;
-        }
-        element.classList.add("htmx-request");
-        try {
-            const response = await fetch(url, {
-                method: method,
-                body: method === "POST" ? formDataFor(element) : undefined,
-                credentials: "same-origin",
-                signal: signal,
-                headers: {
-                    "HX-Request": "true",
-                    "HX-Current-URL": window.location.href,
-                },
-            });
-            if (!response.ok) {
-                throw new Error(await response.text());
-            }
-            const redirectedURL = response.headers.get("HX-Redirect");
-            if (redirectedURL) {
-                window.location.assign(redirectedURL);
-                return;
-            }
-            if (response.headers.get("HX-Refresh") === "true") {
-                window.location.reload();
-                return;
-            }
-            applyResponse(element, await response.text());
-            syncShellState();
-            syncWorkspaceStickyOffsets();
-            window.requestAnimationFrame(syncWorkspaceStickyOffsets);
-            scheduleChatPolling();
-            initializeHelp();
-            initializeDynamicWidgets();
-            const pushedURL = response.headers.get("HX-Push-Url");
-            if (pushedURL ||
-                    element.getAttribute("hx-push-url") === "true") {
-                history.pushState({}, "", pushedURL || url);
-            }
-            const trigger = response.headers.get("HX-Trigger");
-            if (trigger) {
-                try {
-                    const events = JSON.parse(trigger);
-                    startDownloads(events["voyager-download"]);
-                } catch (error) {
-                    // Non-JSON HX-Trigger values do not carry downloads.
-                }
-            }
-            restoreFocus();
-            initializeSearchCompletions();
-            scheduleInitialFormFocus();
-            focusNewX2ManyRow(x2manyFocusSelector(element));
-        } catch (error) {
-            if (error.name === "AbortError") {
-                return;
-            }
-            const host = document.getElementById("notifications");
-            if (host) {
-                const notice = document.createElement("div");
-                notice.className = "vs-notice vs-notice-error";
-                notice.textContent = error.message;
-                host.replaceChildren(notice);
-            }
-        } finally {
-            element.classList.remove("htmx-request");
-        }
-    }
-
-    function fallbackRequest(element, replace) {
-        if (replace) {
-            const previous = replaceRequests.get(element);
-            if (previous) {
-                previous.abort();
-            }
-            const controller = new AbortController();
-            replaceRequests.set(element, controller);
-            return performFallbackRequest(element, controller.signal)
-                .finally(function () {
-                    if (replaceRequests.get(element) === controller) {
-                        replaceRequests.delete(element);
-                    }
-                });
-        }
-        const owner = element.closest(".vs-screen, .vs-wizard") ||
-            document.body;
-        const previous = requestQueues.get(owner) || Promise.resolve();
-        const current = previous
-            .catch(function () {
-                // A failed field update must not block later edits.
-            })
-            .then(() => performFallbackRequest(element));
-        requestQueues.set(owner, current);
-        return current;
-    }
-
-    function installFallback() {
-        document.addEventListener("click", function (event) {
-            const element = event.target.closest(
-                "button[hx-post], button[hx-get], a[hx-post], a[hx-get]");
-            if (!element) {
-                return;
-            }
-            event.preventDefault();
-            fallbackRequest(element);
-        });
-        document.addEventListener("submit", function (event) {
-            const element = event.target.closest("form[hx-post], form[hx-get]");
-            if (!element) {
-                return;
-            }
-            event.preventDefault();
-            fallbackRequest(element);
-        });
-        document.addEventListener("input", function (event) {
-            const element = event.target.closest(
-                "input[hx-post], textarea[hx-post]");
-            if (!element) {
-                return;
-            }
-            clearTimeout(fallbackTimers.get(element));
-            fallbackTimers.set(element, setTimeout(
-                () => fallbackRequest(element, true), 400));
-        });
-        document.addEventListener("change", function (event) {
-            const element = event.target.closest(
-                "input[hx-post], select[hx-post], textarea[hx-post]");
-            if (element) {
-                clearTimeout(fallbackTimers.get(element));
-                fallbackTimers.delete(element);
-                fallbackRequest(element, element.matches(
-                    "input[type='text'], input[type='email'], " +
-                    "input[type='url'], input[type='tel'], " +
-                    "input[type='password'], textarea"));
-            }
-        });
-    }
-
     const deferredScreenActions = new Set();
     const pendingFieldRequests = new WeakMap();
 
@@ -3901,11 +3641,7 @@
             startDownloads(event.detail && (
                 event.detail.value || event.detail));
         });
-        if (window.htmx) {
-            window.htmx.config.historyCacheSize = 0;
-        } else {
-            installFallback();
-        }
+        window.htmx.config.historyCacheSize = 0;
         syncShellState();
         syncWorkspaceStickyOffsets();
         window.requestAnimationFrame(syncWorkspaceStickyOffsets);

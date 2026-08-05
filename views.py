@@ -1369,7 +1369,7 @@ class ViewRenderer:
             list(parser.completion(query))
             + list(parser.completion(''))))
 
-    def tree(self, tab, view):
+    def tree(self, tab, view, rows=None):
         root = parse_architecture(view)
         relation_origin = tab.get('relation_origin')
         # Relation record dialogs keep their parent origin too, but only an
@@ -1456,11 +1456,18 @@ class ViewRenderer:
                     relation_origin.get('editable', True)
                     and relation_origin.get('type') == 'one2many')))
         select_column_class = 'vs-select-column'
-        rows = self.tree_rows(tab, view)
+        if rows is None:
+            rows = self.tree_rows(tab, view)
+        lazy_tree = (
+            tab.get('kind') == 'window'
+            and not embedded
+            and int(tab.get('tree_next_offset') or 0) < int(
+                tab.get('tree_end_offset') or 0))
         first_field = next((
                 node.attrib['name']
                 for node in columns if node.tag == 'field'), None)
         with div(
+                id='tree-' + tab['id'],
                 cls='vs-table-wrap',
                 data_editable_tree='true' if editable else None,
                 data_tree_reorder='true' if reorderable else None,
@@ -2016,6 +2023,14 @@ class ViewRenderer:
                                             self.record_button(
                                                 tab, record, attributes,
                                                 renderer)
+                    if lazy_tree:
+                        LoadTreeRecords = self.pool.get(
+                            'cassini.load.tree.records')
+                        LoadTreeRecords(
+                            tab=tab['id'], render=False).render_lazy(
+                                hx_trigger=(
+                                    'intersect once root:.vs-main'),
+                                colspan=len(columns) + 2)
                 if any(
                         node.tag == 'field'
                         and str(node.attrib.get('sum', '0')).lower()

@@ -1151,6 +1151,11 @@ button.vs-menu-group:focus-visible {
     overflow: visible;
 }
 
+.vs-screen[data-view="tree"]
+        > .vs-toolbar:not(:has(.vs-domain-tabs)) {
+    margin-bottom: 0;
+}
+
 .vs-window-menu {
     position: relative;
     display: block;
@@ -2689,7 +2694,7 @@ textarea.vs-input {
 
 .vs-table-wrap {
     max-width: 100%;
-    overflow: auto;
+    overflow: visible;
 }
 
 .vs-table-wrap:has(.vs-column-popup[open]) {
@@ -2718,13 +2723,25 @@ textarea.vs-input {
 .vs-table th {
     padding-block: 3px;
     position: sticky;
-    z-index: 2;
-    top: 0;
+    z-index: 4;
+    top: var(--vs-sticky-toolbar-height, 0px);
     background: var(--vs-panel-soft);
+    box-shadow: 0 1px 0 var(--vs-line);
     color: var(--vs-muted);
     font-size: .75rem;
     letter-spacing: .04em;
     text-transform: uppercase;
+}
+
+.vs-tree-loader {
+    color: var(--vs-muted);
+    font-size: .8rem;
+}
+
+.vs-tree-loader td {
+    display: grid;
+    min-height: 2.5rem;
+    place-items: center;
 }
 
 .vs-table thead .vs-drag-column {
