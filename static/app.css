@@ -2864,6 +2864,30 @@ textarea.vs-input {
     text-align: end;
 }
 
+.vs-tree-content:has(.vs-numeric-value),
+.vs-tree-content:has(.vs-numeric-input) {
+    justify-content: flex-end;
+    text-align: end;
+}
+
+.vs-tree-total-row {
+    position: sticky;
+    z-index: 3;
+    bottom: 0;
+    background: var(--vs-panel);
+    box-shadow: 0 -1px 0 var(--vs-line);
+    font-weight: 700;
+}
+
+.vs-tree-total-row td {
+    background: inherit;
+}
+
+.vs-table .vs-tree-total-numeric {
+    text-align: right;
+    text-align: end;
+}
+
 .vs-monetary-value {
     display: inline-flex;
     min-width: 0;

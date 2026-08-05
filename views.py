@@ -1456,6 +1456,7 @@ class ViewRenderer:
                     relation_origin.get('editable', True)
                     and relation_origin.get('type') == 'one2many')))
         select_column_class = 'vs-select-column'
+        partial_tree = rows is not None
         if rows is None:
             rows = self.tree_rows(tab, view)
         lazy_tree = (
@@ -2036,10 +2037,26 @@ class ViewRenderer:
                         and str(node.attrib.get('sum', '0')).lower()
                         in {'1', 'true', 'yes'}
                         for node in columns):
+                    total_row_id = 'tree-total-' + tab['id']
+                    total_renderer = WidgetRenderer(
+                        tab, {
+                            'key': 'total',
+                            'values': (
+                                decode_value(tab['records'][
+                                    tab['record_order'][0]].get(
+                                        'values', {}))
+                                if tab.get('record_order') else {}),
+                            }, view, editable=False)
                     with tfoot():
-                        with tr():
+                        with tr(
+                                id=total_row_id,
+                                cls='vs-tree-total-row',
+                                hx_swap_oob=(
+                                    'outerHTML:#' + total_row_id
+                                    if partial_tree and not embedded
+                                    else None)):
                             td(cls='vs-drag-column')
-                            td(_('Total'), cls='vs-select-column')
+                            td(cls='vs-select-column')
                             for node in columns:
                                 if node.tag != 'field':
                                     td()
@@ -2049,12 +2066,34 @@ class ViewRenderer:
                                             '1', 'true', 'yes'}:
                                     td()
                                     continue
-                                total = sum(
+                                values = [
                                     decode_value(tab['records'][key].get(
                                             'values', {})).get(
                                                 node.attrib['name']) or 0
-                                    for key in tab.get('record_order', []))
-                                td(stringify(total), cls='vs-tree-total')
+                                    for key in tab.get('record_order', [])
+                                    ]
+                                total = values[0] if values else 0
+                                for value in values[1:]:
+                                    total += value
+                                definition = view.get('fields', {}).get(
+                                    node.attrib['name'], {})
+                                widget = (
+                                    node.attrib.get('widget')
+                                    or definition.get('type', 'char'))
+                                formatted = (
+                                    total_renderer.format_numeric(
+                                        node.attrib['name'], total,
+                                        node.attrib)
+                                    if widget
+                                    in WidgetRenderer.numeric_widgets
+                                    else stringify(total))
+                                td(
+                                    formatted,
+                                    cls='vs-tree-total%s' % (
+                                        ' vs-tree-total-numeric'
+                                        if widget
+                                        in WidgetRenderer.numeric_widgets
+                                        else ''))
             if not tab.get('record_order'):
                 p(
                     tab.get('empty_message') or _('No records'),

@@ -298,6 +298,34 @@ class WidgetRenderer:
         except Exception:
             return default
 
+    def format_numeric(self, name, value, attributes=None):
+        """Format a numeric value like the corresponding Tryton field."""
+        attributes = attributes or {}
+        definition = self.view.get('fields', {}).get(name, {})
+        widget = attributes.get('widget') or definition.get('type', 'char')
+        if value in (None, '') or widget == 'timedelta':
+            return stringify(value)
+        factor = self.evaluate(attributes.get('factor'), 1) or 1
+        if factor != 1:
+            value = (
+                value / Decimal(str(factor))
+                if isinstance(value, Decimal)
+                else value / factor)
+        grouping = str(attributes.get('grouping', '1')).lower() not in {
+            '0', 'false', 'no'}
+        digits = self.evaluate(
+            attributes.get('digits', definition.get('digits')))
+        if isinstance(digits, (list, tuple)) and len(digits) > 1:
+            digits = digits[1]
+        else:
+            digits = 0 if widget == 'integer' else None
+        try:
+            language = self.pool.get('ir.lang').get()
+            return language.format_number(
+                value, digits=digits, grouping=grouping)
+        except (ArithmeticError, TypeError, ValueError):
+            return stringify(value)
+
     def htmx(self, name, field_id, widget):
         preserve_self = widget in (
             self.text_widgets | self.textarea_widgets
@@ -1913,14 +1941,8 @@ class WidgetRenderer:
                 value = value.strftime(date_format_)
             elif isinstance(value, time):
                 value = value.strftime(time_format_)
-        if (widget in self.numeric_widgets
-                and str(attributes.get('grouping', '1')).lower()
-                not in {'0', 'false', 'no'}
-                and value not in (None, '')):
-            try:
-                value = format(value, ',')
-            except (TypeError, ValueError):
-                pass
+        if widget in self.numeric_widgets:
+            value = self.format_numeric(name, value, attributes)
         symbol, position = self.get_symbol(
             symbol_value, definition, attributes)
         if symbol:
@@ -1957,4 +1979,6 @@ class WidgetRenderer:
         return span(
             stringify(value),
             cls='vs-value%s' % (
-                ' vs-temporal-value' if widget in self.date_widgets else ''))
+                ' vs-temporal-value' if widget in self.date_widgets
+                else ' vs-numeric-value'
+                if widget in self.numeric_widgets else ''))

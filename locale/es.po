@@ -3043,10 +3043,6 @@ msgid "Toolbar action %s not found"
 msgstr "No se ha encontrado la acción %s de la barra de herramientas"
 
 msgctxt "xgettext:x:"
-msgid "Total"
-msgstr "Total"
-
-msgctxt "xgettext:x:"
 msgid ""
 "Track the tickets you have created via the chat, monitor their status, and "
 "add new comments as needed."

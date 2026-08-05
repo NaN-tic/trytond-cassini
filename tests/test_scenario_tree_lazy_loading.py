@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from playwright.sync_api import Page, expect
 from trytond.pool import Pool
 from trytond.transaction import Transaction
@@ -27,13 +29,16 @@ class TestTreeLazyLoading(WebTestCase):
                     {
                         'name': 'Lazy record %03d' % index,
                         'sequence': index,
+                        'amount': Decimal('10.25'),
                         }
                     for index in range(220)
                     ])
             view, = View.create([{
                         'model': 'cassini.test.tree.node',
                         'type': 'tree',
-                        'data': '<tree><field name="name"/></tree>',
+                        'data': (
+                            '<tree><field name="name"/>'
+                            '<field name="amount" sum="1"/></tree>'),
                         }])
             action, = ActionWindow.create([{
                         'name': 'Cassini Lazy Tree',
@@ -84,7 +89,8 @@ class TestTreeLazyLoading(WebTestCase):
             'hx-trigger', 'intersect once root:.vs-main')
         expect(loader).to_have_attribute('hx-target', 'this')
         expect(loader).to_have_attribute(
-            'hx-select', '.vs-row, .vs-tree-loader')
+            'hx-select',
+            '.vs-row, .vs-tree-loader, .vs-tree-total-row')
         self.assertTrue(loader.get_attribute('hx-get').endswith(
                 '/tab/'
                 + page.locator('.vs-screen').get_attribute('data-tab')
@@ -96,7 +102,20 @@ class TestTreeLazyLoading(WebTestCase):
         domains = page.get_by_role('navigation', name='Domains')
         expect(domains).to_be_visible()
         header = page.locator('.vs-active-panel .vs-table th').first
+        total = tree.locator('.vs-tree-total')
+        total_row = tree.locator('.vs-tree-total-row')
         main = page.locator('.vs-main')
+        expect(total).to_have_text('1,025.00')
+        expect(total_row).not_to_contain_text('Total')
+        self.assertEqual(total_row.evaluate(
+                'element => getComputedStyle(element).position'), 'sticky')
+        self.assertEqual(total_row.evaluate(
+                'element => getComputedStyle(element).bottom'), '0px')
+        self.assertGreaterEqual(int(total.evaluate(
+                'element => getComputedStyle(element).fontWeight')), 700)
+        self.assertIn(total.evaluate(
+                'element => getComputedStyle(element).textAlign'),
+            {'end', 'right'})
         self.assertEqual(
             tree.evaluate(
                 'element => getComputedStyle(element).overflowY'),
@@ -107,12 +126,20 @@ class TestTreeLazyLoading(WebTestCase):
             'sticky')
         main.evaluate('(element) => { element.scrollTop = 200; }')
         expect(header).to_be_visible()
+        expect(total_row).to_be_visible()
         header_box = header.bounding_box()
         domains_box = domains.bounding_box()
+        total_box = total_row.bounding_box()
+        main_box = main.bounding_box()
         self.assertGreaterEqual(
             header_box['y'], domains_box['y'] + domains_box['height'] - 1)
         self.assertLessEqual(
             header_box['y'], domains_box['y'] + domains_box['height'] + 2)
+        self.assertLessEqual(
+            abs(
+                total_box['y'] + total_box['height']
+                - main_box['y'] - main_box['height']),
+            2)
 
         with page.expect_response(
                 lambda response: '/tree/records' in response.url) \
@@ -125,6 +152,7 @@ class TestTreeLazyLoading(WebTestCase):
         self.assertIn('Lazy record 100', response_markup)
         self.assertIn('Lazy record 199', response_markup)
         expect(rows).to_have_count(200)
+        expect(total).to_have_text('2,050.00')
 
         with page.expect_response(
                 lambda response: '/tree/records' in response.url) \
@@ -137,4 +165,5 @@ class TestTreeLazyLoading(WebTestCase):
         self.assertIn('Lazy record 200', response_markup)
         self.assertIn('Lazy record 219', response_markup)
         expect(rows).to_have_count(220)
+        expect(total).to_have_text('2,255.00')
         expect(page.locator('.vs-tree-loader')).to_have_count(0)

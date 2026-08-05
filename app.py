@@ -4121,7 +4121,8 @@ class LoadTreeRecords(SaoEndpoint):
                 hx_trigger=hx_trigger,
                 hx_target='this',
                 hx_swap='outerHTML',
-                hx_select='.vs-row, .vs-tree-loader',
+                hx_select=(
+                    '.vs-row, .vs-tree-loader, .vs-tree-total-row'),
                 hx_sync='this:drop') as loader:
             with td(colspan=str(colspan)):
                 span(_('Loading more records'), cls='vs-tree-loader-label')
