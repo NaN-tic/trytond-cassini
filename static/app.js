@@ -50,6 +50,30 @@
         htmx.trigger(hidden, "change");
     });
 
+    function syncURLWidget(widget) {
+        const input = widget?.querySelector("[data-url-input]");
+        const link = widget?.querySelector("[data-url-open]");
+        if (!input || !link) return;
+        const value = input.value || "";
+        const href = value ? (widget.dataset.urlPrefix || "") + value : "";
+        link.hidden = !value;
+        link.title = value;
+        if (href) {
+            link.setAttribute("href", href);
+        } else {
+            link.removeAttribute("href");
+        }
+    }
+
+    document.addEventListener("click", event => {
+        const link = event.target.closest?.("[data-url-open]");
+        if (!link) return;
+        syncURLWidget(link.closest("[data-url-widget]"));
+        if (!link.getAttribute("href")) {
+            event.preventDefault();
+        }
+    }, true);
+
     function easterSundayDate(year) {
         const a = year % 19;
         const b = (year / 100) | 0;
@@ -2489,6 +2513,10 @@
     });
 
     document.addEventListener("input", function (event) {
+        const urlInput = event.target.closest("[data-url-input]");
+        if (urlInput) {
+            syncURLWidget(urlInput.closest("[data-url-widget]"));
+        }
         const search = event.target.closest("[data-search-autocomplete]");
         if (search) {
             updateSearchCompletion(search);

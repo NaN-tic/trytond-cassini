@@ -77,6 +77,8 @@ class Widget(ModelSQL, ModelView):
                 ('res.group', 'Group'),
                 ])
     richtext_value = fields.Text('Rich Text')
+    readonly_url_value = fields.Function(
+        fields.Char('Readonly URL'), 'get_readonly_url_value')
     selection_value = fields.Selection([
             ('draft', 'Draft'),
             ('marked', 'Marked'),
@@ -100,6 +102,9 @@ class Widget(ModelSQL, ModelView):
     @staticmethod
     def default_selection_value():
         return 'draft'
+
+    def get_readonly_url_value(self, name):
+        return 'https://readonly.example.test'
 
     @classmethod
     @ModelView.button

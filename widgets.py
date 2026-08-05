@@ -88,6 +88,7 @@ class WidgetRenderer:
         'char', 'password', 'color', 'url', 'email', 'callto', 'sip',
         'pyson',
         }
+    url_widgets = {'url', 'email', 'callto', 'sip'}
     textarea_widgets = {'code', 'text', 'richtext', 'html'}
     numeric_widgets = {'integer', 'float', 'numeric', 'timedelta'}
     date_widgets = {'date', 'datetime', 'timestamp', 'time'}
@@ -143,6 +144,9 @@ class WidgetRenderer:
         widget = attributes.get('widget') or definition.get('type', 'char')
         value = self.values.get(name)
         readonly, required, invisible = self.states(definition, attributes)
+        field = self.Model._fields.get(name)
+        if field and hasattr(field, 'setter') and not field.setter:
+            readonly = True
         readonly = readonly or not self.editable
         field_id = dom_id(
             'field', self.tab['id'],
@@ -209,7 +213,7 @@ class WidgetRenderer:
                 style=style) as wrapper:
             control = self.control(
                 name, widget, value, definition, attributes,
-                field_id, readonly, required)
+                field_id, readonly, required, invisible)
             symbol, position = self.get_symbol(
                 value, definition, attributes)
             if symbol:
@@ -528,9 +532,58 @@ class WidgetRenderer:
                         data_temporal_picker_input='true')
         return control
 
+    def url_control(
+            self, widget, value, definition, attributes, common, readonly,
+            invisible):
+        input_type = {
+            'email': 'email',
+            }.get(widget, 'url')
+        if invisible:
+            input_type = 'text'
+        prefix = {
+            'email': 'mailto:',
+            'callto': 'callto:',
+            'sip': 'sip:',
+            }.get(widget, '')
+        text = stringify(value)
+        href = prefix + text if text else ''
+        icon_name = attributes.get('icon')
+        if icon_name in self.Model._fields:
+            icon_name = self.values.get(icon_name)
+        icon_name = stringify(icon_name or 'public').removeprefix('tryton-')
+        common['cls'] += ' vs-url-entry'
+        if readonly:
+            common.pop('disabled', None)
+            common['readonly'] = 'readonly'
+            for name in list(common):
+                if name.startswith('hx_'):
+                    del common[name]
+        if definition.get('size'):
+            common['maxlength'] = definition['size']
+        with div(
+                cls='vs-url-widget',
+                data_url_widget='true',
+                data_url_prefix=prefix) as control:
+            input_(
+                type=input_type, value=text, autocomplete='off',
+                data_url_input='true', **common)
+            with a(
+                    href=href or None,
+                    target='_blank', rel='noreferrer noopener',
+                    cls='vs-url-open',
+                    title=text or None,
+                    aria_label=(
+                        attributes.get('string')
+                        or definition.get('string')
+                        or text),
+                    hidden=not bool(text) or None,
+                    data_url_open='true'):
+                icon(icon_name)
+        return control
+
     def control(
             self, name, widget, value, definition, attributes,
-            field_id, readonly, required):
+            field_id, readonly, required, invisible=False):
         common = self.common_attributes(
             name, field_id, widget, readonly, required)
         common['placeholder'] = attributes.get('help')
@@ -541,6 +594,11 @@ class WidgetRenderer:
         if attributes.get('spell') is not None:
             common['spellcheck'] = str(attributes.get('spell')).lower() in {
                 '1', 'true', 'yes'}
+
+        if widget in self.url_widgets and self.root.tag == 'form':
+            return self.url_control(
+                widget, value, definition, attributes, common, readonly,
+                invisible)
 
         if widget in self.text_widgets:
             input_type = {

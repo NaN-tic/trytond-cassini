@@ -2181,6 +2181,40 @@ input.vs-input[type="checkbox"] {
     cursor: pointer;
 }
 
+.vs-url-widget {
+    display: flex;
+    min-width: 0;
+    align-items: stretch;
+}
+
+.vs-url-entry {
+    min-width: 0;
+    flex: 1;
+}
+
+.vs-url-open {
+    display: inline-grid;
+    width: 1.9rem;
+    min-width: 1.9rem;
+    place-items: center;
+    border-bottom: 1px solid var(--vs-line);
+    color: var(--vs-primary);
+}
+
+.vs-url-open[hidden] {
+    display: none;
+}
+
+.vs-url-open:hover,
+.vs-url-open:focus-visible {
+    background: var(--vs-panel-soft);
+}
+
+.vs-url-open .vs-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
 .vs-reference {
     display: flex;
     min-width: 0;
@@ -2252,7 +2286,8 @@ textarea.vs-input {
     white-space: pre-wrap;
 }
 
-.vs-input:disabled {
+.vs-input:disabled,
+.vs-input[readonly] {
     border-bottom-style: dotted;
     background: transparent;
     color: var(--vs-muted);
