@@ -30,7 +30,7 @@ from .widgets import WidgetRenderer
 
 SUPPORTED_VIEWS = {'tree', 'form', 'list-form', 'calendar'}
 COMMON_SEARCH_FIELDS = SEARCH_COMMON_SEARCH_FIELDS
-TREE_RECORD_CHUNK_SIZE = 50
+TREE_RECORD_CHUNK_SIZE = 100
 
 
 def evaluate(value, context, default=None):

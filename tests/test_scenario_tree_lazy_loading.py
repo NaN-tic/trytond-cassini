@@ -28,7 +28,7 @@ class TestTreeLazyLoading(WebTestCase):
                         'name': 'Lazy record %03d' % index,
                         'sequence': index,
                         }
-                    for index in range(120)
+                    for index in range(220)
                     ])
             view, = View.create([{
                         'model': 'cassini.test.tree.node',
@@ -78,7 +78,7 @@ class TestTreeLazyLoading(WebTestCase):
             'button', name='Cassini Lazy Tree', exact=True).click()
 
         rows = page.locator('.vs-active-panel .vs-row')
-        expect(rows).to_have_count(50)
+        expect(rows).to_have_count(100)
         loader = page.locator('.vs-tree-loader')
         expect(loader).to_have_attribute(
             'hx-trigger', 'intersect once root:.vs-main')
@@ -120,11 +120,11 @@ class TestTreeLazyLoading(WebTestCase):
             main.evaluate(
                 'element => { element.scrollTop = element.scrollHeight; }')
         response_markup = response_info.value.text()
-        self.assertEqual(response_markup.count('<tr class="vs-row'), 50)
+        self.assertEqual(response_markup.count('<tr class="vs-row'), 100)
         self.assertNotIn('Lazy record 000', response_markup)
-        self.assertIn('Lazy record 050', response_markup)
-        self.assertIn('Lazy record 099', response_markup)
-        expect(rows).to_have_count(100)
+        self.assertIn('Lazy record 100', response_markup)
+        self.assertIn('Lazy record 199', response_markup)
+        expect(rows).to_have_count(200)
 
         with page.expect_response(
                 lambda response: '/tree/records' in response.url) \
@@ -133,8 +133,8 @@ class TestTreeLazyLoading(WebTestCase):
                 'element => { element.scrollTop = element.scrollHeight; }')
         response_markup = response_info.value.text()
         self.assertEqual(response_markup.count('<tr class="vs-row'), 20)
-        self.assertNotIn('Lazy record 050', response_markup)
-        self.assertIn('Lazy record 100', response_markup)
-        self.assertIn('Lazy record 119', response_markup)
-        expect(rows).to_have_count(120)
+        self.assertNotIn('Lazy record 100', response_markup)
+        self.assertIn('Lazy record 200', response_markup)
+        self.assertIn('Lazy record 219', response_markup)
+        expect(rows).to_have_count(220)
         expect(page.locator('.vs-tree-loader')).to_have_count(0)
