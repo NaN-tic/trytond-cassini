@@ -2716,6 +2716,9 @@ textarea.vs-input {
 }
 
 .vs-table {
+    --vs-tree-row-height: 2rem;
+    --vs-tree-cell-padding-block: .2rem;
+
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
@@ -2724,9 +2727,10 @@ textarea.vs-input {
 
 .vs-table th,
 .vs-table td {
+    height: var(--vs-tree-row-height);
     min-width: 0;
     overflow: hidden;
-    padding: .55rem .65rem;
+    padding: var(--vs-tree-cell-padding-block) .65rem;
     border-bottom: 1px solid var(--vs-line);
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2735,7 +2739,6 @@ textarea.vs-input {
 }
 
 .vs-table th {
-    padding-block: 3px;
     position: sticky;
     z-index: 4;
     top: var(--vs-sticky-toolbar-height, 0px);
@@ -2753,9 +2756,17 @@ textarea.vs-input {
 }
 
 .vs-tree-loader td {
-    height: 2.5rem;
+    height: var(--vs-tree-row-height);
     text-align: center;
     vertical-align: middle;
+}
+
+.vs-table .vs-input {
+    min-height: calc(
+        var(--vs-tree-row-height) -
+        2 * var(--vs-tree-cell-padding-block)
+    );
+    padding-block: 0;
 }
 
 .vs-table thead .vs-drag-column {
@@ -3654,8 +3665,11 @@ textarea.vs-input {
 .vs-table .vs-drag-column .vs-tree-menu {
     width: 30px;
     min-width: 30px;
-    height: 30px;
-    padding: .3rem;
+    height: calc(
+        var(--vs-tree-row-height) -
+        2 * var(--vs-tree-cell-padding-block)
+    );
+    padding: .2rem;
     border: 0;
     background: var(--vs-panel-soft);
 }
@@ -3669,7 +3683,10 @@ textarea.vs-input {
 .vs-tree-drag-handle {
     display: inline-flex;
     width: 1.5rem;
-    height: 1.7rem;
+    height: calc(
+        var(--vs-tree-row-height) -
+        2 * var(--vs-tree-cell-padding-block)
+    );
     align-items: center;
     justify-content: center;
     cursor: grab;
@@ -4204,8 +4221,11 @@ textarea.vs-input {
 .vs-tree-binary .vs-icon-button {
     width: 1.8rem;
     min-width: 1.8rem;
-    height: 1.8rem;
-    padding: .3rem;
+    height: calc(
+        var(--vs-tree-row-height) -
+        2 * var(--vs-tree-cell-padding-block)
+    );
+    padding: .2rem;
 }
 
 .vs-progress {
