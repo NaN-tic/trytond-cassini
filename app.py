@@ -16,8 +16,11 @@ import dominate
 from dominate.tags import (
     a, article, aside, br, button, details, div, form, h1, h2, h3, h4,
     header, img, input_, kbd, label, li, link, main, meta, nav, option, p,
-    script, section, select, span, strong, summary, textarea, ul)
-from dominate.util import raw
+    script, section, select, span, strong, summary, td, textarea, tr, ul)
+from dominate.tags import table as table_tag
+from dominate.tags import tbody as tbody_tag
+from dominate.tags import tfoot as tfoot_tag
+from dominate.util import container, raw
 from trytond.exceptions import (
     LoginException, RateLimitException, TrytonException, UserWarning)
 from trytond.model import fields
@@ -4249,12 +4252,47 @@ class LoadTreeRecords(SaoEndpoint):
 
     tab = fields.Char('Tab')
 
+    def render_lazy(self, hx_trigger='load', colspan=1):
+        with tr(
+                id='tree-loader-' + self.tab,
+                cls='vs-tree-loader',
+                hx_get=type(self).url(tab=self.tab),
+                hx_trigger=hx_trigger,
+                hx_target='this',
+                hx_swap='outerHTML',
+                hx_sync='this:drop') as loader:
+            with td(colspan=str(colspan)):
+                self.lazy_content()
+        return loader
+
     @handle_endpoint_errors
     def render(self):
-        tab, _loaded_keys = self.engine.load_tree_records(self.tab)
+        tab, loaded_keys = self.engine.load_tree_records(self.tab)
         view = decode_value(tab.get('view', {}))
         renderer = ViewRenderer(self.engine.interface)
-        return html_response(renderer.tree(tab, view))
+        loaded_keys = set(loaded_keys)
+        rows = [
+            row for row in renderer.tree_rows(tab, view)
+            if row[0] in loaded_keys]
+        tree = renderer.tree(tab, view, rows=rows)
+        table = next(
+            child for child in tree.children
+            if isinstance(child, table_tag))
+        body = next(
+            child for child in table.children
+            if isinstance(child, tbody_tag))
+        fragment = container()
+        for row in list(body.children):
+            fragment.add(row)
+        if int(tab.get('tree_next_offset') or 0) >= int(
+                tab.get('tree_end_offset') or 0):
+            foot = next((
+                    child for child in table.children
+                    if isinstance(child, tfoot_tag)), None)
+            if foot:
+                for row in list(foot.children):
+                    fragment.add(row)
+        return html_response(fragment)
 
 
 class NavigateCalendar(SaoEndpoint):

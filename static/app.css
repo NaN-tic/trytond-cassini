@@ -2820,6 +2820,17 @@ textarea.vs-input {
     text-transform: uppercase;
 }
 
+.vs-tree-loader {
+    color: var(--vs-muted);
+    font-size: .8rem;
+}
+
+.vs-tree-loader td {
+    height: var(--vs-tree-row-height);
+    text-align: center;
+    vertical-align: middle;
+}
+
 .vs-table .vs-input {
     min-height: calc(
         var(--vs-tree-row-height) -
