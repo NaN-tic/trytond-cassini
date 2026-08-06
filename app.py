@@ -16,7 +16,7 @@ import dominate
 from dominate.tags import (
     a, article, aside, br, button, details, div, form, h1, h2, h3, h4,
     header, img, input_, kbd, label, li, link, main, meta, nav, option, p,
-    script, section, select, span, strong, summary, td, textarea, tr, ul)
+    script, section, select, span, strong, summary, textarea, ul)
 from dominate.util import raw
 from trytond.exceptions import (
     LoginException, RateLimitException, TrytonException, UserWarning)
@@ -4054,21 +4054,6 @@ class NotebookPage(SaoEndpoint):
     notebook = fields.Char('Notebook')
     page = fields.Integer('Page')
 
-    def render_lazy(self, hx_trigger='load'):
-        with div(
-                cls='vs-notebook-page-widget',
-                style='grid-column:1/-1',
-                hx_post=type(self).url(
-                    tab=self.tab, record=self.record,
-                    notebook=self.notebook, page=self.page),
-                hx_trigger=hx_trigger,
-                hx_target='this',
-                hx_swap='outerHTML',
-                data_notebook_page_loader='true') as widget:
-            span(
-                _('Loading page'), cls='vs-muted')
-        return widget
-
     @handle_endpoint_errors
     def render(self):
         tab = self.engine.switch_page(
@@ -4264,32 +4249,12 @@ class LoadTreeRecords(SaoEndpoint):
 
     tab = fields.Char('Tab')
 
-    def render_lazy(self, hx_trigger='load', colspan=1):
-        """Render Voyager's deferred tree-record loader."""
-        with tr(
-                id='tree-loader-' + self.tab,
-                cls='vs-tree-loader',
-                hx_get=type(self).url(tab=self.tab),
-                hx_trigger=hx_trigger,
-                hx_target='this',
-                hx_swap='outerHTML',
-                hx_select=(
-                    '.vs-row, .vs-tree-loader, .vs-tree-total-row'),
-                hx_sync='this:drop') as loader:
-            with td(colspan=str(colspan)):
-                span(_('Loading more records'), cls='vs-tree-loader-label')
-        return loader
-
     @handle_endpoint_errors
     def render(self):
-        tab, loaded_keys = self.engine.load_tree_records(self.tab)
+        tab, _loaded_keys = self.engine.load_tree_records(self.tab)
         view = decode_value(tab.get('view', {}))
         renderer = ViewRenderer(self.engine.interface)
-        loaded_keys = set(loaded_keys)
-        rows = [
-            row for row in renderer.tree_rows(tab, view)
-            if row[0] in loaded_keys]
-        return html_response(renderer.tree(tab, view, rows=rows))
+        return html_response(renderer.tree(tab, view))
 
 
 class NavigateCalendar(SaoEndpoint):

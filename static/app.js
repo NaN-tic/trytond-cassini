@@ -2733,7 +2733,7 @@
             }
             if (!wasSelected && notebookTab.dataset.notebookSwitchUrl &&
                     !selectedPanel?.querySelector(
-                        "[data-notebook-page-loader]")) {
+                        "[hx-get][hx-trigger~='intersect']")) {
                 window.htmx.ajax(
                     "POST", notebookTab.dataset.notebookSwitchUrl, {
                         source: notebookTab,

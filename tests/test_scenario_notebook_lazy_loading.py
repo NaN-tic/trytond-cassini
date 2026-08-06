@@ -79,13 +79,17 @@ class TestNotebookLazyLoading(WebTestCase):
         notebook = page.locator('.vs-notebook')
         first_tab = notebook.get_by_role('tab', name='First', exact=True)
         more_tab = notebook.get_by_role('tab', name='More', exact=True)
-        more_page = notebook.get_by_role(
-            'tabpanel', name='More', exact=True)
+        more_page = notebook.locator(
+            '[role="tabpanel"][data-notebook-page="1"]')
         expect(first_tab).to_have_attribute('aria-selected', 'true')
         expect(more_tab).to_have_attribute('aria-selected', 'false')
         expect(more_page).to_be_hidden()
         expect(more_page.get_by_text(
             'Lazy Page Content', exact=True)).to_have_count(0)
+        expect(more_page.locator(
+            '[hx-get][hx-trigger="intersect"]')).to_have_count(1)
+        expect(more_page.locator(
+            '[role="status"][aria-label="Loading"]')).to_have_count(1)
         page.evaluate(
             'window.__cassiniNotebookScreen = '
             'document.querySelector(".vs-screen")')
@@ -98,7 +102,7 @@ class TestNotebookLazyLoading(WebTestCase):
                 lambda response: response.url.endswith(
                     '/content')) as lazy_response:
             more_tab.click()
-        self.assertEqual(lazy_response.value.request.method, 'POST')
+        self.assertEqual(lazy_response.value.request.method, 'GET')
         self.assertEqual(len([
                     request for request in notebook_requests
                     if '/page/1' in request.url]), 1)

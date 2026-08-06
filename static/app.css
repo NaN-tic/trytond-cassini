@@ -2711,6 +2711,18 @@ textarea.vs-input {
     display: none;
 }
 
+.vs-notebook > .vs-page > [hx-get][hx-trigger~="intersect"] {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    gap: inherit;
+}
+
+.vs-notebook > .vs-page > [hx-get][hx-trigger~="intersect"]
+    > [role="status"] {
+    grid-column: 1 / -1;
+}
+
 .vs-page {
     grid-column: 1 / -1;
     border: 0;
@@ -2806,17 +2818,6 @@ textarea.vs-input {
     font-size: .75rem;
     letter-spacing: .04em;
     text-transform: uppercase;
-}
-
-.vs-tree-loader {
-    color: var(--vs-muted);
-    font-size: .8rem;
-}
-
-.vs-tree-loader td {
-    height: var(--vs-tree-row-height);
-    text-align: center;
-    vertical-align: middle;
 }
 
 .vs-table .vs-input {

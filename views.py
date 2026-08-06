@@ -2224,14 +2224,6 @@ class ViewRenderer:
                                             self.record_button(
                                                 tab, record, attributes,
                                                 renderer)
-                    if lazy_tree:
-                        LoadTreeRecords = self.pool.get(
-                            'cassini.load.tree.records')
-                        LoadTreeRecords(
-                            tab=tab['id'], render=False).render_lazy(
-                                hx_trigger=(
-                                    'intersect once root:.vs-main'),
-                                colspan=len(columns) + 2)
                 if any(
                         node.tag == 'field'
                         and str(node.attrib.get('sum', '0')).lower()
@@ -2241,6 +2233,14 @@ class ViewRenderer:
                         self.tree_total_row(
                             tab, view, columns,
                             out_of_band=partial_tree and not embedded)
+            if lazy_tree:
+                LoadTreeRecords = self.pool.get(
+                    'cassini.load.tree.records')
+                loader = LoadTreeRecords(
+                    tab=tab['id'], render=False).render_lazy(
+                        hx_trigger='intersect once root:.vs-main')
+                loader['hx-target'] = '#tree-' + tab['id']
+                loader['hx-swap'] = 'outerHTML'
             if not tab.get('record_order'):
                 p(
                     tab.get('empty_message') or _('No records'),

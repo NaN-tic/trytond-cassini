@@ -86,27 +86,22 @@ class TestTreeLazyLoading(WebTestCase):
         expect(record_position).to_have_text('_/220')
         rows = page.locator('.vs-active-panel .vs-row')
         expect(rows).to_have_count(100)
-        loader = page.locator('.vs-tree-loader')
+        tree = page.locator('.vs-active-panel .vs-table-wrap')
+        loader = tree.locator('[hx-get$="/tree/records"]')
         expect(loader).to_have_attribute(
             'hx-trigger', 'intersect once root:.vs-main')
-        expect(loader).to_have_attribute('hx-target', 'this')
         expect(loader).to_have_attribute(
-            'hx-select',
-            '.vs-row, .vs-tree-loader, .vs-tree-total-row')
-        loader_cell = loader.locator('td')
-        self.assertEqual(
-            int(loader_cell.get_attribute('colspan')),
-            page.locator('.vs-active-panel .vs-table th').count())
-        expect(loader_cell).to_have_css('display', 'table-cell')
-        expect(loader_cell).to_have_css('text-align', 'center')
+            'hx-target', '#' + tree.get_attribute('id'))
+        expect(loader).to_have_attribute('hx-swap', 'outerHTML')
+        expect(loader.locator(
+            '[role="status"][aria-label="Loading"]')).to_have_count(1)
         self.assertTrue(loader.get_attribute('hx-get').endswith(
                 '/tab/'
                 + page.locator('.vs-screen').get_attribute('data-tab')
                 + '/tree/records'))
 
-        tree = page.locator('.vs-active-panel .vs-table-wrap')
         expect(tree.locator(
-                'tbody > .vs-tree-loader:last-child')).to_have_count(1)
+                ':scope > [hx-get$="/tree/records"]')).to_have_count(1)
         domains = page.get_by_role('navigation', name='Domains')
         expect(domains).to_be_visible()
         header = page.locator('.vs-active-panel .vs-table th').first
@@ -164,8 +159,8 @@ class TestTreeLazyLoading(WebTestCase):
             main.evaluate(
                 'element => { element.scrollTop = element.scrollHeight; }')
         response_markup = response_info.value.text()
-        self.assertEqual(response_markup.count('<tr class="vs-row'), 100)
-        self.assertNotIn('Lazy record 000', response_markup)
+        self.assertEqual(response_markup.count('<tr class="vs-row'), 200)
+        self.assertIn('Lazy record 000', response_markup)
         self.assertIn('Lazy record 100', response_markup)
         self.assertIn('Lazy record 199', response_markup)
         expect(rows).to_have_count(200)
@@ -179,8 +174,8 @@ class TestTreeLazyLoading(WebTestCase):
             main.evaluate(
                 'element => { element.scrollTop = element.scrollHeight; }')
         response_markup = response_info.value.text()
-        self.assertEqual(response_markup.count('<tr class="vs-row'), 20)
-        self.assertNotIn('Lazy record 100', response_markup)
+        self.assertEqual(response_markup.count('<tr class="vs-row'), 220)
+        self.assertIn('Lazy record 100', response_markup)
         self.assertIn('Lazy record 200', response_markup)
         self.assertIn('Lazy record 219', response_markup)
         expect(rows).to_have_count(220)
@@ -188,4 +183,5 @@ class TestTreeLazyLoading(WebTestCase):
                 '.vs-tree-total-selected')).to_have_text('10.25')
         expect(total.locator(
                 '.vs-tree-total-page')).to_have_text('2,255.00')
-        expect(page.locator('.vs-tree-loader')).to_have_count(0)
+        expect(page.locator(
+            '[hx-get$="/tree/records"]')).to_have_count(0)
