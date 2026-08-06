@@ -275,7 +275,7 @@ class TestShellDemo(WebTestCase):
                 'Persistent task written quickly',
                 exact=True)).to_be_visible()
 
-        page.get_by_role('link', name='Back to Sao').click()
+        page.get_by_role('link', name='Back to Cassini').click()
         page.locator('[data-panel-option="menu"]').click()
         expect(page.get_by_role(
                 'button', name='Shell Groups', exact=True)).to_have_count(0)

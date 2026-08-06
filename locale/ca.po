@@ -1848,8 +1848,8 @@ msgid "Back"
 msgstr "Enrere"
 
 msgctxt "xgettext:x:"
-msgid "Back to Sao"
-msgstr "Torna al Sao"
+msgid "Back to Cassini"
+msgstr "Torna al Cassini"
 
 msgctxt "xgettext:x:"
 msgid "Binary actions"

@@ -122,7 +122,7 @@ def menu_action_url(menu):
     return None
 
 
-class SaoEngine:
+class CassiniEngine:
     """Translate Tryton client semantics into a persistent state document."""
 
     def __init__(self, workspace):

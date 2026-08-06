@@ -33,7 +33,7 @@ from trytond.transaction import Transaction
 from werkzeug.utils import redirect
 from werkzeug.wrappers import Response
 
-from .engine import SaoEngine, decode_shared_tab, menu_action_url
+from .engine import CassiniEngine, decode_shared_tab, menu_action_url
 from .icons import fullscreen_icon, icon, theme_icon
 from .i18n import javascript_translations
 from .state import (
@@ -1111,20 +1111,20 @@ def handle_endpoint_errors(method):
     return guarded
 
 
-class SaoComponent(Component):
+class CassiniComponent(Component):
     @property
     def engine(self):
         if not self.session.system_user:
             return None
         context = Transaction().context.get('voyager_context')
-        if context is not None and hasattr(context, 'sao_engine'):
-            return context.sao_engine
+        if context is not None and hasattr(context, 'cassini_engine'):
+            return context.cassini_engine
         Workspace = Pool().get('cassini.workspace')
         workspace = Workspace.get(
             self.session, self.session.system_user)
-        engine = SaoEngine(workspace)
+        engine = CassiniEngine(workspace)
         if context is not None:
-            context.sao_engine = engine
+            context.cassini_engine = engine
         return engine
 
     def require_user(self):
@@ -1140,7 +1140,7 @@ class SaoComponent(Component):
             include_tabs=False)
 
 
-class SaoEndpoint(SaoComponent, Endpoint):
+class CassiniEndpoint(CassiniComponent, Endpoint):
     _type = APP_TYPE
     _cached = False
     _method = ['GET', 'POST']
@@ -1167,7 +1167,7 @@ class SaoEndpoint(SaoComponent, Endpoint):
         super().__init__(*args, **kwargs)
 
 
-class Asset(SaoEndpoint):
+class Asset(CassiniEndpoint):
     'Cassini Asset'
     __name__ = 'cassini.asset'
     _url = '/asset/<string:name>'
@@ -1187,7 +1187,7 @@ class Asset(SaoEndpoint):
         return Response('', status=404)
 
 
-class PageLayout(SaoComponent):
+class PageLayout(CassiniComponent):
     'Cassini Page Layout'
     __name__ = 'cassini.page.layout'
 
@@ -1247,7 +1247,7 @@ class PageLayout(SaoComponent):
         return self.render_page(div())
 
 
-class Index(SaoEndpoint):
+class Index(CassiniEndpoint):
     'Cassini Index'
     __name__ = 'cassini.index'
     _url = '/'
@@ -1260,7 +1260,7 @@ class Index(SaoEndpoint):
         return redirect(LoginPage.url())
 
 
-class LoginForm(SaoComponent):
+class LoginForm(CassiniComponent):
     'Cassini Login Form'
     __name__ = 'cassini.login.form'
     _cached = False
@@ -1332,7 +1332,7 @@ class LoginForm(SaoComponent):
         return page
 
 
-class LoginPage(SaoEndpoint):
+class LoginPage(CassiniEndpoint):
     'Cassini Login Page'
     __name__ = 'cassini.login.page'
     _url = '/login'
@@ -1347,7 +1347,7 @@ class LoginPage(SaoEndpoint):
         return layout.render_page(LoginForm().tag(), 'Sign in — Tryton')
 
 
-class ShareLogin(SaoEndpoint):
+class ShareLogin(CassiniEndpoint):
     'Cassini Shared Tab Login Page'
     __name__ = 'cassini.share.login'
     _url = '/login/share/<string:payload>'
@@ -1369,7 +1369,7 @@ class ShareLogin(SaoEndpoint):
             LoginForm(next=target).tag(), 'Sign in — Tryton')
 
 
-class Login(SaoEndpoint):
+class Login(CassiniEndpoint):
     'Cassini Login'
     __name__ = 'cassini.login'
     _url = '/login-request'
@@ -1440,7 +1440,7 @@ class Login(SaoEndpoint):
         return response
 
 
-class Logout(SaoEndpoint):
+class Logout(CassiniEndpoint):
     'Cassini Logout'
     __name__ = 'cassini.logout'
     _url = '/logout'
@@ -1464,7 +1464,7 @@ class Logout(SaoEndpoint):
         return response
 
 
-class Shell(SaoEndpoint):
+class Shell(CassiniEndpoint):
     'Cassini Shell'
     __name__ = 'cassini.shell'
     _url = '/app'
@@ -1830,7 +1830,7 @@ class Shell(SaoEndpoint):
             app, theme=shell_state.get('theme', 'light'))
 
 
-class VersionChanges(SaoEndpoint):
+class VersionChanges(CassiniEndpoint):
     'Dismiss Cassini Version Changes'
     __name__ = 'cassini.version.changes'
     _url = '/version-changes/<int:update>/<string:action>'
@@ -1867,7 +1867,7 @@ class VersionChanges(SaoEndpoint):
                 cls='vs-version-changes-host'))
 
 
-class ShellControl(SaoEndpoint):
+class ShellControl(CassiniEndpoint):
     'Update Cassini Shell State'
     __name__ = 'cassini.shell.control'
     _url = '/shell/<string:action>'
@@ -1926,7 +1926,7 @@ class ShellControl(SaoEndpoint):
         return Shell(render=False).render_app()
 
 
-class OpenNotification(SaoEndpoint):
+class OpenNotification(CassiniEndpoint):
     'Open a Tryton Notification'
     __name__ = 'cassini.open.notification'
     _url = '/notification/<int:notification>/open'
@@ -1983,7 +1983,7 @@ class OpenNotification(SaoEndpoint):
             headers)
 
 
-class OpenNotifications(SaoEndpoint):
+class OpenNotifications(CassiniEndpoint):
     'Open All Tryton Notifications'
     __name__ = 'cassini.open.notifications'
     _url = '/notifications/open'
@@ -2040,7 +2040,7 @@ def nan_popup_menu():
     return menu
 
 
-class HelpPanel(SaoEndpoint):
+class HelpPanel(CassiniEndpoint):
     'Cassini Help and Assistant Panel'
     __name__ = 'cassini.help.panel'
     _url = '/help'
@@ -2655,7 +2655,7 @@ class HelpPanel(SaoEndpoint):
             pass
 
 
-class HelpNanOptions(SaoEndpoint):
+class HelpNanOptions(CassiniEndpoint):
     'Refresh the NaN Options'
     __name__ = 'cassini.help.nan.options'
     _url = '/help/nans'
@@ -2664,7 +2664,7 @@ class HelpNanOptions(SaoEndpoint):
         return nan_popup_menu()
 
 
-class HelpSection(SaoEndpoint):
+class HelpSection(CassiniEndpoint):
     'Switch the Open Help Accordion Section'
     __name__ = 'cassini.help.section'
     _url = '/help/section/<string:section>'
@@ -2682,7 +2682,7 @@ class HelpSection(SaoEndpoint):
         return Pool().get('cassini.help.panel')().tag()
 
 
-class ChatRequest(SaoEndpoint):
+class ChatRequest(CassiniEndpoint):
     'Send a Request to Nantic Connection'
     __name__ = 'cassini.chat.request'
     _url = '/help/chat'
@@ -2758,7 +2758,7 @@ class ChatRequest(SaoEndpoint):
         return Pool().get('cassini.help.panel')().tag()
 
 
-class ChatRefresh(SaoEndpoint):
+class ChatRefresh(CassiniEndpoint):
     'Refresh the Nantic Connection Conversation'
     __name__ = 'cassini.chat.refresh'
     _url = '/help/chat/refresh'
@@ -2767,7 +2767,7 @@ class ChatRefresh(SaoEndpoint):
         return Pool().get('cassini.help.panel')().tag()
 
 
-class ChatNew(SaoEndpoint):
+class ChatNew(CassiniEndpoint):
     'Start a New Nantic Connection Conversation'
     __name__ = 'cassini.chat.new'
     _url = '/help/chat/new'
@@ -2782,7 +2782,7 @@ class ChatNew(SaoEndpoint):
         return Pool().get('cassini.help.panel')().tag()
 
 
-class ChatSelect(SaoEndpoint):
+class ChatSelect(CassiniEndpoint):
     'Select an Existing Assistant Conversation'
     __name__ = 'cassini.chat.select'
     _url = '/help/chat/select'
@@ -2812,7 +2812,7 @@ class ChatSelect(SaoEndpoint):
         return Pool().get('cassini.help.panel')().tag()
 
 
-class ChatTranscribe(SaoEndpoint):
+class ChatTranscribe(CassiniEndpoint):
     'Transcribe Assistant Audio Input'
     __name__ = 'cassini.chat.transcribe'
     _url = '/help/chat/transcribe'
@@ -2830,7 +2830,7 @@ class ChatTranscribe(SaoEndpoint):
             content_type='application/json')
 
 
-class ChatSpeech(SaoEndpoint):
+class ChatSpeech(CassiniEndpoint):
     'Read Assistant Text Aloud'
     __name__ = 'cassini.chat.speech'
     _url = '/help/chat/speech'
@@ -2848,7 +2848,7 @@ class ChatSpeech(SaoEndpoint):
         return Response(audio, content_type='audio/wav')
 
 
-class HelpDocumentation(SaoEndpoint):
+class HelpDocumentation(CassiniEndpoint):
     'Search and Open Contextual Help Documentation'
     __name__ = 'cassini.help.documentation'
     _url = '/help/documentation/<string:action>'
@@ -2882,7 +2882,7 @@ class HelpDocumentation(SaoEndpoint):
         return Pool().get('cassini.help.panel')().tag()
 
 
-class HelpUpdates(SaoEndpoint):
+class HelpUpdates(CassiniEndpoint):
     'Filter and Open Help Updates'
     __name__ = 'cassini.help.updates'
     _url = '/help/updates'
@@ -2910,7 +2910,7 @@ class HelpUpdates(SaoEndpoint):
         return Pool().get('cassini.help.panel')().tag()
 
 
-class WizardHelp(SaoEndpoint):
+class WizardHelp(CassiniEndpoint):
     'Toggle and Navigate Contextual Wizard Help'
     __name__ = 'cassini.wizard.help'
     _url = '/tab/<string:tab>/wizard/help/<string:action>'
@@ -2960,7 +2960,7 @@ class WizardHelp(SaoEndpoint):
         return workspace_response(engine)
 
 
-class HelpResource(SaoEndpoint):
+class HelpResource(CassiniEndpoint):
     'Open a Help Resource in the Workspace'
     __name__ = 'cassini.help.resource'
     _url = '/help/resource/<string:resource>'
@@ -3010,7 +3010,7 @@ class HelpResource(SaoEndpoint):
                         'cassini.activate.tab').url(tab=tab['id'])})
 
 
-class Menu(SaoEndpoint):
+class Menu(CassiniEndpoint):
     'Cassini Menu'
     __name__ = 'cassini.menu'
     _url = '/menu'
@@ -3157,7 +3157,7 @@ class Menu(SaoEndpoint):
         return item
 
 
-class ToggleMenuItem(SaoEndpoint):
+class ToggleMenuItem(CassiniEndpoint):
     'Toggle a Cassini Menu Branch'
     __name__ = 'cassini.toggle.menu.item'
     _url = '/menu/<int:menu>/toggle'
@@ -3181,7 +3181,7 @@ class ToggleMenuItem(SaoEndpoint):
         return Pool().get('cassini.menu')().tag()
 
 
-class ToggleMenuFavorite(SaoEndpoint):
+class ToggleMenuFavorite(CassiniEndpoint):
     'Toggle a Cassini Menu Favorite'
     __name__ = 'cassini.toggle.menu.favorite'
     _url = '/menu/<int:menu>/favorite/<string:action>'
@@ -3225,7 +3225,7 @@ class ToggleMenuFavorite(SaoEndpoint):
                 ])
 
 
-class Demo(SaoEndpoint):
+class Demo(CassiniEndpoint):
     'Cassini Stateful Component Demo'
     __name__ = 'cassini.demo'
     _url = '/demo'
@@ -3253,7 +3253,7 @@ class Demo(SaoEndpoint):
                         'its custom components, HTMX updates fragments and '
                         'the same workspace stores every draft.'),
                         cls='vs-muted')
-                a(_('Back to Sao'), href=Shell.url(), cls='vs-button')
+                a(_('Back to Cassini'), href=Shell.url(), cls='vs-button')
             with section(cls='vs-demo-grid'):
                 with article(cls='vs-demo-card'):
                     h2(_('Persistent draft'))
@@ -3361,7 +3361,7 @@ class Demo(SaoEndpoint):
             state.get('theme', 'light'))
 
 
-class DemoUpdate(SaoEndpoint):
+class DemoUpdate(CassiniEndpoint):
     'Update Cassini Component Demo'
     __name__ = 'cassini.demo.update'
     _url = '/demo/<string:action>'
@@ -3416,7 +3416,7 @@ class DemoUpdate(SaoEndpoint):
             render=False).render_demo()
 
 
-class GlobalSearch(SaoEndpoint):
+class GlobalSearch(CassiniEndpoint):
     'Cassini Global Search'
     __name__ = 'cassini.global.search'
     _url = '/global-search'
@@ -3558,7 +3558,7 @@ class GlobalSearch(SaoEndpoint):
         return search
 
 
-class GlobalSearchResults(SaoEndpoint):
+class GlobalSearchResults(CassiniEndpoint):
     'Update Cassini Global Search Results'
     __name__ = 'cassini.global.search.results'
     _url = '/global-search/results'
@@ -3569,7 +3569,7 @@ class GlobalSearchResults(SaoEndpoint):
         return GlobalSearch.render_results(self)
 
 
-class OpenMenu(SaoEndpoint):
+class OpenMenu(CassiniEndpoint):
     'Open Cassini Menu'
     __name__ = 'cassini.open.menu'
     _url = '/open/menu/<int:menu>'
@@ -3594,7 +3594,7 @@ class OpenMenu(SaoEndpoint):
                 'HX-Push-Url': ActivateTab.url(tab=tab['id'])})
 
 
-class OpenResource(SaoEndpoint):
+class OpenResource(CassiniEndpoint):
     'Open Cassini Resource'
     __name__ = 'cassini.open.resource'
     _url = '/open/<string:model>/<int:record>'
@@ -3614,7 +3614,7 @@ class OpenResource(SaoEndpoint):
                 'HX-Push-Url': ActivateTab.url(tab=tab['id'])})
 
 
-class OpenRelationRecord(SaoEndpoint):
+class OpenRelationRecord(CassiniEndpoint):
     'Open a Cassini Relation Record in a Dialog'
     __name__ = 'cassini.open.relation.record'
     _url = (
@@ -3665,7 +3665,7 @@ class OpenRelationRecord(SaoEndpoint):
         return workspace_response(engine)
 
 
-class OpenAction(SaoEndpoint):
+class OpenAction(CassiniEndpoint):
     'Open Cassini Action'
     __name__ = 'cassini.open.action'
     _url = '/open/action/<int:action>'
@@ -3704,7 +3704,7 @@ class OpenAction(SaoEndpoint):
                 'HX-Push-Url': ActivateTab.url(tab=tab['id'])})
 
 
-class ShareTab(SaoEndpoint):
+class ShareTab(CassiniEndpoint):
     'Open a Portable Cassini Tab'
     __name__ = 'cassini.share.tab'
     _url = '/share/<string:payload>'
@@ -3727,7 +3727,7 @@ class ShareTab(SaoEndpoint):
                 })
 
 
-class OpenRelated(SaoEndpoint):
+class OpenRelated(CassiniEndpoint):
     'Open Cassini Related Resource'
     __name__ = 'cassini.open.related'
     _url = '/tab/<string:tab>/related/<string:resource>'
@@ -3748,7 +3748,7 @@ class OpenRelated(SaoEndpoint):
                     tab=related_tab['id'])})
 
 
-class AttachmentUpload(SaoEndpoint):
+class AttachmentUpload(CassiniEndpoint):
     'Upload Cassini Attachments'
     __name__ = 'cassini.attachment.upload'
     _url = '/tab/<string:tab>/attachments/upload'
@@ -3787,7 +3787,7 @@ class AttachmentUpload(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class AttachmentData(SaoEndpoint):
+class AttachmentData(CassiniEndpoint):
     'Read a Cassini Attachment'
     __name__ = 'cassini.attachment.data'
     _url = '/tab/<string:tab>/attachment/<int:attachment>/data'
@@ -3829,7 +3829,7 @@ class AttachmentData(SaoEndpoint):
         return response
 
 
-class AttachmentPreview(SaoEndpoint):
+class AttachmentPreview(CassiniEndpoint):
     'Preview Cassini Attachments'
     __name__ = 'cassini.attachment.preview'
     _url = '/tab/<string:tab>/attachments/preview'
@@ -3860,7 +3860,7 @@ class AttachmentPreview(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class AttachmentPreviewNavigate(SaoEndpoint):
+class AttachmentPreviewNavigate(CassiniEndpoint):
     'Navigate Cassini Attachment Preview'
     __name__ = 'cassini.attachment.preview.navigate'
     _url = '/tab/<string:tab>/attachments/preview/<string:direction>'
@@ -3899,7 +3899,7 @@ class AttachmentPreviewNavigate(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class ActivateTab(SaoEndpoint):
+class ActivateTab(CassiniEndpoint):
     'Activate Cassini Tab'
     __name__ = 'cassini.activate.tab'
     _url = '/tab/<string:tab>'
@@ -3921,7 +3921,7 @@ class ActivateTab(SaoEndpoint):
                     'cassini.activate.tab').url(tab=self.tab)})
 
 
-class CloseTab(SaoEndpoint):
+class CloseTab(CassiniEndpoint):
     'Close Cassini Tab'
     __name__ = 'cassini.close.tab'
     _url = '/tab/<string:tab>/close'
@@ -3943,7 +3943,7 @@ class CloseTab(SaoEndpoint):
                 'HX-Push-Url': active_workspace_url(engine)})
 
 
-class ResolveUnsavedChanges(SaoEndpoint):
+class ResolveUnsavedChanges(CassiniEndpoint):
     'Resolve Unsaved Changes before Leaving a Record'
     __name__ = 'cassini.resolve.unsaved.changes'
     _url = '/tab/<string:tab>/leave/<string:action>'
@@ -3994,7 +3994,7 @@ class ResolveUnsavedChanges(SaoEndpoint):
                     'modal', div(id='modal', cls='vs-modal-host'))])
 
 
-class SwitchView(SaoEndpoint):
+class SwitchView(CassiniEndpoint):
     'Switch Cassini View'
     __name__ = 'cassini.switch.view'
     _url = '/tab/<string:tab>/view/<string:view>'
@@ -4014,7 +4014,7 @@ class SwitchView(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class SwitchDomain(SaoEndpoint):
+class SwitchDomain(CassiniEndpoint):
     'Switch Cassini Domain'
     __name__ = 'cassini.switch.domain'
     _url = '/tab/<string:tab>/domain/<int:domain>'
@@ -4029,7 +4029,7 @@ class SwitchDomain(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class SwitchPage(SaoEndpoint):
+class SwitchPage(CassiniEndpoint):
     'Switch Cassini Notebook Page'
     __name__ = 'cassini.switch.page'
     _url = (
@@ -4045,7 +4045,7 @@ class SwitchPage(SaoEndpoint):
         return Response('', status=204)
 
 
-class NotebookPage(SaoEndpoint):
+class NotebookPage(CassiniEndpoint):
     'Cassini Notebook Page'
     __name__ = 'cassini.notebook.page'
     _url = (
@@ -4066,7 +4066,7 @@ class NotebookPage(SaoEndpoint):
                     tab, self.record, self.notebook, self.page))
 
 
-class Search(SaoEndpoint):
+class Search(CassiniEndpoint):
     'Search Cassini View'
     __name__ = 'cassini.search'
     _url = '/tab/<string:tab>/search'
@@ -4094,7 +4094,7 @@ class Search(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class SearchDraft(SaoEndpoint):
+class SearchDraft(CassiniEndpoint):
     'Update Cassini Search Draft'
     __name__ = 'cassini.search.draft'
     _url = '/tab/<string:tab>/search/draft'
@@ -4117,7 +4117,7 @@ class SearchDraft(SaoEndpoint):
                 ], stream=True)
 
 
-class SearchBookmarkDialog(SaoEndpoint):
+class SearchBookmarkDialog(CassiniEndpoint):
     'Create Cassini Search Bookmark Dialog'
     __name__ = 'cassini.search.bookmark.dialog'
     _url = '/tab/<string:tab>/search/bookmark'
@@ -4158,7 +4158,7 @@ class SearchBookmarkDialog(SaoEndpoint):
         return backdrop
 
 
-class SaveSearchBookmark(SaoEndpoint):
+class SaveSearchBookmark(CassiniEndpoint):
     'Save Cassini Search Bookmark'
     __name__ = 'cassini.save.search.bookmark'
     _url = '/tab/<string:tab>/search/bookmark/save'
@@ -4173,7 +4173,7 @@ class SaveSearchBookmark(SaoEndpoint):
         return screen_and_close_modal_response(self.engine, tab)
 
 
-class DeleteSearchBookmark(SaoEndpoint):
+class DeleteSearchBookmark(CassiniEndpoint):
     'Delete Cassini Search Bookmark'
     __name__ = 'cassini.delete.search.bookmark'
     _url = '/tab/<string:tab>/search/bookmark/<int:bookmark>/delete'
@@ -4188,7 +4188,7 @@ class DeleteSearchBookmark(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class ApplySearchBookmark(SaoEndpoint):
+class ApplySearchBookmark(CassiniEndpoint):
     'Apply Cassini Search Bookmark'
     __name__ = 'cassini.apply.search.bookmark'
     _url = '/tab/<string:tab>/search/bookmark/<int:bookmark>'
@@ -4203,7 +4203,7 @@ class ApplySearchBookmark(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class ToggleActive(SaoEndpoint):
+class ToggleActive(CassiniEndpoint):
     'Toggle Active Cassini Records'
     __name__ = 'cassini.toggle.active'
     _url = '/tab/<string:tab>/search/active'
@@ -4217,7 +4217,7 @@ class ToggleActive(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class PageRecords(SaoEndpoint):
+class PageRecords(CassiniEndpoint):
     'Page Cassini Records'
     __name__ = 'cassini.page.records'
     _url = '/tab/<string:tab>/page/<string:direction>'
@@ -4232,7 +4232,7 @@ class PageRecords(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class CountRecords(SaoEndpoint):
+class CountRecords(CassiniEndpoint):
     'Count All Cassini Records'
     __name__ = 'cassini.count.records'
     _url = '/tab/<string:tab>/records/count'
@@ -4245,7 +4245,7 @@ class CountRecords(SaoEndpoint):
         return html_response(ViewRenderer(self.engine.interface).toolbar(tab))
 
 
-class LoadTreeRecords(SaoEndpoint):
+class LoadTreeRecords(CassiniEndpoint):
     'Load More Cassini Tree Records'
     __name__ = 'cassini.load.tree.records'
     _url = '/tab/<string:tab>/tree/records'
@@ -4295,7 +4295,7 @@ class LoadTreeRecords(SaoEndpoint):
         return html_response(fragment)
 
 
-class NavigateCalendar(SaoEndpoint):
+class NavigateCalendar(CassiniEndpoint):
     'Navigate Cassini Calendar'
     __name__ = 'cassini.navigate.calendar'
     _url = '/tab/<string:tab>/calendar/<string:direction>'
@@ -4310,7 +4310,7 @@ class NavigateCalendar(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class SetCalendarMode(SaoEndpoint):
+class SetCalendarMode(CassiniEndpoint):
     'Set Cassini Calendar Mode'
     __name__ = 'cassini.set.calendar.mode'
     _url = '/tab/<string:tab>/calendar/mode/<string:mode>'
@@ -4325,7 +4325,7 @@ class SetCalendarMode(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class NewCalendarRecord(SaoEndpoint):
+class NewCalendarRecord(CassiniEndpoint):
     'Create a Cassini Calendar Record'
     __name__ = 'cassini.new.calendar.record'
     _url = '/tab/<string:tab>/calendar/day/<string:day>/new'
@@ -4352,7 +4352,7 @@ class NewCalendarRecord(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class MoveCalendarRecord(SaoEndpoint):
+class MoveCalendarRecord(CassiniEndpoint):
     'Move a Cassini Calendar Record'
     __name__ = 'cassini.move.calendar.record'
     _url = (
@@ -4371,7 +4371,7 @@ class MoveCalendarRecord(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class SortRecords(SaoEndpoint):
+class SortRecords(CassiniEndpoint):
     'Sort Cassini Records'
     __name__ = 'cassini.sort.records'
     _url = '/tab/<string:tab>/sort/<string:field>'
@@ -4386,7 +4386,7 @@ class SortRecords(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class ToggleColumn(SaoEndpoint):
+class ToggleColumn(CassiniEndpoint):
     'Toggle Cassini Optional Column'
     __name__ = 'cassini.toggle.column'
     _url = '/tab/<string:tab>/column/<string:field>'
@@ -4403,7 +4403,7 @@ class ToggleColumn(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class ResizeTreeColumns(SaoEndpoint):
+class ResizeTreeColumns(CassiniEndpoint):
     'Resize Cassini Tree Columns'
     __name__ = 'cassini.resize.tree.columns'
     _url = '/tree/columns/width'
@@ -4455,7 +4455,7 @@ class ResizeTreeColumns(SaoEndpoint):
         return Response('', status=204)
 
 
-class ToggleTreeNode(SaoEndpoint):
+class ToggleTreeNode(CassiniEndpoint):
     'Toggle Cassini Tree Node'
     __name__ = 'cassini.toggle.tree.node'
     _url = '/tab/<string:tab>/tree/<string:record>/toggle'
@@ -4470,7 +4470,7 @@ class ToggleTreeNode(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class MoveTreeRecord(SaoEndpoint):
+class MoveTreeRecord(CassiniEndpoint):
     'Move a Cassini Tree Record'
     __name__ = 'cassini.move.tree.record'
     _url = '/tab/<string:tab>/tree/move'
@@ -4488,7 +4488,7 @@ class MoveTreeRecord(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class NewRecord(SaoEndpoint):
+class NewRecord(CassiniEndpoint):
     'New Cassini Record'
     __name__ = 'cassini.new.record'
     _url = '/tab/<string:tab>/record/new'
@@ -4506,7 +4506,7 @@ class NewRecord(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class SelectRecord(SaoEndpoint):
+class SelectRecord(CassiniEndpoint):
     'Select Cassini Record'
     __name__ = 'cassini.select.record'
     _url = '/tab/<string:tab>/record/<string:record>/select'
@@ -4586,7 +4586,7 @@ class SelectRecord(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class SelectAllRecords(SaoEndpoint):
+class SelectAllRecords(CassiniEndpoint):
     'Select All Cassini Records'
     __name__ = 'cassini.select.all.records'
     _url = '/tab/<string:tab>/records/select'
@@ -4601,7 +4601,7 @@ class SelectAllRecords(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class SelectNeighbor(SaoEndpoint):
+class SelectNeighbor(CassiniEndpoint):
     'Select Previous or Next Cassini Record'
     __name__ = 'cassini.select.neighbor'
     _url = '/tab/<string:tab>/record/<string:direction>'
@@ -4621,7 +4621,7 @@ class SelectNeighbor(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class RelationAutocomplete(SaoEndpoint):
+class RelationAutocomplete(CassiniEndpoint):
     'Autocomplete a Cassini Relation'
     __name__ = 'cassini.relation.autocomplete'
     _url = (
@@ -4707,7 +4707,7 @@ class RelationAutocomplete(SaoEndpoint):
             input_id=field_id + '-input')
 
 
-class ReferenceAutocomplete(SaoEndpoint):
+class ReferenceAutocomplete(CassiniEndpoint):
     'Autocomplete a Cassini Reference'
     __name__ = 'cassini.reference.autocomplete'
     _url = (
@@ -4761,7 +4761,7 @@ class ReferenceAutocomplete(SaoEndpoint):
         return html_response(suggestions)
 
 
-class RelationSearch(SaoEndpoint):
+class RelationSearch(CassiniEndpoint):
     'Search and Select a Cassini Relation'
     __name__ = 'cassini.relation.search'
     _url = (
@@ -5101,7 +5101,7 @@ class RelationSearch(SaoEndpoint):
         return backdrop
 
 
-class OpenRelationNew(SaoEndpoint):
+class OpenRelationNew(CassiniEndpoint):
     'Create a Record for a Cassini Relation'
     __name__ = 'cassini.open.relation.new'
     _url = (
@@ -5259,7 +5259,7 @@ class OpenRelationNew(SaoEndpoint):
                     'modal', div(id='modal', cls='vs-modal-host'))])
 
 
-class X2ManyAction(SaoEndpoint):
+class X2ManyAction(CassiniEndpoint):
     'Operate a Cassini One2Many or Many2Many Widget'
     __name__ = 'cassini.x2many.action'
     _url = (
@@ -5629,7 +5629,7 @@ class X2ManyAction(SaoEndpoint):
             fragments, stream=len(fragments) > 2)
 
 
-class UpdateX2ManyField(SaoEndpoint):
+class UpdateX2ManyField(CassiniEndpoint):
     'Update a Field in an Embedded Cassini X2Many View'
     __name__ = 'cassini.update.x2many.field'
     _url = (
@@ -5875,7 +5875,7 @@ class UpdateX2ManyField(SaoEndpoint):
             all_out_of_band=True)
 
 
-class UpdateField(SaoEndpoint):
+class UpdateField(CassiniEndpoint):
     'Update Cassini Field'
     __name__ = 'cassini.update.field'
     _url = (
@@ -6011,7 +6011,7 @@ class UpdateField(SaoEndpoint):
             all_out_of_band=True)
 
 
-class ScanCode(SaoEndpoint):
+class ScanCode(CassiniEndpoint):
     'Scan a Code into a Cassini Form'
     __name__ = 'cassini.scan.code'
     _url = '/tab/<string:tab>/record/<string:record>/scan'
@@ -6034,7 +6034,7 @@ class ScanCode(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class SaveRecord(SaoEndpoint):
+class SaveRecord(CassiniEndpoint):
     'Save Cassini Record'
     __name__ = 'cassini.save.record'
     _url = '/tab/<string:tab>/record/<string:record>/save'
@@ -6077,7 +6077,7 @@ class SaveRecord(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class SaveRecords(SaoEndpoint):
+class SaveRecords(CassiniEndpoint):
     'Save Cassini Records'
     __name__ = 'cassini.save.records'
     _url = '/tab/<string:tab>/records/save'
@@ -6117,7 +6117,7 @@ class SaveRecords(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class DeleteRecord(SaoEndpoint):
+class DeleteRecord(CassiniEndpoint):
     'Delete Cassini Record'
     __name__ = 'cassini.delete.record'
     _url = '/tab/<string:tab>/record/<string:record>/delete'
@@ -6132,7 +6132,7 @@ class DeleteRecord(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class DeleteRecords(SaoEndpoint):
+class DeleteRecords(CassiniEndpoint):
     'Delete Cassini Records'
     __name__ = 'cassini.delete.records'
     _url = '/tab/<string:tab>/records/delete'
@@ -6146,7 +6146,7 @@ class DeleteRecords(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class RevertRecord(SaoEndpoint):
+class RevertRecord(CassiniEndpoint):
     'Revert Cassini Record'
     __name__ = 'cassini.revert.record'
     _url = '/tab/<string:tab>/record/<string:record>/revert'
@@ -6161,7 +6161,7 @@ class RevertRecord(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class DuplicateRecord(SaoEndpoint):
+class DuplicateRecord(CassiniEndpoint):
     'Duplicate Cassini Record'
     __name__ = 'cassini.duplicate.record'
     _url = '/tab/<string:tab>/duplicate'
@@ -6180,7 +6180,7 @@ class DuplicateRecord(SaoEndpoint):
         return screen_response(engine, tab)
 
 
-class ReloadTab(SaoEndpoint):
+class ReloadTab(CassiniEndpoint):
     'Reload Cassini Tab'
     __name__ = 'cassini.reload.tab'
     _url = '/tab/<string:tab>/reload'
@@ -6194,7 +6194,7 @@ class ReloadTab(SaoEndpoint):
         return screen_response(self.engine, tab)
 
 
-class RunButton(SaoEndpoint):
+class RunButton(CassiniEndpoint):
     'Run Cassini Button'
     __name__ = 'cassini.run.button'
     _url = '/tab/<string:tab>/button/<string:button>'
@@ -6213,7 +6213,7 @@ class RunButton(SaoEndpoint):
                 'HX-Push-Url': active_workspace_url(engine)})
 
 
-class RunToolbarAction(SaoEndpoint):
+class RunToolbarAction(CassiniEndpoint):
     'Run Cassini Toolbar Action'
     __name__ = 'cassini.toolbar.action'
     _url = '/tab/<string:tab>/action/<int:action>'
@@ -6241,7 +6241,7 @@ class RunToolbarAction(SaoEndpoint):
                 'HX-Push-Url': active_workspace_url(engine)})
 
 
-class ShowCSVExport(SaoEndpoint):
+class ShowCSVExport(CassiniEndpoint):
     'Show Cassini CSV Export'
     __name__ = 'cassini.csv.export.show'
     _url = '/tab/<string:tab>/export/dialog'
@@ -6254,7 +6254,7 @@ class ShowCSVExport(SaoEndpoint):
         return html_response(csv_dialog(self.engine, tab, 'export'))
 
 
-class ShowCSVImport(SaoEndpoint):
+class ShowCSVImport(CassiniEndpoint):
     'Show Cassini CSV Import'
     __name__ = 'cassini.csv.import.show'
     _url = '/tab/<string:tab>/import/dialog'
@@ -6269,7 +6269,7 @@ class ShowCSVImport(SaoEndpoint):
         return html_response(csv_dialog(self.engine, tab, 'import'))
 
 
-class CSVRelationFields(SaoEndpoint):
+class CSVRelationFields(CassiniEndpoint):
     'Cassini CSV Relation Fields'
     __name__ = 'cassini.csv.relation.fields'
     _url = '/tab/<string:tab>/csv/fields'
@@ -6295,7 +6295,7 @@ class CSVRelationFields(SaoEndpoint):
         return html_response(host)
 
 
-class AutodetectCSVImport(SaoEndpoint):
+class AutodetectCSVImport(CassiniEndpoint):
     'Autodetect Cassini CSV Import'
     __name__ = 'cassini.csv.import.autodetect'
     _url = '/tab/<string:tab>/import/autodetect'
@@ -6310,7 +6310,7 @@ class AutodetectCSVImport(SaoEndpoint):
         if not uploaded or not uploaded.filename:
             raise ValueError(_('You must select an import file first.'))
         encoding = request.form.get('encoding') or 'utf-8'
-        delimiter, quotechar = SaoEngine._csv_parameters(
+        delimiter, quotechar = CassiniEngine._csv_parameters(
             request.form.get('delimiter'), request.form.get('quotechar'))
         try:
             codecs.lookup(encoding)
@@ -6338,7 +6338,7 @@ class AutodetectCSVImport(SaoEndpoint):
             {'HX-Trigger': json.dumps({'cassini-csv-autodetected': {}})})
 
 
-class SaveCSVExport(SaoEndpoint):
+class SaveCSVExport(CassiniEndpoint):
     'Save Cassini CSV Export'
     __name__ = 'cassini.csv.export.save'
     _url = '/tab/<string:tab>/export/save'
@@ -6381,7 +6381,7 @@ class SaveCSVExport(SaoEndpoint):
         return html_response(csv_dialog(self.engine, tab, 'export'))
 
 
-class DeleteCSVExport(SaoEndpoint):
+class DeleteCSVExport(CassiniEndpoint):
     'Delete Cassini CSV Export'
     __name__ = 'cassini.csv.export.delete'
     _url = '/tab/<string:tab>/export/delete'
@@ -6403,7 +6403,7 @@ class DeleteCSVExport(SaoEndpoint):
         return html_response(csv_dialog(self.engine, tab, 'export'))
 
 
-class CloseCSVDialog(SaoEndpoint):
+class CloseCSVDialog(CassiniEndpoint):
     'Close Cassini CSV Dialog'
     __name__ = 'cassini.csv.dialog.close'
     _url = '/tab/<string:tab>/csv/close'
@@ -6416,7 +6416,7 @@ class CloseCSVDialog(SaoEndpoint):
         return screen_and_close_modal_response(self.engine, tab)
 
 
-class ExportRecords(SaoEndpoint):
+class ExportRecords(CassiniEndpoint):
     'Export Cassini Records'
     __name__ = 'cassini.export.records'
     _url = '/tab/<string:tab>/export'
@@ -6441,7 +6441,7 @@ class ExportRecords(SaoEndpoint):
             locale_format=bool(request.args.get('locale')))
 
 
-class ImportRecords(SaoEndpoint):
+class ImportRecords(CassiniEndpoint):
     'Import Cassini Records'
     __name__ = 'cassini.import.records'
     _url = '/tab/<string:tab>/import'
@@ -6465,7 +6465,7 @@ class ImportRecords(SaoEndpoint):
         return screen_and_close_modal_response(self.engine, tab)
 
 
-class ShowRevisions(SaoEndpoint):
+class ShowRevisions(CassiniEndpoint):
     'Show Cassini Revisions'
     __name__ = 'cassini.show.revisions'
     _url = '/tab/<string:tab>/revisions'
@@ -6478,7 +6478,7 @@ class ShowRevisions(SaoEndpoint):
         return revision_dialog(tab)
 
 
-class CloseRevisions(SaoEndpoint):
+class CloseRevisions(CassiniEndpoint):
     'Close Cassini Revisions'
     __name__ = 'cassini.close.revisions'
     _url = '/tab/<string:tab>/revisions/close'
@@ -6491,7 +6491,7 @@ class CloseRevisions(SaoEndpoint):
         return Response('', content_type='text/html')
 
 
-class SetRevision(SaoEndpoint):
+class SetRevision(CassiniEndpoint):
     'Set Cassini Revision'
     __name__ = 'cassini.set.revision'
     _url = '/tab/<string:tab>/revision/<string:revision>'
@@ -6511,7 +6511,7 @@ class SetRevision(SaoEndpoint):
             extra_fragments=[Fragment('modal', empty_modal)])
 
 
-class Preferences(SaoEndpoint):
+class Preferences(CassiniEndpoint):
     'Cassini Preferences'
     __name__ = 'cassini.preferences'
     _url = '/preferences'
@@ -6654,7 +6654,7 @@ class Preferences(SaoEndpoint):
         return self.render_preferences(engine)
 
 
-class SwitchPreferencePage(SaoEndpoint):
+class SwitchPreferencePage(CassiniEndpoint):
     'Switch Cassini Preferences Notebook Page'
     __name__ = 'cassini.switch.preference.page'
     _url = (
@@ -6681,7 +6681,7 @@ class SwitchPreferencePage(SaoEndpoint):
         return Response('', status=204)
 
 
-class SavePreferences(SaoEndpoint):
+class SavePreferences(CassiniEndpoint):
     'Save Cassini Preferences'
     __name__ = 'cassini.save.preferences'
     _url = '/preferences/save'
@@ -6741,7 +6741,7 @@ class SavePreferences(SaoEndpoint):
             code=303)
 
 
-class ClosePreferences(SaoEndpoint):
+class ClosePreferences(CassiniEndpoint):
     'Close Cassini Preferences'
     __name__ = 'cassini.close.preferences'
     _url = '/preferences/close'
@@ -6752,7 +6752,7 @@ class ClosePreferences(SaoEndpoint):
         return Response('', content_type='text/html')
 
 
-class PreferenceBinary(SaoEndpoint):
+class PreferenceBinary(CassiniEndpoint):
     'Cassini Preference Binary'
     __name__ = 'cassini.preference.binary'
     _url = '/preferences/binary/<string:field>'
@@ -6792,7 +6792,7 @@ class PreferenceBinary(SaoEndpoint):
         return response
 
 
-class UpdatePreferenceField(SaoEndpoint):
+class UpdatePreferenceField(CassiniEndpoint):
     'Update Cassini Preference Field'
     __name__ = 'cassini.update.preference.field'
     _url = '/preferences/field/<string:field>'
@@ -6865,7 +6865,7 @@ class UpdatePreferenceField(SaoEndpoint):
             all_out_of_band=True)
 
 
-class UpdateWizardField(SaoEndpoint):
+class UpdateWizardField(CassiniEndpoint):
     'Update Cassini Wizard Field'
     __name__ = 'cassini.update.wizard.field'
     _url = '/tab/<string:tab>/wizard/field/<string:field>'
@@ -6929,7 +6929,7 @@ class UpdateWizardField(SaoEndpoint):
             all_out_of_band=True)
 
 
-class WizardStep(SaoEndpoint):
+class WizardStep(CassiniEndpoint):
     'Continue Cassini Wizard'
     __name__ = 'cassini.wizard.step'
     _url = '/tab/<string:tab>/wizard/<string:state>'
@@ -6984,7 +6984,7 @@ class WizardStep(SaoEndpoint):
         return workspace_response(engine, headers)
 
 
-class ReportDownload(SaoEndpoint):
+class ReportDownload(CassiniEndpoint):
     'Download Cassini Report'
     __name__ = 'cassini.report.download'
     _url = '/report/<string:key>'
@@ -6996,7 +6996,7 @@ class ReportDownload(SaoEndpoint):
         return self.engine.download_report(self.key)
 
 
-class DownloadBinary(SaoEndpoint):
+class DownloadBinary(CassiniEndpoint):
     'Download Cassini Binary'
     __name__ = 'cassini.download.binary'
     _url = (
@@ -7013,7 +7013,7 @@ class DownloadBinary(SaoEndpoint):
             self.tab, self.record, self.field, inline=self.inline)
 
 
-class DownloadX2ManyBinary(SaoEndpoint):
+class DownloadX2ManyBinary(CassiniEndpoint):
     'Download Cassini X2Many Binary'
     __name__ = 'cassini.download.x2many.binary'
     _url = (
@@ -7078,7 +7078,7 @@ class DownloadX2ManyBinary(SaoEndpoint):
             content, filename or self.child, inline=self.inline)
 
 
-class StateComponent(SaoEndpoint):
+class StateComponent(CassiniEndpoint):
     """Render a registered custom component from its persistent state."""
     'Cassini State Component'
     __name__ = 'cassini.state.component'
@@ -7105,7 +7105,7 @@ class StateComponent(SaoEndpoint):
         return wrapper
 
 
-class UpdateStateComponent(SaoEndpoint):
+class UpdateStateComponent(CassiniEndpoint):
     """Merge JSON state and return only the affected custom component."""
     'Update Cassini State Component'
     __name__ = 'cassini.update.state.component'
