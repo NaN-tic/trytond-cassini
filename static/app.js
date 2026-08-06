@@ -2701,24 +2701,45 @@
                     'input[name="value"]:checked');
             }
         }
-        const preferenceTab = event.target.closest(
-            "[data-preference-notebook-tab][role='tab']");
-        if (preferenceTab) {
-            const notebook = preferenceTab.closest(".vs-notebook");
-            const page = preferenceTab.dataset.preferenceNotebookPage;
+        const notebookTab = event.target.closest(
+            "[data-notebook][data-notebook-page][role='tab']");
+        if (notebookTab) {
+            const notebook = notebookTab.closest(".vs-notebook");
+            const notebookId = notebookTab.dataset.notebook;
+            const page = notebookTab.dataset.notebookPage;
+            const wasSelected =
+                notebookTab.getAttribute("aria-selected") === "true";
+            let selectedPanel = null;
             for (const button of notebook.querySelectorAll(
-                    "[data-preference-notebook-tab][role='tab']")) {
+                    "[data-notebook][data-notebook-page][role='tab']")) {
+                if (button.dataset.notebook !== notebookId) {
+                    continue;
+                }
                 const selected =
-                    button.dataset.preferenceNotebookPage === page;
+                    button.dataset.notebookPage === page;
                 button.setAttribute(
                     "aria-selected", selected ? "true" : "false");
                 button.closest(".vs-local-tab")?.classList.toggle(
                     "vs-local-tab-active", selected);
             }
             for (const panel of notebook.querySelectorAll(
-                    "[data-preference-notebook-tab][role='tabpanel']")) {
-                panel.hidden =
-                    panel.dataset.preferenceNotebookPage !== page;
+                    "[data-notebook][data-notebook-page][role='tabpanel']")) {
+                if (panel.dataset.notebook === notebookId) {
+                    panel.hidden = panel.dataset.notebookPage !== page;
+                    if (!panel.hidden) {
+                        selectedPanel = panel;
+                    }
+                }
+            }
+            if (!wasSelected && notebookTab.dataset.notebookSwitchUrl &&
+                    !selectedPanel?.querySelector(
+                        "[data-notebook-page-loader]")) {
+                window.htmx.ajax(
+                    "POST", notebookTab.dataset.notebookSwitchUrl, {
+                        source: notebookTab,
+                        target: notebookTab,
+                        swap: "none",
+                    });
             }
         }
         for (const popup of document.querySelectorAll(

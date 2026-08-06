@@ -2513,6 +2513,97 @@ class ViewRenderer:
                 row_start=2 if root.attrib.get('scan_code') else 1)
         return tag
 
+    def notebook_page(self, tab, record_key, notebook, page_index):
+        if not tab or tab.get('kind') not in {'window', 'wizard'}:
+            raise ValueError(_('Unknown notebook page'))
+        view = decode_value(tab.get('view', {}))
+        root = parse_architecture(view)
+        if tab['kind'] == 'wizard':
+            render_tab = {
+                'id': tab['id'],
+                'model': view.get('model'),
+                'kind': 'wizard',
+                'pages': tab.get('pages', {}),
+                'screen_width': self.interface.data.get('screen_width'),
+                }
+            record = {
+                'key': 'wizard',
+                'id': None,
+                'values': decode_value(tab.get('values', {})),
+                'new': True,
+                'x2many': tab.setdefault('x2many', {}),
+                }
+            renderer = WidgetRenderer(
+                render_tab, record, view, editable=True, endpoint='wizard')
+        else:
+            render_tab = tab
+            record = next((
+                        record
+                        for key, record in tab.get('records', {}).items()
+                        if str(key) == str(record_key)), None)
+            if record is None:
+                raise ValueError(_('Unknown notebook page'))
+            access = tab.get('access', {})
+            editable = (
+                access.get('create', True) if record.get('new')
+                else access.get('write', True))
+            editable = editable and not decode_value(
+                tab.get('context', {})).get('_datetime')
+            renderer = WidgetRenderer(
+                render_tab, record, view, editable=editable)
+
+        path = notebook.removeprefix('n-').split('-')
+        if (
+                not notebook.startswith('n-')
+                or not path
+                or any(not item.isdigit() for item in path)):
+            raise ValueError(_('Unknown notebook page'))
+        node = root
+        inherited_readonly = False
+        try:
+            for item in path:
+                index = int(item)
+                if node.tag == 'notebook':
+                    children = [
+                        child for child in node
+                        if child.tag == 'page'
+                        and (
+                            not render_tab.get('exclude_field')
+                            or child.attrib.get('name')
+                            != render_tab['exclude_field'])
+                        and not renderer.states(
+                            {}, dict(child.attrib))[2]
+                        ]
+                    node = children[index]
+                else:
+                    node = node[index]
+                readonly, _required, _invisible = renderer.states(
+                    {}, dict(node.attrib))
+                inherited_readonly = inherited_readonly or readonly
+        except (IndexError, TypeError):
+            raise ValueError(_('Unknown notebook page')) from None
+        if node.tag != 'notebook':
+            raise ValueError(_('Unknown notebook page'))
+        pages = [
+            page for page in node
+            if page.tag == 'page'
+            and (
+                not render_tab.get('exclude_field')
+                or page.attrib.get('name') != render_tab['exclude_field'])
+            and not renderer.states({}, dict(page.attrib))[2]
+            ]
+        if page_index < 0 or page_index >= len(pages):
+            raise ValueError(_('Unknown notebook page'))
+        page = pages[page_index]
+        with div(
+                cls='vs-notebook-page-widget',
+                style='display:contents') as widget:
+            self.form_children(
+                widget, page, renderer, render_tab, record,
+                tuple(map(int, path)) + (page_index,),
+                inherited_readonly, page.attrib.get('col', 4))
+        return widget
+
     def form_children(
             self, parent, node, renderer, tab, record, path=(),
             inherited_readonly=False, columns=4, row_start=1):
@@ -2703,6 +2794,7 @@ class ViewRenderer:
                 SwitchPage = self.pool.get('cassini.switch.page')
                 SwitchPreferencePage = self.pool.get(
                     'cassini.switch.preference.page')
+                NotebookPage = self.pool.get('cassini.notebook.page')
                 with section(
                         cls='vs-notebook',
                         style=layout_style) as notebook:
@@ -2742,31 +2834,35 @@ class ViewRenderer:
                                                         page=page_index)
                                                     if notebook_kind
                                                     == 'preferences'
-                                                    else SwitchPage.url(
-                                                        tab=tab['id'],
-                                                        notebook=notebook_id,
-                                                        page=page_index)),
+                                                    else None),
                                                 hx_target=(
                                                     'this'
                                                     if notebook_kind
                                                     == 'preferences'
-                                                    else '#screen-' + tab['id']
-                                                    if notebook_kind
-                                                    == 'window'
-                                                    else '#wizard-'
-                                                    + tab['id']),
+                                                    else None),
                                                 hx_swap=(
                                                     'none'
                                                     if notebook_kind
                                                     == 'preferences'
-                                                    else 'outerHTML'),
+                                                    else None),
+                                                data_notebook=notebook_id,
+                                                data_notebook_page=str(
+                                                    page_index),
+                                                data_notebook_switch_url=(
+                                                    SwitchPage.url(
+                                                        tab=tab['id'],
+                                                        notebook=notebook_id,
+                                                        page=page_index)
+                                                    if notebook_kind in {
+                                                        'window', 'wizard'}
+                                                    else None),
                                                 data_preference_notebook_tab=(
                                                     notebook_id
                                                     if notebook_kind
                                                     == 'preferences'
                                                     else None),
                                                 data_preference_notebook_page=(
-                                                    page_index
+                                                    str(page_index)
                                                     if notebook_kind
                                                     == 'preferences'
                                                     else None)):
@@ -2780,25 +2876,40 @@ class ViewRenderer:
                                                 or _('Page %(page)d') % {
                                                     'page': page_index + 1})
                     if pages and notebook_kind in {'window', 'wizard'}:
-                        page = pages[active]
-                        page_id = dom_id(
-                            'notebook-page', tab['id'],
-                            notebook_id, active)
-                        tab_id = dom_id(
-                            'notebook-tab', tab['id'],
-                            notebook_id, active)
-                        with section(
-                                id=page_id,
-                                role='tabpanel',
-                                aria_labelledby=tab_id,
-                                cls='vs-page',
-                                style=self.form_grid_style(
-                                    page, page.attrib.get(
-                                        'col', 4))) as page_container:
-                            self.form_children(
-                                page_container, page, renderer, tab, record,
-                                child_path + (active,), state_readonly,
-                                page.attrib.get('col', 4))
+                        for page_index, page in enumerate(pages):
+                            selected = page_index == active
+                            page_id = dom_id(
+                                'notebook-page', tab['id'],
+                                notebook_id, page_index)
+                            tab_id = dom_id(
+                                'notebook-tab', tab['id'],
+                                notebook_id, page_index)
+                            with section(
+                                    id=page_id,
+                                    role='tabpanel',
+                                    aria_labelledby=tab_id,
+                                    cls='vs-page',
+                                    hidden=None if selected else True,
+                                    data_notebook=notebook_id,
+                                    data_notebook_page=str(page_index),
+                                    style=self.form_grid_style(
+                                        page, page.attrib.get(
+                                            'col', 4))) as page_container:
+                                if selected:
+                                    self.form_children(
+                                        page_container, page, renderer,
+                                        tab, record,
+                                        child_path + (page_index,),
+                                        state_readonly,
+                                        page.attrib.get('col', 4))
+                                else:
+                                    page_container.add(NotebookPage(
+                                            tab=tab['id'],
+                                            record=record['key'],
+                                            notebook=notebook_id,
+                                            page=page_index,
+                                            render=False).render_lazy(
+                                                hx_trigger='intersect'))
                     elif pages and notebook_kind == 'preferences':
                         for page_index, page in enumerate(pages):
                             selected = page_index == active
@@ -2814,8 +2925,11 @@ class ViewRenderer:
                                     aria_labelledby=tab_id,
                                     cls='vs-page',
                                     hidden=None if selected else True,
+                                    data_notebook=notebook_id,
+                                    data_notebook_page=str(page_index),
                                     data_preference_notebook_tab=notebook_id,
-                                    data_preference_notebook_page=page_index,
+                                    data_preference_notebook_page=str(
+                                        page_index),
                                     style=self.form_grid_style(
                                         page, page.attrib.get(
                                             'col', 4))) as page_container:

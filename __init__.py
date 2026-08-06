@@ -64,6 +64,7 @@ def register():
         app.SwitchView,
         app.SwitchDomain,
         app.SwitchPage,
+        app.NotebookPage,
         app.Search,
         app.SearchDraft,
         app.SearchBookmarkDialog,

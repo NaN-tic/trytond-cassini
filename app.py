@@ -4039,10 +4039,43 @@ class SwitchPage(SaoEndpoint):
     @handle_endpoint_errors
     def render(self):
         self.engine.switch_page(self.tab, self.notebook, self.page)
-        tab = self.engine.interface.get_tab(self.tab)
-        if tab.get('kind') == 'wizard':
-            return ViewRenderer(self.engine.interface).wizard(tab)
-        return screen_response(self.engine, tab)
+        return Response('', status=204)
+
+
+class NotebookPage(SaoEndpoint):
+    'Cassini Notebook Page'
+    __name__ = 'cassini.notebook.page'
+    _url = (
+        '/tab/<string:tab>/record/<string:record>/'
+        'notebook/<string:notebook>/page/<int:page>/content')
+
+    tab = fields.Char('Tab')
+    record = fields.Char('Record')
+    notebook = fields.Char('Notebook')
+    page = fields.Integer('Page')
+
+    def render_lazy(self, hx_trigger='load'):
+        with div(
+                cls='vs-notebook-page-widget',
+                style='grid-column:1/-1',
+                hx_post=type(self).url(
+                    tab=self.tab, record=self.record,
+                    notebook=self.notebook, page=self.page),
+                hx_trigger=hx_trigger,
+                hx_target='this',
+                hx_swap='outerHTML',
+                data_notebook_page_loader='true') as widget:
+            span(
+                _('Loading page'), cls='vs-muted')
+        return widget
+
+    @handle_endpoint_errors
+    def render(self):
+        tab = self.engine.switch_page(
+            self.tab, self.notebook, self.page)
+        return html_response(ViewRenderer(
+                self.engine.interface).notebook_page(
+                    tab, self.record, self.notebook, self.page))
 
 
 class Search(SaoEndpoint):
