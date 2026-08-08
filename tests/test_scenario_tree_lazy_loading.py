@@ -179,6 +179,11 @@ class TestTreeLazyLoading(WebTestCase):
         expect(total.locator('.vs-tree-total-page')).to_have_text('-')
 
         with page.expect_response(
+                lambda response: '/select?' in response.url):
+            page.get_by_text('Lazy record 100', exact=True).click()
+        expect(record_position).to_have_text('101/220')
+
+        with page.expect_response(
                 lambda response: '/tree/records' in response.url) \
                 as response_info:
             main.evaluate(

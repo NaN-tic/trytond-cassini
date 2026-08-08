@@ -4,6 +4,7 @@ import mimetypes
 import re
 from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_UP
+from time import perf_counter
 from xml.etree import ElementTree
 
 from dominate.tags import (
@@ -1536,7 +1537,8 @@ class ViewRenderer:
                 selected_total = sum_values(
                     key for key in tab.get('record_order', [])
                     if key in selected)
-                page_total = sum_values(tab.get('record_order', []))
+                page_total = tab.get('tree_totals', {}).get(
+                    name, sum_values(tab.get('record_order', [])))
                 definition = view.get('fields', {}).get(name, {})
                 widget = (
                     node.attrib.get('widget')
@@ -1567,6 +1569,8 @@ class ViewRenderer:
         return row
 
     def tree(self, tab, view, rows=None):
+        from timer import Timer
+        t = Timer()
         root = parse_architecture(view)
         relation_origin = tab.get('relation_origin')
         # Relation record dialogs keep their parent origin too, but only an
@@ -1637,6 +1641,20 @@ class ViewRenderer:
         partial_tree = rows is not None
         if rows is None:
             rows = self.tree_rows(tab, view)
+        widgets = {
+            node.attrib.get('widget')
+            or view.get('fields', {}).get(
+                node.attrib.get('name'), {}).get('type', 'char')
+            for node in columns if node.tag == 'field'}
+        format_context = None
+        if widgets & WidgetRenderer.date_widgets:
+            format_context = dict(
+                self.pool.get('res.user').get_preferences(context_only=True))
+            format_context.update(Transaction().context)
+            format_context.update(decode_value(tab.get('context', {})))
+        language = (
+            self.pool.get('ir.lang').get()
+            if widgets & WidgetRenderer.numeric_widgets else None)
         lazy_tree = (
             tab.get('kind') == 'window'
             and not embedded
@@ -1645,6 +1663,7 @@ class ViewRenderer:
         first_field = next((
                 node.attrib['name']
                 for node in columns if node.tag == 'field'), None)
+        print('TV1', t)
         with div(
                 id='tree-' + tab['id'],
                 cls='vs-table-wrap',
@@ -1902,17 +1921,28 @@ class ViewRenderer:
                             else:
                                 th(node.attrib.get(
                                     'string', _('Action')))
+                print('TV2', t)
+                renderer_initialization = 0
+                row_rendering = 0
+                row_actions = 0
+                cells_rendering = 0
+                widgets_rendering = 0
                 with tbody():
                     for key, depth, has_children in rows:
                         record = tab['records'][key]
                         is_expanded = key in tab.get('expanded', [])
+                        started = perf_counter()
                         renderer = WidgetRenderer(
                             tab, record, view,
                             editable=(
                                 editable and not record.get('deleted')),
                             endpoint=(
                                 'x2many'
-                                if relation_origin else 'record'))
+                                if relation_origin else 'record'),
+                            root=root, format_context=format_context,
+                            language=language)
+                        renderer_initialization += perf_counter() - started
+                        started = perf_counter()
                         focus_new_field = bool(
                             relation_origin
                             and key == tab.get('focus_record'))
@@ -1952,6 +1982,7 @@ class ViewRenderer:
                                     if relation_search_origin else None),
                                 data_tree_depth=(
                                     depth if reorderable else None)):
+                            started_actions = perf_counter()
                             with td(cls='vs-drag-column'):
                                 if reorderable:
                                     with span(
@@ -2069,6 +2100,8 @@ class ViewRenderer:
                                                 if relation_origin else
                                                 tree_target),
                                             hx_swap='outerHTML')
+                            row_actions += perf_counter() - started_actions
+                            started_cells = perf_counter()
                             for node in columns:
                                 cell_visual = renderer.evaluate(
                                     node.attrib.get('visual'))
@@ -2170,6 +2203,7 @@ class ViewRenderer:
                                                                 affix_attributes))
                                                         if tag is not None:
                                                             content.add(tag)
+                                                started_widget = perf_counter()
                                                 if widget == 'url':
                                                     pass
                                                 elif editable:
@@ -2206,6 +2240,9 @@ class ViewRenderer:
                                                                 affix_attributes))
                                                         if tag is not None:
                                                             content.add(tag)
+                                                widgets_rendering += (
+                                                    perf_counter()
+                                                    - started_widget)
                                             if (name == first_field
                                                     and view.get(
                                                         'field_childs')):
@@ -2224,6 +2261,8 @@ class ViewRenderer:
                                             self.record_button(
                                                 tab, record, attributes,
                                                 renderer)
+                            cells_rendering += perf_counter() - started_cells
+                        row_rendering += perf_counter() - started
                     if lazy_tree:
                         LoadTreeRecords = self.pool.get(
                             'cassini.load.tree.records')
@@ -2232,6 +2271,13 @@ class ViewRenderer:
                                 hx_trigger=(
                                     'intersect once root:.vs-main'),
                                 colspan=len(columns) + 2)
+                print('TV3', t)
+                print(
+                    'TV3.1',
+                    'renderer %.4f, actions %.4f, cells %.4f, widgets %.4f, '
+                    'rows %.4f' % (
+                        renderer_initialization, row_actions,
+                        cells_rendering, widgets_rendering, row_rendering))
                 if any(
                         node.tag == 'field'
                         and str(node.attrib.get('sum', '0')).lower()
@@ -2276,6 +2322,7 @@ class ViewRenderer:
                         self.record_button(
                             tab, tab['records'][selected[0]],
                             attributes, selected_renderer)
+        print('TV4', t)
         return wrapper
 
     def tree_rows(self, tab, view):

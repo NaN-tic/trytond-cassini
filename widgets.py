@@ -97,17 +97,22 @@ class WidgetRenderer:
     x2many_widgets = {'one2many', 'many2many'}
     binary_widgets = {'binary', 'image', 'document'}
 
-    def __init__(self, tab, record, view, editable=True, endpoint='record'):
+    def __init__(
+            self, tab, record, view, editable=True, endpoint='record',
+            root=None, format_context=None, language=None):
         self.tab = tab
         self.record = record
         self.view = view
         self.editable = editable
         self.endpoint = endpoint
+        self.format_context = format_context
+        self.language = language
         self.pool = Pool()
         self.Model = self.pool.get(tab['model'])
         self.values = decode_value(record.get('values', {}))
-        self.root = ElementTree.fromstring(
-            self.view.get('arch') or '<form/>')
+        self.root = (
+            root if root is not None
+            else ElementTree.fromstring(self.view.get('arch') or '<form/>'))
         self.state_context = {}
         for name, value in self.values.items():
             field = self.Model._fields.get(name)
@@ -325,7 +330,7 @@ class WidgetRenderer:
         else:
             digits = 0 if widget == 'integer' else None
         try:
-            language = self.pool.get('ir.lang').get()
+            language = self.language or self.pool.get('ir.lang').get()
             return language.format_number(
                 value, digits=digits, grouping=grouping)
         except (ArithmeticError, TypeError, ValueError):
@@ -2001,8 +2006,12 @@ class WidgetRenderer:
                 if isinstance(value, (list, tuple)):
                     value = value[0] if value else None
                 relation_value = value
-                Relation = self.pool.get(definition['relation'])
-                value = Relation(int(value)).rec_name
+                related = self.values.get(name + '.')
+                if related:
+                    value = related.get('rec_name', value)
+                else:
+                    Relation = self.pool.get(definition['relation'])
+                    value = Relation(int(value)).rec_name
             except Exception:
                 pass
         elif widget == 'reference' and value:
@@ -2052,11 +2061,13 @@ class WidgetRenderer:
         elif widget == 'html':
             return div(value or '', cls='vs-value vs-html')
         elif widget in self.date_widgets and value:
-            context = dict(
-                self.pool.get('res.user').get_preferences(
-                    context_only=True))
-            context.update(Transaction().context)
-            context.update(decode_value(self.tab.get('context', {})))
+            context = self.format_context
+            if context is None:
+                context = dict(
+                    self.pool.get('res.user').get_preferences(
+                        context_only=True))
+                context.update(Transaction().context)
+                context.update(decode_value(self.tab.get('context', {})))
             if isinstance(value, datetime):
                 value = to_local_datetime(value, context)
             date_format_ = date_format(context)
