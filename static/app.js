@@ -2843,28 +2843,28 @@
         }
         const row = treeRowFromEvent(event, true);
         if (row) {
-            const selectAction = row.querySelector(
-                "[data-row-select-action]");
-            const selectionKind = selectAction?.dataset.rowSelectionKind;
+            const selectionKind = row.dataset.rowSelectionKind;
             const multipleSelection =
                 selectionKind === "screen" || selectionKind === "relation";
             const selection = markTreeRowSelected(
                 row, event, multipleSelection);
             window.clearTimeout(rowClickTimer);
             rowClickTimer = window.setTimeout(function () {
-                if (selectAction) {
+                if (row.dataset.rowSelectUrl) {
+                    const values = {};
                     if (multipleSelection && selection) {
-                        const values = {
-                            selection: JSON.stringify(selection.records),
-                            current: selection.current,
-                        };
+                        values.selection = JSON.stringify(selection.records);
+                        values.current = selection.current;
                         if (selectionKind === "relation") {
                             values.item = row.dataset.record;
                         }
-                        selectAction.setAttribute(
-                            "hx-vals", JSON.stringify(values));
                     }
-                    selectAction.click();
+                    window.htmx.ajax("POST", row.dataset.rowSelectUrl, {
+                        source: row,
+                        target: row.dataset.rowSelectTarget,
+                        swap: row.dataset.rowSelectSwap,
+                        values,
+                    });
                 }
                 rowClickTimer = null;
             }, 220);
@@ -2897,9 +2897,12 @@
         event.preventDefault();
         window.clearTimeout(rowClickTimer);
         rowClickTimer = null;
-        const openAction = row.querySelector("[data-row-open-action]");
-        if (openAction) {
-            openAction.click();
+        if (row.dataset.rowOpenUrl) {
+            window.htmx.ajax("POST", row.dataset.rowOpenUrl, {
+                source: row,
+                target: row.dataset.rowOpenTarget,
+                swap: "outerHTML",
+            });
         }
     }, true);
     document.addEventListener("keydown", function (event) {

@@ -1927,6 +1927,7 @@ class ViewRenderer:
                 row_actions = 0
                 cells_rendering = 0
                 widgets_rendering = 0
+                render_cache = {}
                 with tbody():
                     for key, depth, has_children in rows:
                         record = tab['records'][key]
@@ -1940,7 +1941,7 @@ class ViewRenderer:
                                 'x2many'
                                 if relation_origin else 'record'),
                             root=root, format_context=format_context,
-                            language=language)
+                            language=language, render_cache=render_cache)
                         renderer_initialization += perf_counter() - started
                         started = perf_counter()
                         focus_new_field = bool(
@@ -1981,7 +1982,45 @@ class ViewRenderer:
                                     'true'
                                     if relation_search_origin else None),
                                 data_tree_depth=(
-                                    depth if reorderable else None)):
+                                    depth if reorderable else None),
+                                data_row_selection_kind=(
+                                    None if relation_search_origin else
+                                    'relation' if relation_origin
+                                    else 'screen'),
+                                data_row_select_url=(
+                                    None if relation_search_origin else
+                                    X2ManyAction.url(
+                                        tab=tab['id'],
+                                        record=relation_origin['record'],
+                                        field=relation_origin['field'],
+                                        action='select')
+                                    if relation_origin else
+                                    SelectRecord.url(
+                                        tab=tab['id'], record=key,
+                                        row='true')),
+                                data_row_select_target=(
+                                    tree_target if relation_origin else
+                                    '#toolbar-' + tab['id']),
+                                data_row_select_swap=(
+                                    'none' if relation_origin else
+                                    'outerHTML'),
+                                data_row_open_url=(
+                                    None if relation_search_origin
+                                    or (relation_origin
+                                        and not record.get('id')) else
+                                    OpenRelationRecord.url(
+                                        tab=tab['id'], model=tab['model'],
+                                        record=record.get('id'),
+                                        source_record=relation_origin[
+                                            'record'],
+                                        field=relation_origin['field'])
+                                    if relation_origin else
+                                    SelectRecord.url(
+                                        tab=tab['id'], record=key,
+                                        row='true', open='true')),
+                                data_row_open_target=(
+                                    '#workspace' if relation_origin else
+                                    tree_target)):
                             started_actions = perf_counter()
                             with td(cls='vs-drag-column'):
                                 if reorderable:
@@ -2041,65 +2080,6 @@ class ViewRenderer:
                                         hx_target=tree_target,
                                         hx_swap='outerHTML',
                                         hx_include='this')
-                                if not relation_search_origin:
-                                    button(
-                                        '', type='button',
-                                        cls='vs-row-action',
-                                        tabindex='-1',
-                                        aria_hidden='true',
-                                        data_row_select_action='true',
-                                        data_row_selection_kind=(
-                                            'relation'
-                                            if relation_origin else 'screen'),
-                                        hx_post=(
-                                            X2ManyAction.url(
-                                                tab=tab['id'],
-                                                record=(
-                                                    relation_origin['record']),
-                                                field=(
-                                                    relation_origin['field']),
-                                                action='select')
-                                            if relation_origin else
-                                            SelectRecord.url(
-                                                tab=tab['id'], record=key,
-                                                row='true')),
-                                        hx_vals=(
-                                            '{"item":"%s"}' % key
-                                            if relation_origin else None),
-                                        hx_target=(
-                                            tree_target
-                                            if relation_origin else
-                                            '#toolbar-' + tab['id']),
-                                        hx_swap=(
-                                            'none' if relation_origin
-                                            else 'outerHTML'))
-                                    if not relation_origin or record.get('id'):
-                                        button(
-                                            '', type='button',
-                                            cls='vs-row-action',
-                                            tabindex='-1',
-                                            aria_hidden='true',
-                                            data_row_open_action='true',
-                                            hx_post=(
-                                                OpenRelationRecord.url(
-                                                    tab=tab['id'],
-                                                    model=tab['model'],
-                                                    record=record.get('id'),
-                                                    source_record=(
-                                                        relation_origin[
-                                                            'record']),
-                                                    field=(
-                                                        relation_origin[
-                                                            'field']))
-                                                if relation_origin else
-                                                SelectRecord.url(
-                                                    tab=tab['id'], record=key,
-                                                    row='true', open='true')),
-                                            hx_target=(
-                                                '#workspace'
-                                                if relation_origin else
-                                                tree_target),
-                                            hx_swap='outerHTML')
                             row_actions += perf_counter() - started_actions
                             started_cells = perf_counter()
                             for node in columns:

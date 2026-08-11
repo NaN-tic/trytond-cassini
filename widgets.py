@@ -99,7 +99,8 @@ class WidgetRenderer:
 
     def __init__(
             self, tab, record, view, editable=True, endpoint='record',
-            root=None, format_context=None, language=None):
+            root=None, format_context=None, language=None,
+            render_cache=None):
         self.tab = tab
         self.record = record
         self.view = view
@@ -107,6 +108,7 @@ class WidgetRenderer:
         self.endpoint = endpoint
         self.format_context = format_context
         self.language = language
+        self.render_cache = render_cache
         self.pool = Pool()
         self.Model = self.pool.get(tab['model'])
         self.values = decode_value(record.get('values', {}))
@@ -259,8 +261,13 @@ class WidgetRenderer:
                 sign = -1
             else:
                 sign = 1
-            symbol, position = self.pool.get(
-                symbol_field.model_name)(symbol_id).get_symbol(sign)
+            cache = self.render_cache.setdefault(
+                'symbols', {}) if self.render_cache is not None else {}
+            cache_key = (symbol_field.model_name, symbol_id, sign)
+            if cache_key not in cache:
+                cache[cache_key] = self.pool.get(
+                    symbol_field.model_name)(symbol_id).get_symbol(sign)
+            symbol, position = cache[cache_key]
             return stringify(symbol), float(position)
         except Exception:
             return '', 1
@@ -2103,9 +2110,12 @@ class WidgetRenderer:
             except (TypeError, ValueError):
                 relation_id = None
             ModelAccess = self.pool.get('ir.model.access')
-            if (relation_id and relation_id > 0
-                    and ModelAccess.get_access(
-                        [relation])[relation]['read']):
+            cache = self.render_cache.setdefault(
+                'model_access', {}) if self.render_cache is not None else {}
+            if relation not in cache:
+                cache[relation] = ModelAccess.get_access(
+                    [relation])[relation]['read']
+            if relation_id and relation_id > 0 and cache[relation]:
                 OpenRelationRecord = self.pool.get(
                     'cassini.open.relation.record')
                 OpenResource = self.pool.get('cassini.open.resource')
