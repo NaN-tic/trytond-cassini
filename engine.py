@@ -1101,9 +1101,20 @@ class CassiniEngine:
         if view_type not in tab['view_types']:
             raise ValueError(_('View %s is not part of this action') % view_type)
         index = tab['view_types'].index(view_type)
+        record_order = list(tab.get('record_order', []))
+        record_key = tab.get('current_record')
+        if record_key not in tab.get('records', {}):
+            record_key = next((
+                    key for key in record_order
+                    if key in tab.get('records', {})), None)
+        record = tab.get('records', {}).get(record_key, {})
         tab['view_type'] = view_type
         tab['view_id'] = tab['view_ids'][index]
-        self.load_tab(tab)
+        if view_type == 'form' and record.get('id'):
+            self.load_tab(tab, ids=[record['id']])
+            tab['record_order'] = record_order
+        else:
+            self.load_tab(tab)
         self.save()
         return tab
 
@@ -1718,17 +1729,64 @@ class CassiniEngine:
             return tab
         current = tab.get('current_record')
         index = order.index(current) if current in order else 0
+        offset = int(tab.get('offset') or 0)
+        search_offset = None
+        insert = False
         if direction == 'previous':
-            index = max(0, index - 1)
+            if index:
+                index -= 1
+            elif tab.get('view_type') == 'form' and offset:
+                search_offset = offset - 1
+                insert = True
         elif direction == 'next':
-            index = min(len(order) - 1, index + 1)
+            if index < len(order) - 1:
+                index += 1
+            elif (tab.get('view_type') == 'form'
+                    and offset + len(order) < int(tab.get('count') or 0)):
+                search_offset = offset + len(order)
+                insert = False
         else:
             raise ValueError(_('Unknown record direction'))
-        tab['current_record'] = order[index]
-        tab['selected'] = [order[index]]
+        if search_offset is not None:
+            Model = self.pool.get(tab['model'])
+            context = self.context(decode_value(tab.get('context', {})))
+            if not tab.get('active_only', True):
+                context['active_test'] = False
+            screen_width = self.interface.data.get('screen_width')
+            if screen_width:
+                context.update({
+                        'screen_size': (int(screen_width), 0),
+                        'view_tree_width': True,
+                        })
+            with Transaction().set_context(context):
+                view = decode_value(tab.get('view', {}))
+                domain = self._update_window_counts(
+                    tab, Model, view, refresh_count=False)
+                ids = Model.search(
+                    domain, offset=search_offset, limit=1,
+                    order=decode_value(tab.get('order')))
+            if ids:
+                key = str(ids[0])
+                if insert:
+                    order.insert(0, key)
+                    tab['offset'] = search_offset
+                    index = 0
+                else:
+                    order.append(key)
+                    index = len(order) - 1
+        key = order[index]
+        if key not in tab.get('records', {}):
+            try:
+                record_id = int(key)
+            except (TypeError, ValueError):
+                raise ValueError(_('Unknown record %s') % key) from None
+            self.load_tab(
+                tab, ids=[record_id], append=True, refresh_count=False)
+        tab['current_record'] = key
+        tab['selected'] = [key]
         if tab.get('relation_navigation'):
             Model = self.pool.get(tab['model'])
-            record_id = int(order[index])
+            record_id = int(key)
             tab['res_id'] = record_id
             tab['title'] = Model(record_id).rec_name
         self.save()

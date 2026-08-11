@@ -2478,6 +2478,8 @@ class ViewRenderer:
         return 'grid-template-columns:%s' % ' '.join(tracks)
 
     def form(self, tab, view):
+        from timer import Timer
+        timer = Timer()
         key = tab.get('current_record')
         if not key or key not in tab.get('records', {}):
             return p(_('No record selected'), cls='vs-empty')
@@ -2490,6 +2492,7 @@ class ViewRenderer:
             tab.get('context', {})).get('_datetime')
         renderer = WidgetRenderer(tab, record, view, editable=editable)
         root = parse_architecture(view)
+        print('F1', timer)
         cursor = root.attrib.get('cursor')
         focus_nodes = list(root.iter('field'))
         if cursor:
@@ -2503,6 +2506,7 @@ class ViewRenderer:
             if not readonly and not invisible and editable:
                 node.attrib['autofocus'] = '1'
                 break
+        print('F2', timer)
         with div(
                 cls='vs-form',
                 data_form_cursor=cursor,
@@ -2538,6 +2542,7 @@ class ViewRenderer:
                 tag, root, renderer, tab, record,
                 columns=root.attrib.get('col', 4),
                 row_start=2 if root.attrib.get('scan_code') else 1)
+        print('F3', timer)
         return tag
 
     def notebook_page(self, tab, record_key, notebook, page_index):

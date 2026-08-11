@@ -4004,14 +4004,19 @@ class SwitchView(CassiniEndpoint):
 
     @handle_endpoint_errors
     def render(self):
+        from timer import Timer
+        timer = Timer()
         tab = self.engine.interface.get_tab(self.tab)
         if (self.view != tab.get('view_type')
                 and has_unsaved_changes(tab, form_only=True)):
             return unsaved_changes_response(
                 self.engine, tab, 'switch-view', {'view': self.view})
         self.engine.switch_view(self.tab, self.view)
+        print('SV1', timer)
         tab = self.engine.interface.get_tab(self.tab)
-        return screen_response(self.engine, tab)
+        response = screen_response(self.engine, tab)
+        print('SV2', timer)
+        return response
 
 
 class SwitchDomain(CassiniEndpoint):
@@ -4267,32 +4272,48 @@ class LoadTreeRecords(CassiniEndpoint):
 
     @handle_endpoint_errors
     def render(self):
+        from timer import Timer
+        t = Timer()
         tab, loaded_keys = self.engine.load_tree_records(self.tab)
+        print('1', t)
         view = decode_value(tab.get('view', {}))
+        print('2', t)
         renderer = ViewRenderer(self.engine.interface)
+        print('3', t)
         loaded_keys = set(loaded_keys)
+        print('4', t)
         rows = [
             row for row in renderer.tree_rows(tab, view)
             if row[0] in loaded_keys]
+        print('5', t)
         tree = renderer.tree(tab, view, rows=rows)
+        print('6', t)
         table = next(
             child for child in tree.children
             if isinstance(child, table_tag))
+        print('7', t)
         body = next(
             child for child in table.children
             if isinstance(child, tbody_tag))
+        print('8', t)
         fragment = container()
+        print('9', t)
         for row in list(body.children):
             fragment.add(row)
+        print('10', t)
         if int(tab.get('tree_next_offset') or 0) >= int(
                 tab.get('tree_end_offset') or 0):
             foot = next((
                     child for child in table.children
                     if isinstance(child, tfoot_tag)), None)
+            print('10.1', t)
             if foot:
                 for row in list(foot.children):
                     fragment.add(row)
-        return html_response(fragment)
+            print('10.2', t)
+        res = html_response(fragment)
+        print('11', t)
+        return res
 
 
 class NavigateCalendar(CassiniEndpoint):
