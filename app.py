@@ -343,6 +343,15 @@ def screen_response(engine, tab, all_out_of_band=False):
             ], stream=True, all_out_of_band=all_out_of_band)
 
 
+def toolbar_state_fragments(interface, tab):
+    window_heading, toolbar_actions = ViewRenderer(interface).toolbar(
+        tab, state_only=True)
+    return [
+        Fragment('toolbar-heading-state-' + tab['id'], window_heading),
+        Fragment('toolbar-actions-state-' + tab['id'], toolbar_actions),
+        ]
+
+
 def screen_and_close_modal_response(engine, tab):
     renderer = ViewRenderer(engine.interface)
     return FragmentResponse.response([
@@ -4591,8 +4600,8 @@ class SelectRecord(CassiniEndpoint):
             root = parse_architecture(view)
             _all_columns, columns, _multiple_buttons = (
                 renderer.tree_columns(tab, root))
-            fragments = [Fragment(
-                    'toolbar-' + self.tab, renderer.toolbar(tab))]
+            fragments = toolbar_state_fragments(
+                self.engine.interface, tab)
             if any(
                     node.tag == 'field'
                     and str(node.attrib.get('sum', '0')).lower()
@@ -5640,9 +5649,8 @@ class X2ManyAction(CassiniEndpoint):
             if focus_state is not None:
                 focus_state.pop('_focus_record', None)
         if endpoint == 'record':
-            fragments.append(Fragment(
-                    'toolbar-' + self.tab,
-                    ViewRenderer(self.engine.interface).toolbar(tab)))
+            fragments.extend(toolbar_state_fragments(
+                    self.engine.interface, tab))
             fragments.append(Fragment(
                     'workspace-tabs',
                     WorkspaceRenderer(self.engine.interface).tabs()))
@@ -5883,10 +5891,8 @@ class UpdateX2ManyField(CassiniEndpoint):
                     renderer.render(
                         self.field, field_attributes(view, self.field))))
         if endpoint == 'record':
-            fragments.extend([
-                    Fragment(
-                        'toolbar-' + self.tab,
-                        ViewRenderer(self.engine.interface).toolbar(tab)),
+            fragments.extend(
+                toolbar_state_fragments(self.engine.interface, tab) + [
                     Fragment(
                         'workspace-tabs',
                         WorkspaceRenderer(self.engine.interface).tabs()),
@@ -6020,9 +6026,8 @@ class UpdateField(CassiniEndpoint):
                         cls='vs-notice vs-notice-' + level,
                         role='status')
             fragments.append(Fragment('notifications', host))
-        fragments.append(Fragment(
-                'toolbar-' + self.tab,
-                ViewRenderer(self.engine.interface).toolbar(tab)))
+        fragments.extend(toolbar_state_fragments(
+                self.engine.interface, tab))
         fragments.append(Fragment(
                 'workspace-tabs',
                 WorkspaceRenderer(self.engine.interface).tabs()))
@@ -6398,6 +6403,7 @@ class SaveCSVExport(CassiniEndpoint):
             Export.set(values)
         Model = Pool().get(tab['model'])
         tab['toolbar'] = encode_value(Model.view_toolbar_get())
+        tab['toolbar_loaded'] = True
         self.engine.save()
         return html_response(csv_dialog(self.engine, tab, 'export'))
 
@@ -6420,6 +6426,7 @@ class DeleteCSVExport(CassiniEndpoint):
         Export.unset(int(export_id))
         Model = Pool().get(tab['model'])
         tab['toolbar'] = encode_value(Model.view_toolbar_get())
+        tab['toolbar_loaded'] = True
         self.engine.save()
         return html_response(csv_dialog(self.engine, tab, 'export'))
 

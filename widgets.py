@@ -108,13 +108,28 @@ class WidgetRenderer:
         self.endpoint = endpoint
         self.format_context = format_context
         self.language = language
-        self.render_cache = render_cache
+        self.render_cache = render_cache if render_cache is not None else {}
         self.pool = Pool()
         self.Model = self.pool.get(tab['model'])
         self.values = decode_value(record.get('values', {}))
         self.root = (
             root if root is not None
             else ElementTree.fromstring(self.view.get('arch') or '<form/>'))
+        if self.root.tag == 'form':
+            relation_models = {
+                definition['relation']
+                for name, definition in self.view.get('fields', {}).items()
+                if (
+                    definition.get('relation')
+                    and self.Model._fields.get(name)
+                    and self.Model._fields[name]._type in {
+                        'many2one', 'one2one', 'one2many', 'many2many'})
+                }
+            access_cache = self.render_cache.setdefault('model_access', {})
+            missing_models = relation_models - set(access_cache)
+            if missing_models:
+                access_cache.update(self.pool.get(
+                        'ir.model.access').get_access(sorted(missing_models)))
         self.state_context = {}
         for name, value in self.values.items():
             field = self.Model._fields.get(name)
@@ -261,8 +276,7 @@ class WidgetRenderer:
                 sign = -1
             else:
                 sign = 1
-            cache = self.render_cache.setdefault(
-                'symbols', {}) if self.render_cache is not None else {}
+            cache = self.render_cache.setdefault('symbols', {})
             cache_key = (symbol_field.model_name, symbol_id, sign)
             if cache_key not in cache:
                 cache[cache_key] = self.pool.get(
@@ -271,6 +285,16 @@ class WidgetRenderer:
             return stringify(symbol), float(position)
         except Exception:
             return '', 1
+
+    def model_access(self, model):
+        """Return the cached access rights for a related model."""
+        if not model:
+            return {}
+        cache = self.render_cache.setdefault('model_access', {})
+        if model not in cache:
+            ModelAccess = self.pool.get('ir.model.access')
+            cache[model] = ModelAccess.get_access([model])[model]
+        return cache[model]
 
     def states(self, definition, attributes):
         readonly = bool(definition.get('readonly'))
@@ -778,7 +802,12 @@ class WidgetRenderer:
             if isinstance(relation_value, (list, tuple)):
                 relation_value = (
                     relation_value[0] if relation_value else None)
-            title = self.relation_title(definition, relation_value)
+            related = self.values.get(name + '.')
+            title = (
+                related.get('rec_name', '')
+                if isinstance(related, dict) else '')
+            if not title:
+                title = self.relation_title(definition, relation_value)
             suggestions_id = field_id + '-suggestions'
             RelationAutocomplete = self.pool.get(
                 'cassini.relation.autocomplete')
@@ -795,9 +824,7 @@ class WidgetRenderer:
                 'read': False, 'write': False,
                 'create': False, 'delete': False}
             if relation:
-                ModelAccess = self.pool.get('ir.model.access')
-                relation_access.update(
-                    ModelAccess.get_access([relation])[relation])
+                relation_access.update(self.model_access(relation))
             modal_target = (
                 '#relation-modal'
                 if self.endpoint == 'preferences' else '#modal')
@@ -1197,6 +1224,10 @@ class WidgetRenderer:
                             'ir.model.data').get_id(module, fs_id)
                     except KeyError:
                         view_id = None
+        views = definition.get('views', {})
+        view = views.get(str(view_id)) if view_id else views.get(view_type)
+        if view:
+            return view
         context = {}
         screen_width = self.tab.get('screen_width')
         if screen_width:
@@ -1257,6 +1288,9 @@ class WidgetRenderer:
         return names
 
     def x2many_rows(self, definition, attributes, values, state, view_type):
+        from timer import Timer
+        timer = Timer()
+        name = attributes.get('name', definition.get('name', '?'))
         deleted = list(state.get('deleted', []))
         entries = []
         for index, item in enumerate(list(values or []) + deleted):
@@ -1270,10 +1304,20 @@ class WidgetRenderer:
                         else None),
                     'deleted': index >= len(values or []),
                     })
+        print('XR1 %s' % name, timer)
         relation_view = self.x2many_view(
             definition, attributes, view_type)
+        print('XR2 %s' % name, timer)
         Relation = self.pool.get(definition['relation'])
         read_fields = self.tree_read_fields(relation_view, Relation)
+        for field_name in list(read_fields):
+            field = Relation._fields.get(field_name)
+            related_name = field_name + '.rec_name'
+            if (
+                    field and field._type in {'many2one', 'one2one'}
+                and related_name not in read_fields):
+                read_fields.append(related_name)
+        print('XR3 %s' % name, timer)
         ids = [entry['id'] for entry in entries if entry['id']]
         binary_context = {
             '%s.%s' % (Relation.__name__, name): 'size'
@@ -1286,6 +1330,7 @@ class WidgetRenderer:
                 record['id']: record
                 for record in Relation.read(ids, read_fields)
                 } if ids else {}
+        print('XR4 %s' % name, timer)
         for entry in entries:
             item = entry['item']
             if entry['id']:
@@ -1302,6 +1347,7 @@ class WidgetRenderer:
                         Relation._rec_name, _('New record')))
             else:
                 entry['values'] = {'rec_name': stringify(item)}
+        print('XR5 %s' % name, timer)
         return relation_view, entries
 
     def tree_affix(self, attributes, protocol=None):
@@ -1408,6 +1454,8 @@ class WidgetRenderer:
     def x2many(
             self, name, widget, value, definition, attributes,
             field_id, readonly, required):
+        from timer import Timer
+        timer = Timer()
         X2ManyAction = self.pool.get('cassini.x2many.action')
         RelationAutocomplete = self.pool.get(
             'cassini.relation.autocomplete')
@@ -1440,9 +1488,7 @@ class WidgetRenderer:
             'read': False, 'write': False,
             'create': False, 'delete': False}
         if relation:
-            ModelAccess = self.pool.get('ir.model.access')
-            relation_access.update(
-                ModelAccess.get_access([relation])[relation])
+            relation_access.update(self.model_access(relation))
         modal_target = (
             '#relation-modal'
             if self.endpoint == 'preferences' else '#modal')
@@ -1464,8 +1510,10 @@ class WidgetRenderer:
         if view_type not in modes:
             view_type = modes[0]
             state['view'] = view_type
+        print('X1 %s' % name, timer)
         relation_view, rows = self.x2many_rows(
             definition, attributes, value, state, view_type)
+        print('X2 %s' % name, timer)
         relation_root = ElementTree.fromstring(
             relation_view.get('arch') or '<tree/>')
         inline_create = (
@@ -1794,6 +1842,7 @@ class WidgetRenderer:
                     self.x2many_form(
                         name, definition, attributes, relation_view,
                         current_row, readonly, relation_access)
+        print('X3 %s' % name, timer)
         return control
 
     def x2many_form(
@@ -1962,8 +2011,12 @@ class WidgetRenderer:
         if not record_id:
             return ''
         try:
-            return self.pool.get(
-                definition['relation'])(int(record_id)).rec_name
+            relation = definition['relation']
+            cache = self.render_cache.setdefault('relation_titles', {})
+            key = relation, int(record_id)
+            if key not in cache:
+                cache[key] = self.pool.get(relation)(key[1]).rec_name
+            return cache[key]
         except Exception:
             return ''
 
@@ -2109,13 +2162,8 @@ class WidgetRenderer:
                 relation_id = int(relation_value)
             except (TypeError, ValueError):
                 relation_id = None
-            ModelAccess = self.pool.get('ir.model.access')
-            cache = self.render_cache.setdefault(
-                'model_access', {}) if self.render_cache is not None else {}
-            if relation not in cache:
-                cache[relation] = ModelAccess.get_access(
-                    [relation])[relation]['read']
-            if relation_id and relation_id > 0 and cache[relation]:
+            access = self.model_access(relation)
+            if relation_id and relation_id > 0 and access['read']:
                 OpenRelationRecord = self.pool.get(
                     'cassini.open.relation.record')
                 OpenResource = self.pool.get('cassini.open.resource')

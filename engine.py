@@ -1110,11 +1110,13 @@ class CassiniEngine:
         record = tab.get('records', {}).get(record_key, {})
         tab['view_type'] = view_type
         tab['view_id'] = tab['view_ids'][index]
+        refresh_count = tab.get('count') is None
         if view_type == 'form' and record.get('id'):
-            self.load_tab(tab, ids=[record['id']])
+            self.load_tab(
+                tab, ids=[record['id']], refresh_count=refresh_count)
             tab['record_order'] = record_order
         else:
-            self.load_tab(tab)
+            self.load_tab(tab, refresh_count=refresh_count)
         self.save()
         return tab
 
@@ -1249,6 +1251,10 @@ class CassiniEngine:
             self, tab, ids=None, append=False, refresh_count=True):
         from timer import Timer
         t = Timer()
+        # Views are already cached by Tryton for the current user/context.
+        # Do not retain a second copy in the persisted workspace: on large
+        # forms serialising it on every request costs more than a cache hit.
+        tab.pop('view_cache', None)
         Model = self.pool.get(tab['model'])
         ModelAccess = self.pool.get('ir.model.access')
         tab['history'] = bool(getattr(Model, '_history', False))
@@ -1272,10 +1278,12 @@ class CassiniEngine:
                 view = Model.fields_view_get(
                     view_id=tab.get('view_id'),
                     view_type=tab['view_type'])
+            if not append:
                 tab['view'] = encode_value(view)
             print('LT2', t)
-            if not append:
+            if not append and not tab.get('toolbar_loaded'):
                 tab['toolbar'] = encode_value(Model.view_toolbar_get())
+                tab['toolbar_loaded'] = True
             print('LT3', t)
             if not read_fields:
                 fields_names = list(view.get('fields', {}).keys())
@@ -1287,21 +1295,20 @@ class CassiniEngine:
                         if name in Model._fields and name != 'id'
                         ]
             print('LT4', t)
-            if not tab.get('read_fields'):
-                root = ElementTree.fromstring(view.get('arch') or '<form/>')
-                for node in root.iter('field'):
-                    definition = view.get('fields', {}).get(
-                        node.attrib.get('name'), {})
-                    for dependent in (
-                            node.attrib.get('filename'),
-                            definition.get('filename'),
-                            node.attrib.get('symbol'),
-                            definition.get('symbol')):
-                        if (dependent in Model._fields
-                                and dependent not in read_fields):
-                            read_fields.append(dependent)
-                if 'rec_name' not in read_fields:
-                    read_fields.append('rec_name')
+            root = ElementTree.fromstring(view.get('arch') or '<form/>')
+            for node in root.iter('field'):
+                definition = view.get('fields', {}).get(
+                    node.attrib.get('name'), {})
+                for dependent in (
+                        node.attrib.get('filename'),
+                        definition.get('filename'),
+                        node.attrib.get('symbol'),
+                        definition.get('symbol')):
+                    if (dependent in Model._fields
+                            and dependent not in read_fields):
+                        read_fields.append(dependent)
+            if 'rec_name' not in read_fields:
+                read_fields.append('rec_name')
             for name in list(read_fields):
                 field = Model._fields.get(name)
                 related_name = name + '.rec_name'
@@ -1569,6 +1576,7 @@ class CassiniEngine:
             context['_datetime'] = revisions[index][0] + timedelta(
                 milliseconds=1)
         tab['context'] = encode_value(context)
+        tab.pop('toolbar_loaded', None)
         tab['revision_open'] = False
         self.load_tab(tab)
         self.save()
@@ -2421,6 +2429,11 @@ class CassiniEngine:
         if parent_field:
             changed_values.pop(parent_field, None)
         values.update(changed_values)
+        for name in set(changed_values) | {field_name}:
+            changed_field = Model._fields.get(name)
+            if changed_field and changed_field._type in {
+                    'many2one', 'one2one'}:
+                values.pop(name + '.', None)
         stored['values'] = encode_value(values)
         dirty = set(stored.get('dirty', []))
         dirty.update(changed_values)

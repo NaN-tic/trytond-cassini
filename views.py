@@ -329,7 +329,9 @@ class ViewRenderer:
                 hx_target='#workspace', hx_swap='outerHTML')
         return tag
 
-    def toolbar(self, tab):
+    def toolbar(self, tab, state_only=False):
+        from timer import Timer
+        timer = Timer()
         NewRecord = self.pool.get('cassini.new.record')
         CloseTab = self.pool.get('cassini.close.tab')
         DeleteRecords = self.pool.get('cassini.delete.records')
@@ -414,6 +416,7 @@ class ViewRenderer:
             WidgetRenderer(tab, record, view, editable=False)
             if record else None)
         view_buttons = list(root.iter('button'))
+        print('TB1', timer)
         resource_counts = {
             'attachment_count': 0,
             'note_count': 0,
@@ -428,6 +431,7 @@ class ViewRenderer:
             attachments = Attachment.search([
                     ('resource', '=', str(resource)),
                     ], limit=20)
+        print('TB2', timer)
 
         def action_definitions(category):
             items = []
@@ -511,7 +515,9 @@ class ViewRenderer:
                         tab=tab['id'], view=search_view),
                     hx_target='#screen-' + tab['id'],
                     hx_swap='outerHTML')
-            window_heading = div(cls='vs-window-heading')
+            window_heading = div(
+                id='toolbar-heading-state-' + tab['id'],
+                cls='vs-window-heading')
             with window_heading:
                 with details(
                         cls='vs-popup vs-window-menu') as window_menu:
@@ -643,17 +649,15 @@ class ViewRenderer:
                             ('action', 'launch', _('Action')),
                             ('relate', 'link', _('Relate')),
                             ('print', 'print', _('Print'))):
-                        items = action_definitions(category)
-                        if items:
-                            with button(
-                                    type='button',
-                                    cls=(
-                                        'vs-popup-item '
-                                        'vs-popup-item-icon'),
-                                    role='menuitem',
-                                    data_open_toolbar_popup=category):
-                                icon(image)
-                                span(title)
+                        with button(
+                                type='button',
+                                cls=(
+                                    'vs-popup-item '
+                                    'vs-popup-item-icon'),
+                                role='menuitem',
+                                data_open_toolbar_popup=category):
+                            icon(image)
+                            span(title)
                     span(_('Data'), cls='vs-popup-heading')
                     with button(
                             type='button',
@@ -664,17 +668,6 @@ class ViewRenderer:
                             hx_swap='innerHTML'):
                         icon('export')
                         span(_('Export'))
-                    for export in toolbar_data.get('exports', []):
-                        with a(
-                                href=ExportRecords.url(
-                                    tab=tab['id'],
-                                    export_id=export['id']),
-                                cls=(
-                                    'vs-popup-item '
-                                    'vs-popup-item-icon'),
-                                role='menuitem'):
-                            icon('export')
-                            span(export['name'])
                     with button(
                             type='button',
                             cls='vs-popup-item vs-popup-item-icon',
@@ -714,7 +707,9 @@ class ViewRenderer:
                             _('Unsaved changes'),
                             cls='vs-window-dirty-status')
 
-            with div(cls='vs-toolbar-actions'):
+            with div(
+                    id='toolbar-actions-state-' + tab['id'],
+                    cls='vs-toolbar-actions') as toolbar_actions:
                 if tab.get('relation_navigation'):
                     with div(
                             cls=(
@@ -1057,7 +1052,23 @@ class ViewRenderer:
                                                     icon(item['icon'].removeprefix(
                                                             'tryton-'))
                                                 span(item['title'])
-                                else:
+                                exports = (
+                                    toolbar_data.get('exports', [])
+                                    if category == 'print' else [])
+                                if items and exports:
+                                    hr(cls='vs-popup-separator')
+                                for export in exports:
+                                    with a(
+                                            href=ExportRecords.url(
+                                                tab=tab['id'],
+                                                export_id=export['id']),
+                                            cls=(
+                                                'vs-popup-item '
+                                                'vs-popup-item-icon'),
+                                            role='menuitem'):
+                                        icon('export')
+                                        span(export['name'])
+                                if not items and not exports:
                                     span(
                                         _('No actions'),
                                         cls='vs-popup-empty')
@@ -1075,6 +1086,11 @@ class ViewRenderer:
                 span(
                     'Revision %s' % stringify(revision),
                     cls='vs-revision')
+
+            print('TB3', timer)
+
+            if state_only:
+                return window_heading, toolbar_actions
 
             domains = decode_value(tab.get('domain_tabs', []))
             domain_counts = decode_value(tab.get('domain_counts', []))
@@ -1119,6 +1135,7 @@ class ViewRenderer:
                                             aria_hidden='true')
         if tab.get('view_type') in {'tree', 'calendar', 'list-form'}:
             toolbar.add(self.search_toolbar(tab))
+        print('TB4', timer)
         return toolbar
 
     def search_toolbar(self, tab):
@@ -2000,7 +2017,7 @@ class ViewRenderer:
                                         row='true')),
                                 data_row_select_target=(
                                     tree_target if relation_origin else
-                                    '#toolbar-' + tab['id']),
+                                    '#toolbar-heading-state-' + tab['id']),
                                 data_row_select_swap=(
                                     'none' if relation_origin else
                                     'outerHTML'),
@@ -2480,6 +2497,7 @@ class ViewRenderer:
     def form(self, tab, view):
         from timer import Timer
         timer = Timer()
+        form_started = perf_counter()
         key = tab.get('current_record')
         if not key or key not in tab.get('records', {}):
             return p(_('No record selected'), cls='vs-empty')
@@ -2507,11 +2525,22 @@ class ViewRenderer:
                 node.attrib['autofocus'] = '1'
                 break
         print('F2', timer)
+        timings = {
+            'columns': 0,
+            'fields': 0,
+            'grid': 0,
+            'layout': 0,
+            'mnemonics': 0,
+            'states': 0,
+            'widgets': {},
+            }
+        started = perf_counter()
+        form_style = self.form_grid_style(root, root.attrib.get('col', 4))
+        timings['grid'] += perf_counter() - started
         with div(
                 cls='vs-form',
                 data_form_cursor=cursor,
-                style=self.form_grid_style(
-                    root, root.attrib.get('col', 4))) as tag:
+                style=form_style) as tag:
             if root.attrib.get('scan_code'):
                 ScanCode = self.pool.get('cassini.scan.code')
                 scan_states = {
@@ -2541,7 +2570,23 @@ class ViewRenderer:
             self.form_children(
                 tag, root, renderer, tab, record,
                 columns=root.attrib.get('col', 4),
-                row_start=2 if root.attrib.get('scan_code') else 1)
+                row_start=2 if root.attrib.get('scan_code') else 1,
+                timings=timings)
+        slowest_widgets = sorted(
+            timings['widgets'].items(), key=lambda item: item[1], reverse=True)
+        print(
+            'F3.1 fields %.4f, widgets %s, structure %.4f, '
+            'columns %.4f, mnemonics %.4f, states %.4f, layout %.4f, '
+            'grid %.4f' % (
+                timings['fields'],
+                ', '.join(
+                    '%s %.4f' % item for item in slowest_widgets[:3]),
+                max(0, perf_counter() - form_started - timings['fields']),
+                timings['columns'],
+                timings['mnemonics'],
+                timings['states'],
+                timings['layout'],
+                timings['grid']))
         print('F3', timer)
         return tag
 
@@ -2638,9 +2683,25 @@ class ViewRenderer:
 
     def form_children(
             self, parent, node, renderer, tab, record, path=(),
-            inherited_readonly=False, columns=4, row_start=1):
+            inherited_readonly=False, columns=4, row_start=1, timings=None):
+        timings = timings if timings is not None else {
+            'columns': 0,
+            'fields': 0,
+            'grid': 0,
+            'layout': 0,
+            'mnemonics': 0,
+            'states': 0,
+            'widgets': {},
+            }
+        for name in ('columns', 'grid', 'layout', 'mnemonics', 'states'):
+            timings.setdefault(name, 0)
+        timings.setdefault('fields', 0)
+        timings.setdefault('widgets', {})
+        started = perf_counter()
         columns = self.form_columns(node, columns)
+        timings['columns'] += perf_counter() - started
         mnemonics = {}
+        started = perf_counter()
         for item in node:
             if item.tag != 'label' or not item.attrib.get('name'):
                 continue
@@ -2651,6 +2712,7 @@ class ViewRenderer:
                 or definition.get('string')
                 or item.attrib['name'])
             mnemonics[item.attrib['name']] = form_accesskey(text)
+        timings['mnemonics'] += perf_counter() - started
         grid_column = 1
         grid_row = row_start
         for index, child in enumerate(node):
@@ -2685,13 +2747,18 @@ class ViewRenderer:
                     and child.tag in {
                         'field', 'label', 'separator', 'page', 'group'}):
                 continue
+            started = perf_counter()
             layout_style = self.form_layout_style(attributes, columns)
+            timings['layout'] += perf_counter() - started
             state_readonly = inherited_readonly
+            required = False
             if child.tag != 'field':
                 definition = renderer.view.get(
                     'fields', {}).get(attributes.get('name'), {})
-                readonly, _required, invisible = renderer.states(
+                started = perf_counter()
+                readonly, required, invisible = renderer.states(
                     definition, attributes)
+                timings['states'] += perf_counter() - started
                 if invisible and not (
                         child.tag == 'label'
                         and index + 1 < len(node)
@@ -2707,12 +2774,18 @@ class ViewRenderer:
                     attributes['name'])
                 attributes['_columns'] = columns
                 attributes['_layout_style'] = layout_style
+                started = perf_counter()
                 parent.add(renderer.render(attributes['name'], attributes))
+                elapsed = perf_counter() - started
+                timings['fields'] += elapsed
+                widget = (
+                    attributes.get('widget')
+                    or renderer.view.get('fields', {}).get(
+                        attributes['name'], {}).get('type', 'char'))
+                timings['widgets'][widget] = (
+                    timings['widgets'].get(widget, 0) + elapsed)
             elif child.tag == 'label':
                 name = attributes.get('name')
-                definition = renderer.view.get('fields', {}).get(name, {})
-                _readonly, required, _invisible = renderer.states(
-                    definition, attributes)
                 parent.add(label(
                     attributes.get('string')
                     or definition.get('string')
@@ -2724,10 +2797,7 @@ class ViewRenderer:
                         if name else None),
                     cls='vs-standalone-label%s' % (
                         ' vs-label-required' if required else ''),
-                    data_accesskey=form_accesskey(
-                        attributes.get('string')
-                        or definition.get('string')
-                        or name),
+                    data_accesskey=mnemonics.get(name),
                     title=attributes.get('help'),
                     style=layout_style))
             elif child.tag == 'button':
@@ -2794,7 +2864,8 @@ class ViewRenderer:
                                     child, group_columns)) as body:
                             self.form_children(
                                 body, child, renderer, tab, record,
-                                child_path, state_readonly, group_columns)
+                                child_path, state_readonly, group_columns,
+                                timings=timings)
                 else:
                     group_style = ';'.join(filter(None, (
                                 layout_style,
@@ -2806,7 +2877,7 @@ class ViewRenderer:
                             legend(attributes['string'])
                         self.form_children(
                             group, child, renderer, tab, record, child_path,
-                            state_readonly, group_columns)
+                            state_readonly, group_columns, timings=timings)
                 parent.add(group)
             elif child.tag == 'notebook':
                 notebook_id = 'n-' + '-'.join(map(str, child_path))
@@ -2933,7 +3004,8 @@ class ViewRenderer:
                                         tab, record,
                                         child_path + (page_index,),
                                         state_readonly,
-                                        page.attrib.get('col', 4))
+                                        page.attrib.get('col', 4),
+                                        timings=timings)
                                 else:
                                     page_container.add(NotebookPage(
                                             tab=tab['id'],
@@ -2970,7 +3042,8 @@ class ViewRenderer:
                                     tab, record,
                                     child_path + (page_index,),
                                     state_readonly,
-                                    page.attrib.get('col', 4))
+                                    page.attrib.get('col', 4),
+                                    timings=timings)
                     else:
                         for page_index, page in enumerate(pages):
                             with section(
@@ -2987,7 +3060,8 @@ class ViewRenderer:
                                     tab, record,
                                     child_path + (page_index,),
                                     state_readonly,
-                                    page.attrib.get('col', 4))
+                                    page.attrib.get('col', 4),
+                                    timings=timings)
                 parent.add(notebook)
             elif child.tag == 'page':
                 page_style = ';'.join(filter(None, (
@@ -3001,7 +3075,7 @@ class ViewRenderer:
                     self.form_children(
                         container, child, renderer, tab, record,
                         child_path, state_readonly,
-                        attributes.get('col', 4))
+                        attributes.get('col', 4), timings=timings)
                 parent.add(container)
             elif child.tag in {'hpaned', 'vpaned'}:
                 with div(
@@ -3010,7 +3084,7 @@ class ViewRenderer:
                         data_position=attributes.get('position')) as paned:
                     self.form_children(
                         paned, child, renderer, tab, record, child_path,
-                        state_readonly, columns)
+                        state_readonly, columns, timings=timings)
                 parent.add(paned)
             elif child.tag == 'separator':
                 with div(
@@ -3032,7 +3106,7 @@ class ViewRenderer:
                         style=container_style) as container:
                     self.form_children(
                         container, child, renderer, tab, record, child_path,
-                        state_readonly, columns)
+                        state_readonly, columns, timings=timings)
                 parent.add(container)
 
     def form_link(
