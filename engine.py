@@ -1249,8 +1249,6 @@ class CassiniEngine:
 
     def load_tab(
             self, tab, ids=None, append=False, refresh_count=True):
-        from timer import Timer
-        t = Timer()
         # Views are already cached by Tryton for the current user/context.
         # Do not retain a second copy in the persisted workspace: on large
         # forms serialising it on every request costs more than a cache hit.
@@ -1270,7 +1268,6 @@ class CassiniEngine:
                     'screen_size': (int(screen_width), 0),
                     'view_tree_width': True,
                     })
-        print('LT1', t)
         with Transaction().set_context(context):
             view = decode_value(tab.get('view', {})) if append else None
             read_fields = tab.get('read_fields') if append else None
@@ -1280,11 +1277,9 @@ class CassiniEngine:
                     view_type=tab['view_type'])
             if not append:
                 tab['view'] = encode_value(view)
-            print('LT2', t)
             if not append and not tab.get('toolbar_loaded'):
                 tab['toolbar'] = encode_value(Model.view_toolbar_get())
                 tab['toolbar_loaded'] = True
-            print('LT3', t)
             if not read_fields:
                 fields_names = list(view.get('fields', {}).keys())
                 if tab['view_type'] == 'tree':
@@ -1294,7 +1289,6 @@ class CassiniEngine:
                         name for name in fields_names
                         if name in Model._fields and name != 'id'
                         ]
-            print('LT4', t)
             root = ElementTree.fromstring(view.get('arch') or '<form/>')
             for node in root.iter('field'):
                 definition = view.get('fields', {}).get(
@@ -1316,12 +1310,10 @@ class CassiniEngine:
                         and related_name not in read_fields):
                     read_fields.append(related_name)
             tab['read_fields'] = read_fields
-            print('LT5', t)
 
             domain = self._update_window_counts(
                 tab, Model, view,
                 refresh_count=refresh_count and not append)
-            print('LT6', t)
 
             search_offset = int(tab.get('offset') or 0)
             record_limit = int(tab.get('limit') or 1000)
@@ -1342,7 +1334,6 @@ class CassiniEngine:
                     TREE_RECORD_CHUNK_SIZE,
                     max(0, tree_end_offset - search_offset))
                 hierarchy_limit = TREE_RECORD_CHUNK_SIZE
-            print('LT7', t)
             if ids is None:
                 ids = (
                     Model.search(
@@ -1359,7 +1350,6 @@ class CassiniEngine:
                             ('id', 'in', ids),
                             ], order=order)
             ids = [int(id_) for id_ in ids if id_]
-            print('LT8', t)
             if tab.get('view_type') == 'tree':
                 tab['tree_next_offset'] = (
                     search_offset + len(ids)
@@ -1372,7 +1362,6 @@ class CassiniEngine:
                 }
             with Transaction().set_context(binary_context):
                 values = Model.read(ids, read_fields) if ids else []
-                print('LT9', t)
                 if values:
                     by_id = {
                         row['id']: row for row in values}
@@ -1380,7 +1369,6 @@ class CassiniEngine:
                         by_id[record_id]
                         for record_id in ids if record_id in by_id
                         ]
-                print('LT10', t)
                 child_field = view.get('field_childs')
                 if child_field in read_fields:
                     known = {row['id'] for row in values}
@@ -1402,12 +1390,10 @@ class CassiniEngine:
                             for child_id in row.get(child_field, [])
                             if child_id not in known
                             }
-                print('LT11', t)
 
         old_records = tab.get('records', {})
         records = dict(old_records) if append else {}
         order = list(tab.get('record_order', [])) if append else []
-        print('LT12', t)
         for row in values:
             key = str(row['id'])
             old = old_records.get(key)
@@ -1425,14 +1411,12 @@ class CassiniEngine:
                     }
             if key not in order:
                 order.append(key)
-        print('LT13', t)
 
         if not append:
             for key, record in old_records.items():
                 if record.get('new') and key not in records:
                     records[key] = record
                     order.insert(0, key)
-        print('LT14', t)
         tab['records'] = records
         tab['record_order'] = order
         tab['selected'] = [
@@ -1442,34 +1426,25 @@ class CassiniEngine:
                 order[0]
                 if tab.get('view_type') != 'tree' and order else None)
         tab['dirty'] = any(record.get('dirty') for record in records.values())
-        print('LT15', t)
         return tab
 
     def load_tree_records(self, tab_id):
         """Load the next visible chunk of a window tree."""
-        from timer import Timer
-        t = Timer()
         tab = self._tab(tab_id, kind='window')
-        print('L1', t)
         if tab.get('view_type') != 'tree':
             raise ValueError(_('This tab is not a tree view'))
-        print('L2', t)
         previous_keys = set(tab.get('record_order', []))
-        print('L3', t)
         if int(tab.get('tree_next_offset') or 0) < int(
                 tab.get('tree_end_offset') or 0):
             self.load_tab(tab, append=True)
-            print('L3.1', t)
         loaded_keys = [
             key for key in tab.get('record_order', [])
             if key not in previous_keys]
-        print('L4', t)
         response_tab = dict(tab)
         response_tab['records'] = dict(tab.get('records', {}))
         response_tab['record_order'] = list(tab.get('record_order', []))
         self._compact_tree_records(tab, loaded_keys)
         self.save()
-        print('L5', t)
         return response_tab, loaded_keys
 
     @staticmethod

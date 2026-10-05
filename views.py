@@ -330,8 +330,6 @@ class ViewRenderer:
         return tag
 
     def toolbar(self, tab, state_only=False):
-        from timer import Timer
-        timer = Timer()
         NewRecord = self.pool.get('cassini.new.record')
         CloseTab = self.pool.get('cassini.close.tab')
         DeleteRecords = self.pool.get('cassini.delete.records')
@@ -416,7 +414,6 @@ class ViewRenderer:
             WidgetRenderer(tab, record, view, editable=False)
             if record else None)
         view_buttons = list(root.iter('button'))
-        print('TB1', timer)
         resource_counts = {
             'attachment_count': 0,
             'note_count': 0,
@@ -431,7 +428,6 @@ class ViewRenderer:
             attachments = Attachment.search([
                     ('resource', '=', str(resource)),
                     ], limit=20)
-        print('TB2', timer)
 
         def action_definitions(category):
             items = []
@@ -1087,7 +1083,6 @@ class ViewRenderer:
                     'Revision %s' % stringify(revision),
                     cls='vs-revision')
 
-            print('TB3', timer)
 
             if state_only:
                 return window_heading, toolbar_actions
@@ -1135,7 +1130,6 @@ class ViewRenderer:
                                             aria_hidden='true')
         if tab.get('view_type') in {'tree', 'calendar', 'list-form'}:
             toolbar.add(self.search_toolbar(tab))
-        print('TB4', timer)
         return toolbar
 
     def search_toolbar(self, tab):
@@ -1586,8 +1580,6 @@ class ViewRenderer:
         return row
 
     def tree(self, tab, view, rows=None):
-        from timer import Timer
-        t = Timer()
         root = parse_architecture(view)
         relation_origin = tab.get('relation_origin')
         # Relation record dialogs keep their parent origin too, but only an
@@ -1680,7 +1672,6 @@ class ViewRenderer:
         first_field = next((
                 node.attrib['name']
                 for node in columns if node.tag == 'field'), None)
-        print('TV1', t)
         with div(
                 id='tree-' + tab['id'],
                 cls='vs-table-wrap',
@@ -1938,7 +1929,6 @@ class ViewRenderer:
                             else:
                                 th(node.attrib.get(
                                     'string', _('Action')))
-                print('TV2', t)
                 renderer_initialization = 0
                 row_rendering = 0
                 row_actions = 0
@@ -2268,7 +2258,6 @@ class ViewRenderer:
                                 hx_trigger=(
                                     'intersect once root:.vs-main'),
                                 colspan=len(columns) + 2)
-                print('TV3', t)
                 print(
                     'TV3.1',
                     'renderer %.4f, actions %.4f, cells %.4f, widgets %.4f, '
@@ -2319,7 +2308,6 @@ class ViewRenderer:
                         self.record_button(
                             tab, tab['records'][selected[0]],
                             attributes, selected_renderer)
-        print('TV4', t)
         return wrapper
 
     def tree_rows(self, tab, view):
@@ -2495,8 +2483,6 @@ class ViewRenderer:
         return 'grid-template-columns:%s' % ' '.join(tracks)
 
     def form(self, tab, view):
-        from timer import Timer
-        timer = Timer()
         form_started = perf_counter()
         key = tab.get('current_record')
         if not key or key not in tab.get('records', {}):
@@ -2510,7 +2496,6 @@ class ViewRenderer:
             tab.get('context', {})).get('_datetime')
         renderer = WidgetRenderer(tab, record, view, editable=editable)
         root = parse_architecture(view)
-        print('F1', timer)
         cursor = root.attrib.get('cursor')
         focus_nodes = list(root.iter('field'))
         if cursor:
@@ -2524,7 +2509,6 @@ class ViewRenderer:
             if not readonly and not invisible and editable:
                 node.attrib['autofocus'] = '1'
                 break
-        print('F2', timer)
         timings = {
             'columns': 0,
             'fields': 0,
@@ -2587,7 +2571,6 @@ class ViewRenderer:
                 timings['states'],
                 timings['layout'],
                 timings['grid']))
-        print('F3', timer)
         return tag
 
     def notebook_page(self, tab, record_key, notebook, page_index):

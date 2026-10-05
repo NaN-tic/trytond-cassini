@@ -1288,9 +1288,6 @@ class WidgetRenderer:
         return names
 
     def x2many_rows(self, definition, attributes, values, state, view_type):
-        from timer import Timer
-        timer = Timer()
-        name = attributes.get('name', definition.get('name', '?'))
         deleted = list(state.get('deleted', []))
         entries = []
         for index, item in enumerate(list(values or []) + deleted):
@@ -1304,10 +1301,8 @@ class WidgetRenderer:
                         else None),
                     'deleted': index >= len(values or []),
                     })
-        print('XR1 %s' % name, timer)
         relation_view = self.x2many_view(
             definition, attributes, view_type)
-        print('XR2 %s' % name, timer)
         Relation = self.pool.get(definition['relation'])
         read_fields = self.tree_read_fields(relation_view, Relation)
         for field_name in list(read_fields):
@@ -1317,7 +1312,6 @@ class WidgetRenderer:
                     field and field._type in {'many2one', 'one2one'}
                 and related_name not in read_fields):
                 read_fields.append(related_name)
-        print('XR3 %s' % name, timer)
         ids = [entry['id'] for entry in entries if entry['id']]
         binary_context = {
             '%s.%s' % (Relation.__name__, name): 'size'
@@ -1330,7 +1324,6 @@ class WidgetRenderer:
                 record['id']: record
                 for record in Relation.read(ids, read_fields)
                 } if ids else {}
-        print('XR4 %s' % name, timer)
         for entry in entries:
             item = entry['item']
             if entry['id']:
@@ -1347,7 +1340,6 @@ class WidgetRenderer:
                         Relation._rec_name, _('New record')))
             else:
                 entry['values'] = {'rec_name': stringify(item)}
-        print('XR5 %s' % name, timer)
         return relation_view, entries
 
     def tree_affix(self, attributes, protocol=None):
@@ -1454,8 +1446,6 @@ class WidgetRenderer:
     def x2many(
             self, name, widget, value, definition, attributes,
             field_id, readonly, required):
-        from timer import Timer
-        timer = Timer()
         X2ManyAction = self.pool.get('cassini.x2many.action')
         RelationAutocomplete = self.pool.get(
             'cassini.relation.autocomplete')
@@ -1510,10 +1500,8 @@ class WidgetRenderer:
         if view_type not in modes:
             view_type = modes[0]
             state['view'] = view_type
-        print('X1 %s' % name, timer)
         relation_view, rows = self.x2many_rows(
             definition, attributes, value, state, view_type)
-        print('X2 %s' % name, timer)
         relation_root = ElementTree.fromstring(
             relation_view.get('arch') or '<tree/>')
         inline_create = (
@@ -1842,7 +1830,6 @@ class WidgetRenderer:
                     self.x2many_form(
                         name, definition, attributes, relation_view,
                         current_row, readonly, relation_access)
-        print('X3 %s' % name, timer)
         return control
 
     def x2many_form(

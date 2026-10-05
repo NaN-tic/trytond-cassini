@@ -255,13 +255,9 @@ class Workspace(ModelSQL, ModelView):
         return InterfaceState(decode_value(self.state))
 
     def store(self, interface):
-        from timer import Timer
-        timer = Timer()
         self.state = encode_value(interface.data)
-        print('WS1', timer)
         self.revision += 1
         self.save()
-        print('WS2', timer)
 
     def reset(self):
         self.state = empty_state()
